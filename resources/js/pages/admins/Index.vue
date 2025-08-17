@@ -1,14 +1,13 @@
 <script setup lang="ts">
-// ==================================================
-// 📦 Imports
-// ==================================================
-
-// Vue & Inertia
-import { h, ref } from 'vue'
-import { Head, router } from '@inertiajs/vue3'
-import { route } from 'ziggy-js'
-
-// TanStack Table
+// Imports
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { valueUpdater } from '@/lib/utils';
+import type { BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/vue3';
+import type { Column, ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table';
 import {
     FlexRender,
     getCoreRowModel,
@@ -17,258 +16,111 @@ import {
     getPaginationRowModel,
     getSortedRowModel,
     useVueTable,
-    VisibilityState,
-} from '@tanstack/vue-table'
-import type {
-    Column,
-    ColumnDef,
-    ColumnFiltersState,
-    Row,
-    SortingState,
-    Table,
-} from '@tanstack/vue-table'
+} from '@tanstack/vue-table';
+import { ArrowUpDown, X, Plus } from 'lucide-vue-next';
+import { ChevronRightIcon, ChevronLeftIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from "@radix-icons/vue";
+import { h, ref } from 'vue';
+import { route } from 'ziggy-js';
+import DropdownAction from '../users/DataTableDemoColumn.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import Layout from '@/layouts/records/Layout.vue';
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select } from '@/components/ui/select';
+import DeleteDialog from '@/components/DeleteDialog.vue';
 
-// UI Components
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
-import {
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
-
-// Icons
-import { ArrowUpDown, ChevronDown, X, Plus } from 'lucide-vue-next'
-import {
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    DoubleArrowLeftIcon,
-    DoubleArrowRightIcon,
-} from '@radix-icons/vue'
-
-// Utilities
-import { valueUpdater } from '@/lib/utils'
-
-// Custom Components
-import DropdownAction from '../users/DataTableDemoColumn.vue'
-import DeleteDialog from '@/components/DeleteDialog.vue'
-import AppLayout from '@/layouts/AppLayout.vue'
-import Layout from '@/layouts/users/Layout.vue'
-
-// Types
-import type { BreadcrumbItem } from '@/types'
-
-
-// ==================================================
-// ⚙️ Props & Defaults
-// ==================================================
+// Props
 interface Props {
-    data?: {
-        data: any[]
-        current_page?: number
-        per_page?: number
-        last_page?: number
-    }
-    filter?: any[]
-    currentSortField?: string
-    currentSortDirection?: string
+    data?: { data: any[]; current_page?: number; per_page?: number; last_page?: number };
+    filter?: any[];
+    currentSortField?: string;
+    currentSortDirection?: string;
 }
-
 const props = withDefaults(defineProps<Props>(), {
     data: () => ({ data: [], current_page: 1, per_page: 10, last_page: 1 }),
     filter: () => [],
     currentSortField: undefined,
     currentSortDirection: 'asc',
-})
+});
 
-
-// ==================================================
-// 📑 Table Configuration
-// ==================================================
-type RowData = any
-const data = props.data.data
-
-// 🔹 Column Definitions
+// Table setup
+type RowData = any;
+const data = props.data.data;
 const columns: ColumnDef<RowData>[] = [
-    // --- Search (hidden virtual column) ---
-    {
-        id: 'search',
-        accessorFn: (row) => `${row.first_name} ${row.last_name}`,
-        enableSorting: false,
-        enableHiding: false,
-    },
-
-    // --- Select Checkbox ---
+    { id: 'search', accessorFn: (row) => `${row.first_name} ${row.last_name}`, enableSorting: false, enableHiding: false },
     {
         id: 'select',
         header: ({ table }) =>
             h(Checkbox, {
-                checked:
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && 'indeterminate'),
-                'onUpdate:checked': (value: boolean) =>
-                    table.toggleAllPageRowsSelected(!!value),
-                ariaLabel: 'Select all',
+                checked: table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate'),
+                'onUpdate:checked': (v: boolean) => table.toggleAllPageRowsSelected(!!v),
             }),
         cell: ({ row }) =>
             h(Checkbox, {
                 checked: row.getIsSelected(),
-                'onUpdate:checked': (value: boolean) =>
-                    row.toggleSelected(!!value),
-                ariaLabel: 'Select row',
+                'onUpdate:checked': (v: boolean) => row.toggleSelected(!!v),
             }),
         enableSorting: false,
         enableHiding: false,
     },
-
-    // --- Library ID ---
     {
         accessorKey: 'library_id',
         header: ({ column }) =>
-            h(
-                Button,
-                { variant: 'ghost', onClick: () => cycleSort(column) },
-                () => ['Library ID ', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })],
-            ),
-        cell: ({ row }) =>
-            h('div', { class: 'lowercase' }, row.getValue('library_id')),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Library ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('library_id')),
         enableHiding: false,
     },
-
-    // --- First Name ---
     {
         accessorKey: 'first_name',
         header: ({ column }) =>
-            h(
-                Button,
-                { variant: 'ghost', onClick: () => cycleSort(column) },
-                () => ['First Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })],
-            ),
-        cell: ({ row }) =>
-            h('div', { class: 'capitalize' }, row.getValue('first_name')),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['First Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('first_name')),
     },
-
-    // --- Middle Initial ---
     {
         accessorKey: 'middle_initial',
         header: ({ column }) =>
-            h(
-                Button,
-                { variant: 'ghost', onClick: () => cycleSort(column) },
-                () => ['M.I', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })],
-            ),
-        cell: ({ row }) => {
-            const mi = row.getValue('middle_initial')
-            return h('div', { class: 'capitalize' }, mi ? mi + '.' : '')
-        },
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['M.I', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('middle_initial') ? row.getValue('middle_initial') + '.' : ''),
     },
-
-    // --- Last Name ---
     {
         accessorKey: 'last_name',
         header: ({ column }) =>
-            h(
-                Button,
-                { variant: 'ghost', onClick: () => cycleSort(column) },
-                () => ['Last Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })],
-            ),
-        cell: ({ row }) =>
-            h('div', { class: 'capitalize' }, row.getValue('last_name')),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Last Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('last_name')),
     },
-
-    // --- Sex ---
     {
         accessorKey: 'sex',
         header: ({ column }) =>
-            h(
-                Button,
-                { variant: 'ghost', onClick: () => cycleSort(column) },
-                () => ['Sex', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })],
-            ),
-        cell: ({ row }) =>
-            h('div', { class: 'lowercase' }, row.getValue('sex')),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Sex', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('sex')),
     },
-
-    // --- Email ---
     {
         accessorKey: 'email',
         header: ({ column }) =>
-            h(
-                Button,
-                { variant: 'ghost', onClick: () => cycleSort(column) },
-                () => ['Email', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })],
-            ),
-        cell: ({ row }) =>
-            h('div', { class: 'lowercase' }, row.getValue('email')),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Email', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('email')),
         enableHiding: false,
     },
+    { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
+];
 
-    // --- Actions ---
-    {
-        id: 'actions',
-        enableHiding: false,
-        cell: ({ row }) =>
-            h(DropdownAction, {
-                user: row.original,
-                onExpand: row.toggleExpanded,
-                onEdit: (id) => console.log('Edit clicked for ID:', id),
-                onDelete: (id) => {
-                    showDeleteAlert.value = true
-                    selectedUserId.value = id
-                },
-            }),
-    },
-]
-
-// 🔹 Sorting & Filtering Helpers
+// Sorting helper
 function cycleSort(column: Column<RowData, any>) {
-    const currentSort = column.getIsSorted()
-    if (currentSort === false) column.toggleSorting(false) // asc
-    else if (currentSort === 'asc') column.toggleSorting(true) // desc
-    else column.clearSorting() // none
+    const currentSort = column.getIsSorted();
+    if (currentSort === false) column.toggleSorting(false);
+    else if (currentSort === 'asc') column.toggleSorting(true);
+    else column.clearSorting();
 }
 
-
-// ==================================================
-// 📊 Table State
-// ==================================================
-const sorting = ref<SortingState>(
-    props.currentSortField
-        ? [
-            {
-                id: props.currentSortField,
-                desc: props.currentSortDirection === 'desc',
-            },
-        ]
-        : [],
-)
-const columnFilters = ref<ColumnFiltersState>(
-    props.filter ? props.filter.map((f) => ({ id: f.id, value: f.value })) : [],
-)
-const columnVisibility = ref({})
-const rowSelection = ref({})
-const expanded = ref({})
-const pageSizes = [1, 2, 3, 5, 10, 15, 30, 40, 50, 100]
+// State
+const sorting = ref<SortingState>(props.currentSortField ? [{ id: props.currentSortField, desc: props.currentSortDirection === 'desc' }] : []);
+const columnFilters = ref<ColumnFiltersState>(props.filter ? props.filter.map((f) => ({ id: f.id, value: f.value })) : []);
+const columnVisibility = ref({});
+const rowSelection = ref({});
+const expanded = ref({});
 const pagination = ref({
     pageIndex: (props.data?.current_page ?? 1) - 1,
     pageSize: props.data?.per_page ?? 10,
-})
+});
 
 // Table instance
 const table = useVueTable({
@@ -283,174 +135,98 @@ const table = useVueTable({
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,
-
-    // Handlers (pagination, sorting, filtering, etc.)
     onPaginationChange: handlePaginationChange,
     onSortingChange: handleSortingChange,
     onColumnFiltersChange: handleFilterChange,
-    onColumnVisibilityChange: updaterOrValue => valueUpdater(updaterOrValue, columnVisibility),
-    onRowSelectionChange: (updaterOrValue) =>
-        valueUpdater(updaterOrValue, rowSelection),
-    onExpandedChange: (updaterOrValue) =>
-        valueUpdater(updaterOrValue, expanded),
-
-    // Bind reactive state
+    onColumnVisibilityChange: (v) => valueUpdater(v, columnVisibility),
+    onRowSelectionChange: (v) => valueUpdater(v, rowSelection),
+    onExpandedChange: (v) => valueUpdater(v, expanded),
     state: {
         get sorting() {
-            return sorting.value
+            return sorting.value;
         },
         get columnFilters() {
-            return columnFilters.value
+            return columnFilters.value;
         },
-        get columnVisibility() { return columnVisibility.value },
+        get columnVisibility() {
+            return columnVisibility.value;
+        },
         get rowSelection() {
-            return rowSelection.value
+            return rowSelection.value;
         },
         get expanded() {
-            return expanded.value
+            return expanded.value;
         },
         get pagination() {
-            return pagination.value
+            return pagination.value;
         },
     },
-})
+});
 
-
-// ==================================================
-// 🔍 Filtering
-// ==================================================
-const filterInput = ref<string>(
-    (table.getColumn('search')?.getFilterValue() as string) ?? '',
-)
-const applyFilter = () =>
-    table.getColumn('search')?.setFilterValue(filterInput.value)
+// Filtering
+const filterInput = ref<string>((table.getColumn('search')?.getFilterValue() as string) ?? '');
+const applyFilter = () => table.getColumn('search')?.setFilterValue(filterInput.value);
 const clearFilter = () => {
-    filterInput.value = ''
-    table.getColumn('search')?.setFilterValue('')
-}
+    filterInput.value = '';
+    table.getColumn('search')?.setFilterValue('');
+};
 
-
-// ==================================================
-// 🧭 Breadcrumbs
-// ==================================================
+// Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
     { title: 'Staff admins', href: '/users/admins' },
-]
+];
 
-
-// ==================================================
-// ➕ Create / ✖ Delete Handlers
-// ==================================================
-const createNewStaffAdmin = () => {
-    router.get(route('admins.create'))
-}
-
-const showDeleteAlert = ref(false)
-const selectedUserId = ref(null)
-
+// Delete handling
+const showDeleteAlert = ref(false);
+const selectedUserId = ref(null);
 const handleDelete = (id) => {
     router.delete(route('admins.destroy', id), {
         preserveState: false,
         preserveScroll: true,
-        onSuccess: () => console.log('Delete successful'),
-        onError: (errors) => console.error('Delete failed:', errors),
-    })
-    showDeleteAlert.value = false
-    selectedUserId.value = null
-}
+    });
+    showDeleteAlert.value = false;
+    selectedUserId.value = null;
+};
 
-
-// ==================================================
-// 🔧 Event Handlers
-// ==================================================
+// Event handlers
 function handlePaginationChange(updater) {
-    if (typeof updater === 'function') pagination.value = updater(pagination.value)
-    else pagination.value = updater
-
+    pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater;
     router.get(
         route('admins.index'),
-        {
-            page: pagination.value.pageIndex + 1,
-            per_page: pagination.value.pageSize,
-            sort_field: sorting.value[0]?.id,
-            sort_direction:
-                sorting.value.length == 0
-                    ? undefined
-                    : sorting.value[0]?.desc
-                        ? 'desc'
-                        : 'asc',
-        },
+        { page: pagination.value.pageIndex + 1, per_page: pagination.value.pageSize },
         { preserveState: false, preserveScroll: true },
-    )
+    );
 }
-
 function handleSortingChange(updaterOrValue) {
-    sorting.value =
-        typeof updaterOrValue === 'function'
-            ? updaterOrValue(sorting.value)
-            : updaterOrValue
-
-    const filters = buildFilters(columnFilters.value)
-
+    sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue;
+    const filters = buildFilters(columnFilters.value);
     router.get(
         route('admins.index'),
         {
             page: 1,
             per_page: pagination.value.pageSize,
             sort_field: sorting.value[0]?.id,
-            sort_direction:
-                sorting.value.length == 0
-                    ? undefined
-                    : sorting.value[0]?.desc
-                        ? 'desc'
-                        : 'asc',
+            sort_direction: sorting.value[0]?.desc ? 'desc' : 'asc',
             ...filters,
         },
         { preserveState: false, preserveScroll: true },
-    )
+    );
 }
-
 function handleFilterChange(updaterOrValue) {
-    columnFilters.value =
-        typeof updaterOrValue === 'function'
-            ? updaterOrValue(columnFilters.value)
-            : updaterOrValue
-
-    const filters = buildFilters(columnFilters.value)
-
-    router.get(
-        route('admins.index'),
-        {
-            page: 1,
-            per_page: pagination.value.pageSize,
-            sort_field: sorting.value[0]?.id,
-            sort_direction:
-                sorting.value.length == 0
-                    ? undefined
-                    : sorting.value[0]?.desc
-                        ? 'desc'
-                        : 'asc',
-            ...filters,
-        },
-        { preserveState: false, preserveScroll: true },
-    )
+    columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue;
+    const filters = buildFilters(columnFilters.value);
+    router.get(route('admins.index'), { page: 1, per_page: pagination.value.pageSize, ...filters }, { preserveState: false, preserveScroll: true });
 }
-
 function buildFilters(filtersArr: ColumnFiltersState) {
-    return filtersArr.reduce((acc: Record<string, any>, filter) => {
-        if (Array.isArray(filter.value) && filter.value.length > 0) {
-            acc[filter.id] = filter.value
-        } else if (
-            !Array.isArray(filter.value) &&
-            filter.value !== '' &&
-            filter.value !== null &&
-            filter.value !== undefined
-        ) {
-            acc[filter.id] = filter.value
-        }
-        return acc
-    }, {})
+    return filtersArr.reduce(
+        (acc, f) => {
+            if (Array.isArray(f.value) && f.value.length > 0) acc[f.id] = f.value;
+            else if (f.value !== '' && f.value !== null && f.value !== undefined) acc[f.id] = f.value;
+            return acc;
+        },
+        {} as Record<string, any>,
+    );
 }
 </script>
 
