@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue"
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { LoaderCircle } from 'lucide-vue-next';
+import { LoaderCircle, Eye, EyeOff } from 'lucide-vue-next';
 
 defineProps<{
     status?: string;
@@ -25,6 +26,9 @@ const submit = () => {
         onFinish: () => form.reset('password'),
     });
 };
+
+// 👁 password visibility toggle
+const showPassword = ref(false);
 </script>
 
 <template>
@@ -37,6 +41,7 @@ const submit = () => {
 
         <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
+                <!-- Email -->
                 <div class="grid gap-2">
                     <Label for="email">Email address</Label>
                     <Input
@@ -52,6 +57,7 @@ const submit = () => {
                     <InputError :message="form.errors.email" />
                 </div>
 
+                <!-- Password -->
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
                         <Label for="password">Password</Label>
@@ -59,18 +65,33 @@ const submit = () => {
                             Forgot password?
                         </TextLink>
                     </div>
-                    <Input
-                        id="password"
-                        type="password"
-                        required
-                        :tabindex="2"
-                        autocomplete="current-password"
-                        v-model="form.password"
-                        placeholder="Password"
-                    />
+
+                    <div class="relative">
+                        <Input
+                            id="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            required
+                            :tabindex="2"
+                            autocomplete="current-password"
+                            v-model="form.password"
+                            placeholder="Password"
+                            class="pr-10"
+                        />
+                        <button
+                            type="button"
+                            class="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+                            @click="showPassword = !showPassword"
+                            tabindex="-1"
+                        >
+                            <Eye v-if="!showPassword" class="w-5 h-5" />
+                            <EyeOff v-else class="w-5 h-5" />
+                        </button>
+                    </div>
+
                     <InputError :message="form.errors.password" />
                 </div>
 
+                <!-- Remember -->
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
                         <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
@@ -78,12 +99,14 @@ const submit = () => {
                     </Label>
                 </div>
 
+                <!-- Submit -->
                 <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="form.processing">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
                     Log in
                 </Button>
             </div>
 
+            <!-- Register link -->
             <div
                 v-if="$page.props.config.registration_enabled"
                 class="text-center text-sm text-muted-foreground">
