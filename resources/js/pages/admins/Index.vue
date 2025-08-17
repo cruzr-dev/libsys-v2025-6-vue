@@ -261,7 +261,7 @@ const sorting = ref<SortingState>(
 const columnFilters = ref<ColumnFiltersState>(
     props.filter ? props.filter.map((f) => ({ id: f.id, value: f.value })) : [],
 )
-const columnVisibility = ref<VisibilityState>({ search: false })
+const columnVisibility = ref({})
 const rowSelection = ref({})
 const expanded = ref({})
 const pageSizes = [1, 2, 3, 5, 10, 15, 30, 40, 50, 100]
@@ -288,8 +288,7 @@ const table = useVueTable({
     onPaginationChange: handlePaginationChange,
     onSortingChange: handleSortingChange,
     onColumnFiltersChange: handleFilterChange,
-    onColumnVisibilityChange: (updaterOrValue) =>
-        valueUpdater(updaterOrValue, columnVisibility),
+    onColumnVisibilityChange: updaterOrValue => valueUpdater(updaterOrValue, columnVisibility),
     onRowSelectionChange: (updaterOrValue) =>
         valueUpdater(updaterOrValue, rowSelection),
     onExpandedChange: (updaterOrValue) =>
@@ -303,9 +302,7 @@ const table = useVueTable({
         get columnFilters() {
             return columnFilters.value
         },
-        get columnVisibility() {
-            return columnVisibility.value
-        },
+        get columnVisibility() { return columnVisibility.value },
         get rowSelection() {
             return rowSelection.value
         },
@@ -492,15 +489,10 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuCheckboxItem
-                                    v-for="column in table.getAllColumns().filter((column) => column.getCanHide())"
+                                    v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
                                     :key="column.id"
-                                    class="capitalize"
                                     :checked="column.getIsVisible()"
-                                    @update:checked="
-                                        (value: boolean | 'indeterminate') => {
-                                            column.toggleVisibility(!!value);
-                                        }
-                                    "
+                                    @update:checked="(value) => column.toggleVisibility(!!value)"
                                 >
                                     {{ column.id }}
                                 </DropdownMenuCheckboxItem>
