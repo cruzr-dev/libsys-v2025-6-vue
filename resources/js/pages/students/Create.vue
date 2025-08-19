@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/vue3';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle } from 'lucide-vue-next';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/users/Layout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head, useForm } from '@inertiajs/vue3';
+import { LoaderCircle } from 'lucide-vue-next';
 
 // Define the props passed from the controller
 defineProps<{
@@ -50,16 +50,14 @@ const submit = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
-            <div class="flex h-full flex-1 flex-col gap-6 p-6 bg-white rounded-xl shadow-sm overflow-x-auto">
-                <form @submit.prevent="submit" class="flex flex-col gap-8 max-w-4xl mx-auto">
+            <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm">
+                <form @submit.prevent="submit" class="mx-auto flex max-w-4xl flex-col gap-8">
                     <!-- Personal Information Section -->
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Personal Information</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                             <div class="grid gap-2">
-                                <Label for="library_id" class="text-sm font-medium">
-                                    Library ID <span class="text-red-500">*</span>
-                                </Label>
+                                <Label for="library_id" class="text-sm font-medium"> Library ID <span class="text-red-500">*</span> </Label>
                                 <Input
                                     id="library_id"
                                     type="number"
@@ -74,9 +72,7 @@ const submit = () => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="first_name" class="text-sm font-medium">
-                                    First Name <span class="text-red-500">*</span>
-                                </Label>
+                                <Label for="first_name" class="text-sm font-medium"> First Name <span class="text-red-500">*</span> </Label>
                                 <Input
                                     id="first_name"
                                     type="text"
@@ -108,9 +104,7 @@ const submit = () => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="last_name" class="text-sm font-medium">
-                                    Last Name <span class="text-red-500">*</span>
-                                </Label>
+                                <Label for="last_name" class="text-sm font-medium"> Last Name <span class="text-red-500">*</span> </Label>
                                 <Input
                                     id="last_name"
                                     type="text"
@@ -126,14 +120,8 @@ const submit = () => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="sex" class="text-sm font-medium">
-                                    Sex <span class="text-red-500">*</span>
-                                </Label>
-                                <Select
-                                    v-model="form.sex"
-                                    @update:model-value="form.clearErrors('sex')"
-                                    required
-                                >
+                                <Label for="sex" class="text-sm font-medium"> Sex <span class="text-red-500">*</span> </Label>
+                                <Select v-model="form.sex" @update:model-value="form.clearErrors('sex')" required>
                                     <SelectTrigger id="sex" :tabindex="5" class="h-10">
                                         <SelectValue placeholder="Select sex" />
                                     </SelectTrigger>
@@ -150,7 +138,7 @@ const submit = () => {
                     <!-- Contact Information Section -->
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Contact Information</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <div class="grid gap-2">
                                 <Label for="contact_number" class="text-sm font-medium">Contact Number</Label>
                                 <Input
@@ -166,9 +154,7 @@ const submit = () => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="email" class="text-sm font-medium">
-                                    Email Address <span class="text-red-500">*</span>
-                                </Label>
+                                <Label for="email" class="text-sm font-medium"> Email Address <span class="text-red-500">*</span> </Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -188,12 +174,10 @@ const submit = () => {
                     <!-- Academic Information Section -->
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Academic Information</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <!-- Student ID Input -->
                             <div class="grid gap-2">
-                                <Label for="school_id" class="text-sm font-medium">
-                                    School ID <span class="text-red-500">*</span>
-                                </Label>
+                                <Label for="school_id" class="text-sm font-medium"> School ID <span class="text-red-500">*</span> </Label>
                                 <Input
                                     id="school_id"
                                     type="text"
@@ -209,14 +193,8 @@ const submit = () => {
 
                             <!-- College Select Input -->
                             <div class="grid gap-2">
-                                <Label for="college_id" class="text-sm font-medium">
-                                    College <span class="text-red-500">*</span>
-                                </Label>
-                                <Select
-                                    v-model="form.college_id"
-                                    @update:model-value="form.clearErrors('college_id')"
-                                    required
-                                >
+                                <Label for="college_id" class="text-sm font-medium"> College <span class="text-red-500">*</span> </Label>
+                                <Select v-model="form.college_id" @update:model-value="form.clearErrors('college_id')" required>
                                     <SelectTrigger id="college_id" :tabindex="9" class="h-10">
                                         <SelectValue placeholder="Select college" />
                                     </SelectTrigger>
@@ -231,14 +209,8 @@ const submit = () => {
 
                             <!-- Program Select Input -->
                             <div class="grid gap-2">
-                                <Label for="program_id" class="text-sm font-medium">
-                                    Program <span class="text-red-500">*</span>
-                                </Label>
-                                <Select
-                                    v-model="form.program_id"
-                                    @update:model-value="form.clearErrors('program_id')"
-                                    required
-                                >
+                                <Label for="program_id" class="text-sm font-medium"> Program <span class="text-red-500">*</span> </Label>
+                                <Select v-model="form.program_id" @update:model-value="form.clearErrors('program_id')" required>
                                     <SelectTrigger id="program_id" :tabindex="10" class="h-10">
                                         <SelectValue placeholder="Select program" />
                                     </SelectTrigger>
@@ -251,14 +223,11 @@ const submit = () => {
                                 <InputError :message="form.errors.program_id" />
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <!-- Major Select Input -->
                             <div class="grid gap-2">
                                 <Label for="major_id" class="text-sm font-medium">Major (if applicable)</Label>
-                                <Select
-                                    v-model="form.major_id"
-                                    @update:model-value="form.clearErrors('major_id')"
-                                >
+                                <Select v-model="form.major_id" @update:model-value="form.clearErrors('major_id')">
                                     <SelectTrigger id="major_id" :tabindex="11" class="h-10">
                                         <SelectValue placeholder="Select major" />
                                     </SelectTrigger>
@@ -272,14 +241,8 @@ const submit = () => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="student_type" class="text-sm font-medium">
-                                    Student Type <span class="text-red-500">*</span>
-                                </Label>
-                                <Select
-                                    v-model="form.student_type"
-                                    @update:model-value="form.clearErrors('student_type')"
-                                    required
-                                >
+                                <Label for="student_type" class="text-sm font-medium"> Student Type <span class="text-red-500">*</span> </Label>
+                                <Select v-model="form.student_type" @update:model-value="form.clearErrors('student_type')" required>
                                     <SelectTrigger id="student_type" :tabindex="12" class="h-10">
                                         <SelectValue placeholder="Select student type" />
                                     </SelectTrigger>
@@ -295,13 +258,8 @@ const submit = () => {
 
                     <!-- Submit Button -->
                     <div class="flex justify-end pt-4">
-                        <Button
-                            type="submit"
-                            class="w-full md:w-auto px-8 py-2"
-                            :tabindex="13"
-                            :disabled="form.processing"
-                        >
-                            <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin mr-2" />
+                        <Button type="submit" class="w-full px-8 py-2 md:w-auto" :tabindex="13" :disabled="form.processing">
+                            <LoaderCircle v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                             Create Student Account
                         </Button>
                     </div>
