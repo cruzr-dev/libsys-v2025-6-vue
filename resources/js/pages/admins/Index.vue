@@ -1,7 +1,6 @@
 <script setup lang="ts">
 // Imports
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { valueUpdater } from '@/lib/utils';
@@ -25,7 +24,7 @@ import DropdownAction from '../users/DataTableDemoColumn.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/users/Layout.vue';
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DeleteDialog from '@/components/DeleteDialog.vue';
 
 // Props
@@ -107,8 +106,8 @@ const columnVisibility = ref<VisibilityState>({
     searchName: false, // Hide the search column by default
     middle_initial: false,
 })
-const rowSelection = ref({});
 const expanded = ref({});
+const pageSizes = [5, 10, 20, 30, 40, 50];
 const pagination = ref({
     pageIndex: (props.data?.current_page ?? 1) - 1,
     pageSize: props.data?.per_page ?? 10,
@@ -131,7 +130,6 @@ const table = useVueTable({
     onSortingChange: handleSortingChange,
     onColumnFiltersChange: handleFilterChange,
     onColumnVisibilityChange: (v) => valueUpdater(v, columnVisibility),
-    onRowSelectionChange: (v) => valueUpdater(v, rowSelection),
     onExpandedChange: (v) => valueUpdater(v, expanded),
     state: {
         get sorting() {
@@ -142,9 +140,6 @@ const table = useVueTable({
         },
         get columnVisibility() {
             return columnVisibility.value;
-        },
-        get rowSelection() {
-            return rowSelection.value;
         },
         get expanded() {
             return expanded.value;
@@ -306,7 +301,7 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                 </div>
                 <div class="flex items-center justify-end space-x-2 py-4">
                     <div class="flex-1 text-sm text-muted-foreground">
-                        {{ table.getFilteredSelectedRowModel().rows.length }} of {{ table.getFilteredRowModel().rows.length }} row(s) selected.
+                        {{ table.getFilteredRowModel().rows.length }} items.
                     </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
