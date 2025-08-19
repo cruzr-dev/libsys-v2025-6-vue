@@ -78,6 +78,21 @@ const columns: ColumnDef<RowData>[] = [
         enableHiding: false,
     },
     {
+        accessorKey: 'bookEditors',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Editors', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }: { row: Row<RowData> }) => {
+            const book = row.original.book;
+            if (book) {
+                const editors = book.editors || [];
+                return h('div', Array.isArray(editors) ? editors.join(', ') : editors || '')
+            } else {
+                return h('div', '(not found)')
+            }
+        },
+        enableHiding: false,
+    },
+    {
         accessorKey: 'isbn',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
