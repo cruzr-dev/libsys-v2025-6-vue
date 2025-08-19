@@ -58,13 +58,17 @@ const submit = () => {
                         <h2 class="text-lg font-semibold text-gray-900">Personal Information</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <div class="grid gap-2">
-                                <Label for="library_id" class="text-sm font-medium">Library ID</Label>
+                                <Label for="library_id" class="text-sm font-medium">
+                                    Library ID <span class="text-red-500">*</span>
+                                </Label>
                                 <Input id="library_id" type="number" required :tabindex="1" v-model="form.library_id" placeholder="Library ID" class="h-10" />
                                 <InputError :message="form.errors.library_id" />
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="first_name" class="text-sm font-medium">First Name</Label>
+                                <Label for="first_name" class="text-sm font-medium">
+                                    First Name <span class="text-red-500">*</span>
+                                </Label>
                                 <Input id="first_name" type="text" required autofocus :tabindex="2" autocomplete="given-name" v-model="form.first_name" placeholder="First name" class="h-10" />
                                 <InputError :message="form.errors.first_name" />
                             </div>
@@ -76,13 +80,17 @@ const submit = () => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="last_name" class="text-sm font-medium">Last Name</Label>
+                                <Label for="last_name" class="text-sm font-medium">
+                                    Last Name <span class="text-red-500">*</span>
+                                </Label>
                                 <Input id="last_name" type="text" required :tabindex="4" autocomplete="family-name" v-model="form.last_name" placeholder="Last name" class="h-10" />
                                 <InputError :message="form.errors.last_name" />
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="sex" class="text-sm font-medium">Sex</Label>
+                                <Label for="sex" class="text-sm font-medium">
+                                    Sex <span class="text-red-500">*</span>
+                                </Label>
                                 <Select v-model="form.sex" required>
                                     <SelectTrigger id="sex" :tabindex="5" class="h-10">
                                         <SelectValue placeholder="Select sex" />
@@ -109,8 +117,9 @@ const submit = () => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="email" class="text-sm font-medium">Email Address</Label>
-                                <Input id="email" type="email" required :tabindex="7" autocomplete="email" v-model="form.email" placeholder="email@example.com" class="h-10" />
+                                <Label for="email" class="text-sm font-medium">
+                                    Email Address <span class="text-red-500">*</span>
+                                </Label>                                <Input id="email" type="email" required :tabindex="7" autocomplete="email" v-model="form.email" placeholder="email@example.com" class="h-10" />
                                 <InputError :message="form.errors.email" />
                             </div>
                         </div>
@@ -121,15 +130,18 @@ const submit = () => {
                         <h2 class="text-lg font-semibold text-gray-900">Account Information</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="grid gap-2">
-                                <Label for="role_title" class="text-sm font-medium">Role Title</Label>
+                                <Label for="role_title" class="text-sm font-medium">
+                                    Role Title <span class="text-red-500">*</span>
+                                </Label>
                                 <Input id="role_title" type="text" required :tabindex="8" v-model="form.role_title" placeholder="Role Title" class="h-10" />
                                 <InputError :message="form.errors.role_title" />
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="grid gap-2">
-                                <Label for="password" class="text-sm font-medium">Password</Label>
-                                <span class="text-xs text-gray-500">
+                                <Label for="password" class="text-sm font-medium">
+                                    Password <span class="text-red-500">*</span>
+                                </Label>                                <span class="text-xs text-gray-500">
                                     Must be at least 8 characters, include uppercase, lowercase, number, and symbol.
                                 </span>
                                 <Input
@@ -146,8 +158,9 @@ const submit = () => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="password_confirmation" class="text-sm font-medium">Confirm Password</Label>
-                                <Input
+                                <Label for="password_confirmation" class="text-sm font-medium">
+                                    Confirm Password <span class="text-red-500">*</span>
+                                </Label>                                <Input
                                     id="password_confirmation"
                                     type="password"
                                     required
