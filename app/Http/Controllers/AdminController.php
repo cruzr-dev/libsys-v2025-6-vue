@@ -101,8 +101,10 @@ class AdminController extends Controller
                     ->uncompromised()],
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            session()->flash('error', 'Please fix the validation errors below.');
-            throw $e; // Re-throw to let Laravel handle the redirect with errors
+            return redirect()->back()
+                ->withInput()
+                ->withErrors($e->validator)
+                ->with('error', 'Please fix the validation errors below.');
         }
 
         try {
