@@ -156,7 +156,7 @@ const submit = () => {
                                     :tabindex="6"
                                     v-model="form.contact_number"
                                     @input="form.clearErrors('contact_number')"
-                                    placeholder="ex. 9123456789"
+                                    placeholder="10 Digit Contact Number"
                                     class="h-10"
                                 />
                                 <InputError :message="form.errors.contact_number" />

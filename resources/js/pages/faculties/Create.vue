@@ -147,11 +147,11 @@ const submit = () => {
                                 <Label for="contact_number" class="text-sm font-medium">Contact Number</Label>
                                 <Input
                                     id="contact_number"
-                                    type="tel"
+                                    type="text"
                                     :tabindex="6"
                                     v-model="form.contact_number"
                                     @input="form.clearErrors('contact_number')"
-                                    placeholder="Contact Number"
+                                    placeholder="10 Digit Contact Number"
                                     class="h-10"
                                 />
                                 <InputError :message="form.errors.contact_number" />
