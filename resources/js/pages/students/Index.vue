@@ -385,7 +385,9 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                     </Table>
                 </div>
                 <div class="flex items-center justify-end space-x-2 py-4">
-                    <div class="flex-1 text-sm text-muted-foreground">{{ table.getFilteredRowModel().rows.length }} items.</div>
+                    <div class="flex-1 text-sm text-muted-foreground">
+                        Showing {{ table.getFilteredRowModel().rows.length }} items of {{ props.data.total }} {{ props.data.total === 1 || props.data.total === 0 ? 'student' : 'students' }}.
+                    </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
                         <Select
