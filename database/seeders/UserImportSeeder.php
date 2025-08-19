@@ -2,8 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\College;
+use App\Models\Program;
+use App\Models\User;
 use App\Models\UserType;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Log;
 
@@ -123,6 +127,19 @@ class UserImportSeeder extends Seeder
                         }
                     }
 
+                    $college_id = null;
+                    $program_id = null;
+                    try {
+                        $college_id = College::where('code', 'NA')->firstOrFail()->id;
+                        $program_id = Program::where('code', 'NA')->firstOrFail()->id;
+                    } catch (ModelNotFoundException $e) {
+                        // Handle the case where no college or program is found
+                        \Log::error('No college or program found with code NA');
+                        // Set defaults, throw a custom exception, or redirect
+                        $college_id = null;
+                        $program_id = null;
+                    }
+
                     $user_data = [
                         'library_id' => $library_id,
                         'card_number' => $card_number,
@@ -137,14 +154,10 @@ class UserImportSeeder extends Seeder
                         'user_type_id' => $user_type_id,
                     ];
 
-                    $student_id = null;
-                    if ($library_id && preg_match('/^\d{9}$/', $library_id)) {
-                        $student_id = $library_id;
-                    }
-
                     $student_data = [
                         'student_type' => $student_type,
-                        'student_id' => $student_id,
+                        'college_id' => $college_id,
+                        'program_id' => $program_id,
                     ];
 
                     $user = User::create($user_data);

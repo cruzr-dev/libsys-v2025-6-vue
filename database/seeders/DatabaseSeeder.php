@@ -25,5 +25,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PhysicalLocationSeeder::class);
         $this->call(CoverTypeSeeder::class);
         $this->call(SourceSeeder::class);
+        $this->call(UserImportSeeder::class);
     }
 }

@@ -20,6 +20,7 @@ class AcademicSeeder extends Seeder
             ['code' => 'BSBA', 'name' => 'Bachelor of Science in Business Administration'],
             ['code' => 'BSIT', 'name' => 'Bachelor of Science in Information Technology'],
             ['code' => 'BSN',  'name' => 'Bachelor of Science in Nursing'],
+            ['code' => 'NA', 'name' => 'Not Applicable'],
         ]);
 
         // Seed Majors
@@ -38,6 +39,7 @@ class AcademicSeeder extends Seeder
             ['code' => 'CBA', 'name' => 'College of Business Administration'],
             ['code' => 'CTE', 'name' => 'College of Teacher Education'],
             ['code' => 'CHS', 'name' => 'College of Health Sciences'],
+            ['code' => 'NA', 'name' => 'Not Applicable'],
         ]);
     }
 }
