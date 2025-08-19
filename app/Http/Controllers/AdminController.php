@@ -22,18 +22,15 @@ class AdminController extends Controller
         $sortDirection = $request->input('sort_direction', 'asc');
         $filters = [];
 
-        // Get the admin user type ID by key
+        // Get the admin user type ID by key - this is now the fixed filter
         $adminUserType = UserType::where('key', 'staff_admin')->first();
         $adminUserTypeId = $adminUserType ? $adminUserType->id : null;
 
-        // Set default filter to admin user type, or use request parameter
-        $user_type_id = $request->input('user_type_id', $adminUserTypeId);
-
-        // Handle user_type_id filter (can be single value or array)
-        if (!empty($user_type_id)) {
+        // Use admin user type as fixed filter (no longer from request)
+        if (!empty($adminUserTypeId)) {
             $filters[] = [
                 'id' => 'user_type_id',
-                'value' => $user_type_id
+                'value' => $adminUserTypeId
             ];
         }
 
@@ -46,24 +43,10 @@ class AdminController extends Controller
             ];
         }
 
-        // Get all user types for filter dropdown
-        $userTypes = UserType::select('id', 'name')
-            ->orderBy('name')
-            ->get();
-
         $users = User::query()
             ->with('userType')
-            ->when($user_type_id, function ($query, $user_type_id) {
-                // Handle both single values and arrays
-                if (is_array($user_type_id) && !empty($user_type_id)) {
-                    // Convert string values to integers if needed
-                    $userTypeIds = array_map('intval', array_filter($user_type_id));
-                    if (!empty($userTypeIds)) {
-                        $query->whereIn('user_type_id', $userTypeIds);
-                    }
-                } elseif (!empty($user_type_id)) {
-                    $query->where('user_type_id', intval($user_type_id));
-                }
+            ->when($adminUserTypeId, function ($query, $adminUserTypeId) {
+                $query->where('user_type_id', $adminUserTypeId);
             })
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($q) use ($searchTerm) {
@@ -80,7 +63,6 @@ class AdminController extends Controller
         return Inertia::render('admins/Index', [
             'data' => $users,
             'filter' => $filters,
-            'userTypes' => $userTypes,
             'currentSortField' => $sortField,
             'currentSortDirection' => $sortDirection,
         ]);
