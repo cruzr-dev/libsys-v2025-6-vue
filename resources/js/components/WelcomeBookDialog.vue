@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 
 const getCoverUrl = (path: string) => {
-    return path ? `/storage/uploads/book-covers/${path}` : `/storage/placeholders/sample1.png`;
+    return path ? `/storage/uploads/book-covers/${path}` : `/storage/placeholder_images/sample1.png`;
 };
 
 defineProps({
