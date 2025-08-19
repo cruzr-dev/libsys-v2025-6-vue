@@ -81,7 +81,7 @@ class BookController extends Controller
         $records = Record::query()
             ->select('records.id', 'records.accession_number', 'records.title', 'records.status')
             ->with(['book' => function ($query) {
-                $query->select('id', 'record_id', 'isbn', 'authors', 'editors', 'publisher');
+                $query->select('id', 'record_id', 'isbn', 'authors', 'editors', 'publisher', 'publication_year');
             }])
             ->join('books', 'records.id', '=', 'books.record_id')
             ->when($searchTerm, function ($query, $searchTerm) {
@@ -91,7 +91,8 @@ class BookController extends Controller
                         ->orWhere('books.isbn', 'like', '%' . $searchTerm . '%')
                         ->orWhere('books.authors', 'like', '%' . $searchTerm . '%')
                         ->orWhere('books.editors', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('books.publisher', 'like', '%' . $searchTerm . '%');
+                        ->orWhere('books.publisher', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('books.publication_year', 'like', '%' . $searchTerm . '%');
                 });
             })
             ->when($sortField, function ($query, $sortField) use ($sortDirection) {
@@ -104,7 +105,7 @@ class BookController extends Controller
                     'bookEditors' => 'books.editors',
                     'isbn' => 'books.isbn',
                     'publisher' => 'books.publisher',
-                    'publication_year' => 'books.publication_year',
+                    'pubYear' => 'books.publication_year',
                 ];
 
                 $actualSortField = $sortMappings[$sortField] ?? $sortField;

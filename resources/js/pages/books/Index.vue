@@ -107,6 +107,20 @@ const columns: ColumnDef<RowData>[] = [
         enableHiding: false,
     },
     {
+        accessorKey: 'pubYear',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Pub. Year', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }: { row: Row<RowData> }) => {
+            const book = row.original.book;
+            if (book) {
+                return h('div', book.publication_year  || '-')
+            } else {
+                return h('div', '(not found)')
+            }
+        },
+        enableHiding: false,
+    },
+    {
         accessorKey: 'status',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Status', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
