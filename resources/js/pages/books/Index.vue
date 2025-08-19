@@ -48,61 +48,13 @@ type RowData = any;
 const data = props.data.data;
 const columns: ColumnDef<RowData>[] = [
     {
-        accessorKey: 'library_id',
+        accessorKey: 'accession_number',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Library ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('library_id')),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('accession_number')),
         enableHiding: false,
     },
-    {
-        accessorKey: 'card_number',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Card Number', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('card_number')),
-    },
-    {
-        accessorKey: 'school_id',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['School ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('school_id')),
-    },
-    {
-        accessorKey: 'first_name',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['First Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('first_name')),
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'middle_initial',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['M.I', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('middle_initial') ? row.getValue('middle_initial') + '.' : ''),
-    },
-    {
-        accessorKey: 'last_name',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Last Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('last_name')),
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'sex',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Sex', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => {
-            const sex = row.getValue('sex');
-            const displayValue = sex === 'm' ? 'Male' : sex === 'f' ? 'Female' : sex;
-            return h('div', displayValue);
-        },
-    },
-    {
-        accessorKey: 'email',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Email', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('email')),
-        enableHiding: false,
-    },
+
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
 ];
 
