@@ -42,13 +42,53 @@ class BookController extends Controller
             ];
         }
 
+        // Define all possible columns that can be toggled
+        $toggleableColumns = ['accession_number', 'isbn', 'author', 'publisher', 'publication_year', 'category']; // Add other columns as needed
+        $columnVisibility = [];
+
+        // Check for visibility parameters in the URL
+        $hasVisibilityParams = collect($request->query())
+            ->keys()
+            ->contains(function ($key) {
+                return str_starts_with($key, 'hide_') || str_starts_with($key, 'show_');
+            });
+
+        if ($hasVisibilityParams) {
+            // Process explicit visibility settings from URL
+            foreach ($toggleableColumns as $columnName) {
+                if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
+                    $columnVisibility[$columnName] = true;
+                } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
+                    $columnVisibility[$columnName] = false;
+                } else {
+                    // Default visibility based on column
+                    $columnVisibility[$columnName] = in_array($columnName, ['accession_number', 'isbn']) ? true : false;
+                }
+            }
+        } else {
+            // First visit - apply default visibility
+            $columnVisibility = [
+                'accession_number' => true,
+                'isbn' => true,
+                'author' => false,
+                'publisher' => false,
+                'publication_year' => false,
+                'category' => false,
+            ];
+        }
+
         $records = Record::query()
             ->with('book')
             ->whereHas('book')
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('accession_number', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('title', 'like', '%' . $searchTerm . '%');
+                        ->orWhere('title', 'like', '%' . $searchTerm . '%')
+                        ->orWhereHas('book', function ($bookQuery) use ($searchTerm) {
+                            $bookQuery->where('isbn', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('author', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('publisher', 'like', '%' . $searchTerm . '%');
+                        });
                 });
             })
             ->when($sortField, function ($query, $sortField) use ($sortDirection) {
@@ -61,6 +101,7 @@ class BookController extends Controller
             'filter' => $filters,
             'currentSortField' => $sortField,
             'currentSortDirection' => $sortDirection,
+            'columnVisibility' => $columnVisibility,
         ]);
     }
 
