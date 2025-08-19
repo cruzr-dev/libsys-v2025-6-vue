@@ -40,7 +40,7 @@ class StudentController extends Controller
         }
 
         // Define all possible columns that can be toggled
-        $toggleableColumns = ['sex', 'middle_initial']; // Add other columns as needed
+        $toggleableColumns = ['sex', 'middle_initial', 'school_id']; // Add other columns as needed
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
