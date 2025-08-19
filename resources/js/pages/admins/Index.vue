@@ -46,7 +46,7 @@ const props = withDefaults(defineProps<Props>(), {
 type RowData = any;
 const data = props.data.data;
 const columns: ColumnDef<RowData>[] = [
-    { id: 'search', accessorFn: (row) => `${row.first_name} ${row.last_name}`, enableSorting: false, enableHiding: false },
+    { id: 'searchName', accessorFn: (row) => `${row.first_name} ${row.last_name}`, enableSorting: false, enableHiding: false },
     {
         accessorKey: 'library_id',
         header: ({ column }) =>
@@ -149,11 +149,11 @@ const table = useVueTable({
 });
 
 // Filtering
-const filterInput = ref<string>((table.getColumn('search')?.getFilterValue() as string) ?? '');
-const applyFilter = () => table.getColumn('search')?.setFilterValue(filterInput.value);
+const filterInput = ref<string>((table.getColumn('searchName')?.getFilterValue() as string) ?? '');
+const applyFilter = () => table.getColumn('searchName')?.setFilterValue(filterInput.value);
 const clearFilter = () => {
     filterInput.value = '';
-    table.getColumn('search')?.setFilterValue('');
+    table.getColumn('searchName')?.setFilterValue('');
 };
 
 // Breadcrumbs
