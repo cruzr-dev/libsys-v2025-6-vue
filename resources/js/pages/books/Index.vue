@@ -161,8 +161,6 @@ const columns: ColumnDef<RowData>[] = [
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
 ];
 
-console.log(data);
-
 // Sorting helper
 function cycleSort(column: Column<RowData, any>) {
     const currentSort = column.getIsSorted();

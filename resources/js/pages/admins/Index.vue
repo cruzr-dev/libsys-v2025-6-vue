@@ -1,16 +1,16 @@
 <script setup lang="ts">
 // Imports
+import DeleteDialog from '@/components/DeleteDialog.vue';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenuRoot,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuCheckboxItem,
-} from 'radix-vue';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import AppLayout from '@/layouts/AppLayout.vue';
+import Layout from '@/layouts/users/Layout.vue';
 import { valueUpdater } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
+import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
 import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
 import {
     FlexRender,
@@ -21,16 +21,11 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, X, Plus, ChevronDown } from 'lucide-vue-next';
-import { ChevronRightIcon, ChevronLeftIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from "@radix-icons/vue";
+import { ArrowUpDown, ChevronDown, Plus, X } from 'lucide-vue-next';
+import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref } from 'vue';
 import { route } from 'ziggy-js';
 import DropdownAction from '../users/DataTableDemoColumn.vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import Layout from '@/layouts/users/Layout.vue';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import DeleteDialog from '@/components/DeleteDialog.vue';
 
 // Props - Add columnVisibility to props
 interface Props {
@@ -176,7 +171,7 @@ const filterInput = ref<string>('');
 const applyFilter = () => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        const newFilters = columnFilters.value.filter(f => f.id !== 'search');
+        const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
         if (filterInput.value.trim()) {
             newFilters.push({ id: 'search', value: filterInput.value.trim() });
         }
@@ -184,7 +179,7 @@ const applyFilter = () => {
     }, 300); // 300ms delay
 };
 const initializeSearchInput = () => {
-    const searchFilter = props.filter?.find(f => f.id === 'search');
+    const searchFilter = props.filter?.find((f) => f.id === 'search');
     if (searchFilter) {
         filterInput.value = searchFilter.value || '';
     }
@@ -192,7 +187,7 @@ const initializeSearchInput = () => {
 const clearFilter = () => {
     filterInput.value = '';
     // Remove search filter from column filters
-    const newFilters = columnFilters.value.filter(f => f.id !== 'search');
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
     table.setColumnFilters(newFilters);
 };
 initializeSearchInput();
@@ -207,7 +202,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 // Add Handling
 const createNew = () => {
     router.get(route('admins.create'));
-}
+};
 
 // Delete handling
 const showDeleteAlert = ref(false);
@@ -233,7 +228,7 @@ function handlePaginationChange(updater) {
             page: pagination.value.pageIndex + 1,
             per_page: pagination.value.pageSize,
             ...filters,
-            ...visibilityParams
+            ...visibilityParams,
         },
         { preserveState: false, preserveScroll: true },
     );
@@ -252,7 +247,7 @@ function handleSortingChange(updaterOrValue) {
             sort_field: sorting.value[0]?.id,
             sort_direction: sorting.value[0]?.desc ? 'desc' : 'asc',
             ...filters,
-            ...visibilityParams
+            ...visibilityParams,
         },
         { preserveState: false, preserveScroll: true },
     );
@@ -269,9 +264,9 @@ function handleFilterChange(updaterOrValue) {
             page: 1,
             per_page: pagination.value.pageSize,
             ...filters,
-            ...visibilityParams
+            ...visibilityParams,
         },
-        { preserveState: false, preserveScroll: true }
+        { preserveState: false, preserveScroll: true },
     );
 }
 
@@ -289,9 +284,9 @@ function handleColumnVisibilityChange(updaterOrValue) {
             sort_field: sorting.value[0]?.id,
             sort_direction: sorting.value[0]?.desc ? 'desc' : 'asc',
             ...filters,
-            ...visibilityParams
+            ...visibilityParams,
         },
-        { preserveState: false, preserveScroll: true }
+        { preserveState: false, preserveScroll: true },
     );
 }
 
@@ -339,33 +334,19 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                                     <ChevronDown class="ml-2 h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                class="min-w-[220px] bg-white rounded-md p-1 shadow-lg border border-gray-200 z-50"
-                            >
+                            <DropdownMenuContent align="end" class="z-50 min-w-[220px] rounded-md border border-gray-200 bg-white p-1 shadow-lg">
                                 <DropdownMenuCheckboxItem
                                     v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
                                     :key="column.id"
                                     :checked="column.getIsVisible()"
                                     @update:checked="(value) => column.toggleVisibility(!!value)"
-                                    class="relative flex cursor-pointer select-none items-center rounded-sm pl-8 pr-2 py-1.5 text-sm outline-none hover:bg-gray-100"
+                                    class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
                                 >
-      <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-        <svg
-            v-if="column.getIsVisible()"
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-        >
-          <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5 13l4 4L19 7"
-          />
-        </svg>
-      </span>
+                                    <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                                        <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </span>
                                     {{ column.id }}
                                 </DropdownMenuCheckboxItem>
                             </DropdownMenuContent>
@@ -405,7 +386,8 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                 </div>
                 <div class="flex items-center justify-end space-x-2 py-4">
                     <div class="flex-1 text-sm text-muted-foreground">
-                        Showing {{ table.getFilteredRowModel().rows.length }} items of {{ props.data.total }} {{ props.data.total === 1 || props.data.total === 0 ? 'staff admin' : 'staff admins' }}.
+                        Showing {{ table.getFilteredRowModel().rows.length }} items of {{ props.data.total }}
+                        {{ props.data.total === 1 || props.data.total === 0 ? 'staff admin' : 'staff admins' }}.
                     </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
