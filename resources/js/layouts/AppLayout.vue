@@ -28,16 +28,27 @@ withDefaults(defineProps<Props>(), {
 // for alert
 const page = usePage()
 const showAlert = ref(true)
+const progressWidth = ref(100)
+
 onMounted(() => {
-    if (page.props.flash.error) {
-        setTimeout(() => {
-            showAlert.value = false
-        }, 5000)
-    }
-    if (page.props.flash.success) {
-        setTimeout(() => {
-            showAlert.value = false
-        }, 5000)
+    if (page.props.flash.error || page.props.flash.success) {
+        // Start the progress bar animation
+        const startTime = Date.now()
+        const duration = 5000 // 5 seconds
+
+        const updateProgress = () => {
+            const elapsed = Date.now() - startTime
+            const remaining = Math.max(0, duration - elapsed)
+            progressWidth.value = (remaining / duration) * 100
+
+            if (remaining > 0) {
+                requestAnimationFrame(updateProgress)
+            } else {
+                showAlert.value = false
+            }
+        }
+
+        requestAnimationFrame(updateProgress)
     }
 })
 </script>
@@ -45,7 +56,7 @@ onMounted(() => {
 <template>
 
     <Alert
-        class="fixed top-5 left-1/2 transform -translate-x-1/2 w-fit max-w-md pr-8 z-50"
+        class="fixed top-5 left-1/2 transform -translate-x-1/2 w-fit max-w-md pr-8 z-50 overflow-hidden"
         variant="destructive"
         v-if="page.props.flash.error && showAlert"
     >
@@ -60,10 +71,17 @@ onMounted(() => {
         <AlertDescription>
             {{ page.props.flash.error }}
         </AlertDescription>
+        <!-- Progress bar for error alert -->
+        <div class="absolute bottom-0 left-0 w-full h-1 bg-red-200">
+            <div
+                class="h-full bg-red-600 transition-all duration-100 ease-linear"
+                :style="{ width: progressWidth + '%' }"
+            ></div>
+        </div>
     </Alert>
 
     <Alert
-        class="fixed top-5 left-1/2 transform -translate-x-1/2 w-fit max-w-md pr-8 z-50 border-2 border-green-500"
+        class="fixed top-5 left-1/2 transform -translate-x-1/2 w-fit max-w-md pr-8 z-50 border-2 border-green-500 overflow-hidden"
         v-if="page.props.flash.success && showAlert"
     >
         <CircleCheckBig />
@@ -77,6 +95,13 @@ onMounted(() => {
         <AlertDescription>
             {{ page.props.flash.success }}
         </AlertDescription>
+        <!-- Progress bar for success alert -->
+        <div class="absolute bottom-0 left-0 w-full h-1 bg-green-200">
+            <div
+                class="h-full bg-green-600 transition-all duration-100 ease-linear"
+                :style="{ width: progressWidth + '%' }"
+            ></div>
+        </div>
     </Alert>
 
     <AppLayout :breadcrumbs="breadcrumbs">
