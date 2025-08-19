@@ -123,4 +123,18 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+  |--------------------------------------------------------------------------
+  | Seeder Configuration
+  |--------------------------------------------------------------------------
+  |
+  | Configuration options for database seeders
+  |
+  */
+
+    'book_import' => [
+        'csv_file' => env('BOOK_IMPORT_CSV_FILE', 'books_1_999.csv'),
+        'csv_directory' => 'storage/csv_for_seeding',
+    ],
+
 ];
