@@ -43,7 +43,7 @@ class BookController extends Controller
         }
 
         // Define all possible columns that can be toggled
-        $toggleableColumns = ['accession_number', 'isbn', 'authors', 'editors', 'publisher', 'publication_year', 'category'];
+        $toggleableColumns = ['accession_number', 'isbn', 'authors', 'editors', 'publication_year', 'category'];
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
@@ -68,20 +68,15 @@ class BookController extends Controller
         } else {
             // First visit - apply default visibility
             $columnVisibility = [
-                'accession_number' => true,
-                'isbn' => true,
-                'authors' => false,
-                'editors' => false,
-                'publisher' => false,
-                'publication_year' => false,
-                'category' => false,
+                'isbn' => false,
+                'bookEditors' => false,
             ];
         }
 
         $records = Record::query()
-            ->select('records.id', 'records.accession_number', 'records.title', 'records.status')
+            ->select('records.id', 'records.accession_number', 'records.title', 'records.status', 'records.created_at')
             ->with(['book' => function ($query) {
-                $query->select('id', 'record_id', 'isbn', 'authors', 'editors', 'publisher', 'publication_year');
+                $query->select('id', 'record_id', 'isbn', 'authors', 'editors', 'publication_year', 'created_at');
             }])
             ->join('books', 'records.id', '=', 'books.record_id')
             ->when($searchTerm, function ($query, $searchTerm) {
@@ -91,7 +86,6 @@ class BookController extends Controller
                         ->orWhere('books.isbn', 'like', '%' . $searchTerm . '%')
                         ->orWhere('books.authors', 'like', '%' . $searchTerm . '%')
                         ->orWhere('books.editors', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('books.publisher', 'like', '%' . $searchTerm . '%')
                         ->orWhere('books.publication_year', 'like', '%' . $searchTerm . '%');
                 });
             })
@@ -104,7 +98,6 @@ class BookController extends Controller
                     'bookAuthors' => 'books.authors',
                     'bookEditors' => 'books.editors',
                     'isbn' => 'books.isbn',
-                    'publisher' => 'books.publisher',
                     'pubYear' => 'books.publication_year',
                 ];
 
@@ -118,6 +111,7 @@ class BookController extends Controller
                     $query->orderBy($actualSortField, $sortDirection);
                 }
             })
+            ->latest()
             ->paginate(perPage: $perPage);
 
         return Inertia::render('books/Index', [

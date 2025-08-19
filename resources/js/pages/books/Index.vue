@@ -90,7 +90,6 @@ const columns: ColumnDef<RowData>[] = [
                 return h('div', '(not found)')
             }
         },
-        enableHiding: false,
     },
     {
         accessorKey: 'isbn',
@@ -104,7 +103,6 @@ const columns: ColumnDef<RowData>[] = [
                 return h('div', '(not found)')
             }
         },
-        enableHiding: false,
     },
     {
         accessorKey: 'pubYear',
@@ -118,7 +116,6 @@ const columns: ColumnDef<RowData>[] = [
                 return h('div', '(not found)')
             }
         },
-        enableHiding: false,
     },
     {
         accessorKey: 'status',
