@@ -106,6 +106,7 @@ class AdminController extends Controller
                 'middle_initial' => 'nullable|string|max:1',
                 'last_name' => 'required|string|max:50',
                 'sex' => 'required|in:m,f',
+                'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
                 'role_title' => 'required|string|max:100',
                 'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
                 'password' => ['required', 'confirmed', Rules\Password::min(8)

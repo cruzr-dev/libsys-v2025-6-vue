@@ -103,7 +103,8 @@ const submit = () => {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="grid gap-2">
                                 <Label for="contact_number" class="text-sm font-medium">Contact Number</Label>
-                                <Input id="contact_number" type="tel" :tabindex="6" v-model="form.contact_number" placeholder="Contact Number" class="h-10" />
+                                <Input id="contact_number" type="text" :tabindex="6" v-model="form.contact_number"
+                                       placeholder="ex. 9123456789" class="h-10" />
                                 <InputError :message="form.errors.contact_number" />
                             </div>
 

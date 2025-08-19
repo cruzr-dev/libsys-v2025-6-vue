@@ -17,7 +17,7 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, X, Plus } from 'lucide-vue-next';
+import { ArrowUpDown, X, Plus, ChevronDown } from 'lucide-vue-next';
 import { ChevronRightIcon, ChevronLeftIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from "@radix-icons/vue";
 import { h, ref } from 'vue';
 import { route } from 'ziggy-js';
@@ -177,6 +177,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Staff admins', href: '/users/admins' },
 ];
 
+// Add Handling
+const createNew = () => {
+    router.get(route('admins.create'));
+}
+
 // Delete handling
 const showDeleteAlert = ref(false);
 const selectedUserId = ref(null);
@@ -252,9 +257,9 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <Button variant="outline" @click="createNewStaffAdmin">
+                        <Button variant="outline" @click="createNew">
                             <Plus class="h-4"></Plus>
-                            Create New
+                            Add New Admin
                         </Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger as-child>
