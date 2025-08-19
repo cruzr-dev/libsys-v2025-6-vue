@@ -62,20 +62,34 @@ const columns: ColumnDef<RowData>[] = [
         enableHiding: false,
     },
     {
-        accessorKey: 'isbn',
+        accessorKey: 'bookAuthors',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Authors', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }: { row: Row<RowData> }) => {
-            const user = row.original.book;
-            if (user) {
-                return h('div', user.isbn  || '')
+            const book = row.original.book;
+            if (book) {
+                const authors = book.authors || [];
+                return h('div', Array.isArray(authors) ? authors.join(', ') : authors || '')
             } else {
                 return h('div', '(not found)')
             }
         },
         enableHiding: false,
     },
-
+    {
+        accessorKey: 'isbn',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }: { row: Row<RowData> }) => {
+            const book = row.original.book;
+            if (book) {
+                return h('div', book.isbn  || '')
+            } else {
+                return h('div', '(not found)')
+            }
+        },
+        enableHiding: false,
+    },
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
 ];
 
