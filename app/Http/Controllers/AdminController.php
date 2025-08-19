@@ -35,30 +35,32 @@ class AdminController extends Controller
             ];
         }
 
-        // Define columns that should be hidden by default
-        $defaultHiddenColumns = ['sex', 'middle_initial']; // Add any other columns you want hidden initially
-
-        // Handle column visibility from URL parameters
+        // Define all possible columns that can be toggled
+        $toggleableColumns = ['sex', 'middle_initial']; // Add other columns as needed
         $columnVisibility = [];
 
-        // Check if there are any visibility parameters in the URL
+        // Check for visibility parameters in the URL
         $hasVisibilityParams = collect($request->query())
             ->keys()
             ->contains(function ($key) {
-                return str_starts_with($key, 'hide_');
+                return str_starts_with($key, 'hide_') || str_starts_with($key, 'show_');
             });
 
         if ($hasVisibilityParams) {
-            // User has made visibility choices - respect them completely
-            foreach ($request->query() as $key => $value) {
-                if (str_starts_with($key, 'hide_') && $value === '1') {
-                    $columnName = substr($key, 5); // Remove 'hide_' prefix
+            // Process explicit visibility settings from URL
+            foreach ($toggleableColumns as $columnName) {
+                if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
+                    $columnVisibility[$columnName] = true;
+                } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
+                    $columnVisibility[$columnName] = false;
+                } else {
+                    // Default to hidden if no explicit show/hide is provided
                     $columnVisibility[$columnName] = false;
                 }
             }
         } else {
             // First visit - apply default hidden columns
-            foreach ($defaultHiddenColumns as $columnName) {
+            foreach ($toggleableColumns as $columnName) {
                 $columnVisibility[$columnName] = false;
             }
         }

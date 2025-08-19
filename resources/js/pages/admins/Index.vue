@@ -123,9 +123,11 @@ const pagination = ref({
 // Helper function to build column visibility for URL
 function buildColumnVisibility(visibility: VisibilityState) {
     const result: Record<string, string> = {};
-    // Only include columns that are explicitly hidden (not visible)
+    // Include both visible and hidden columns explicitly
     Object.entries(visibility).forEach(([key, value]) => {
-        if (value === false) {
+        if (value === true) {
+            result[`show_${key}`] = '1';
+        } else {
             result[`hide_${key}`] = '1';
         }
     });
