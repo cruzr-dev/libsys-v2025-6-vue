@@ -78,9 +78,9 @@ class BookController extends Controller
         }
 
         $records = Record::query()
-            ->select('id', 'accession_number', 'title') // Select only necessary columns from records
+            ->select('id', 'accession_number', 'title')
             ->with(['book' => function ($query) {
-                $query->select('id', 'isbn', 'authors', 'publisher'); // Select only necessary columns from books
+                $query->select('id', 'record_id', 'isbn', 'authors', 'publisher'); // Add 'record_id'
             }])
             ->whereHas('book')
             ->when($searchTerm, function ($query, $searchTerm) {

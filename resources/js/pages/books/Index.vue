@@ -61,10 +61,18 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }) => h('div', { class: '' }, row.getValue('title')),
         enableHiding: false,
     },
-
+    {
+        accessorKey: 'isbn',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: '' }, row.getValue('isbn')),
+        enableHiding: false,
+    },
 
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
 ];
+
+console.log(data);
 
 // Sorting helper
 function cycleSort(column: Column<RowData, any>) {
