@@ -84,8 +84,8 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }: { row: Row<RowData> }) => {
             const book = row.original.book;
             if (book) {
-                const editors = book.editors || [];
-                return h('div', Array.isArray(editors) ? editors.join('| ') : editors || '')
+                const editors = book.editors;
+                return h('div', Array.isArray(editors) ? editors.join('| ') : '-')
             } else {
                 return h('div', '(not found)')
             }
@@ -146,6 +146,8 @@ const columns: ColumnDef<RowData>[] = [
     },
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
 ];
+
+console.log(data);
 
 // Sorting helper
 function cycleSort(column: Column<RowData, any>) {

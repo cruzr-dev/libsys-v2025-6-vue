@@ -43,7 +43,7 @@ class BookController extends Controller
         }
 
         // Define all possible columns that can be toggled
-        $toggleableColumns = ['accession_number', 'isbn', 'authors', 'publisher', 'publication_year', 'category'];
+        $toggleableColumns = ['accession_number', 'isbn', 'authors', 'editors', 'publisher', 'publication_year', 'category'];
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
@@ -71,6 +71,7 @@ class BookController extends Controller
                 'accession_number' => true,
                 'isbn' => true,
                 'authors' => false,
+                'editors' => false,
                 'publisher' => false,
                 'publication_year' => false,
                 'category' => false,
