@@ -28,7 +28,7 @@ import { route } from 'ziggy-js';
 import DropdownAction from '../users/DataTableDemoColumn.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/users/Layout.vue';
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DeleteDialog from '@/components/DeleteDialog.vue';
 
