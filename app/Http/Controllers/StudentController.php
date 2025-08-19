@@ -131,7 +131,7 @@ class StudentController extends Controller
                 'college_id'     => 'required|exists:colleges,id',
                 'program_id'     => 'required|exists:programs,id',
                 'major_id'       => 'nullable|exists:majors,id',
-                'school_id'     => 'required|string|max:20|unique:users,school_id', // <-- added
+                'school_id'     => 'required|integer|digits_between:1,10|unique:users,school_id', // <-- added
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {

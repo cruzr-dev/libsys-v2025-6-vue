@@ -180,7 +180,7 @@ const submit = () => {
                                 <Label for="school_id" class="text-sm font-medium"> School ID <span class="text-red-500">*</span> </Label>
                                 <Input
                                     id="school_id"
-                                    type="text"
+                                    type="number"
                                     required
                                     :tabindex="8"
                                     v-model="form.school_id"
