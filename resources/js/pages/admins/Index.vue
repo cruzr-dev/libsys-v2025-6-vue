@@ -244,13 +244,13 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <Button variant="outline" @click="createNew">
+                        <Button variant="secondary" @click="createNew">
                             <Plus class="h-4"></Plus>
                             Add New Admin
                         </Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger as-child>
-                                <Button variant="outline" class="ml-auto">
+                                <Button variant="secondary" class="ml-auto">
                                     Columns
                                     <ChevronDown class="ml-2 h-4 w-4" />
                                 </Button>
