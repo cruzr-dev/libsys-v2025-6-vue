@@ -117,8 +117,8 @@ class FacultyController extends Controller
                 'last_name'      => 'required|string|max:50',
                 'sex'            => 'required|in:m,f',
                 'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
-                'role_title'     => 'required|string|max:50',
                 'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+                'role_title'     => 'required|string|max:50',
                 'office_id'      => 'required|exists:offices,id',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
