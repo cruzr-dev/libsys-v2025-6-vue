@@ -43,7 +43,7 @@ class BookController extends Controller
         }
 
         // Define all possible columns that can be toggled
-        $toggleableColumns = ['accession_number', 'isbn', 'author', 'publisher', 'publication_year', 'category']; // Add other columns as needed
+        $toggleableColumns = ['accession_number', 'isbn', 'authors', 'publisher', 'publication_year', 'category']; // Add other columns as needed
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
@@ -70,7 +70,7 @@ class BookController extends Controller
             $columnVisibility = [
                 'accession_number' => true,
                 'isbn' => true,
-                'author' => false,
+                'authors' => false,
                 'publisher' => false,
                 'publication_year' => false,
                 'category' => false,
@@ -78,7 +78,10 @@ class BookController extends Controller
         }
 
         $records = Record::query()
-            ->with('book')
+            ->select('id', 'accession_number', 'title') // Select only necessary columns from records
+            ->with(['book' => function ($query) {
+                $query->select('id', 'isbn', 'authors', 'publisher'); // Select only necessary columns from books
+            }])
             ->whereHas('book')
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($q) use ($searchTerm) {
@@ -86,7 +89,7 @@ class BookController extends Controller
                         ->orWhere('title', 'like', '%' . $searchTerm . '%')
                         ->orWhereHas('book', function ($bookQuery) use ($searchTerm) {
                             $bookQuery->where('isbn', 'like', '%' . $searchTerm . '%')
-                                ->orWhere('author', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('authors', 'like', '%' . $searchTerm . '%')
                                 ->orWhere('publisher', 'like', '%' . $searchTerm . '%');
                         });
                 });
