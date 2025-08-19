@@ -26,5 +26,6 @@ class DatabaseSeeder extends Seeder
         $this->call(CoverTypeSeeder::class);
         $this->call(SourceSeeder::class);
         $this->call(UserImportSeeder::class);
+        $this->call(BookImportSeeder::class);
     }
 }
