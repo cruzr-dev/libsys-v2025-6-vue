@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { valueUpdater } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
-import type { Column, ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table';
+import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
 import {
     FlexRender,
     getCoreRowModel,
@@ -99,7 +99,9 @@ function cycleSort(column: Column<RowData, any>) {
 // State
 const sorting = ref<SortingState>(props.currentSortField ? [{ id: props.currentSortField, desc: props.currentSortDirection === 'desc' }] : []);
 const columnFilters = ref<ColumnFiltersState>(props.filter ? props.filter.map((f) => ({ id: f.id, value: f.value })) : []);
-const columnVisibility = ref({});
+const columnVisibility = ref<VisibilityState>({
+    searchName: false, // Hide the search column by default
+})
 const rowSelection = ref({});
 const expanded = ref({});
 const pagination = ref({
