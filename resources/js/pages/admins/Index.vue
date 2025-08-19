@@ -32,18 +32,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DeleteDialog from '@/components/DeleteDialog.vue';
 
-// Props
+// Props - Add columnVisibility to props
 interface Props {
     data?: { data: any[]; current_page?: number; per_page?: number; last_page?: number };
     filter?: any[];
     currentSortField?: string;
     currentSortDirection?: string;
+    columnVisibility?: Record<string, boolean>; // Add this
 }
 const props = withDefaults(defineProps<Props>(), {
     data: () => ({ data: [], current_page: 1, per_page: 10, last_page: 1 }),
     filter: () => [],
     currentSortField: undefined,
     currentSortDirection: 'asc',
+    columnVisibility: () => ({}), // Add default
 });
 
 // Table setup
@@ -62,6 +64,7 @@ const columns: ColumnDef<RowData>[] = [
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['First Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('first_name')),
+        enableHiding: false,
     },
     {
         accessorKey: 'middle_initial',
@@ -74,6 +77,7 @@ const columns: ColumnDef<RowData>[] = [
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Last Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('last_name')),
+        enableHiding: false,
     },
     {
         accessorKey: 'sex',
@@ -103,18 +107,30 @@ function cycleSort(column: Column<RowData, any>) {
     else column.clearSorting();
 }
 
-// State
+// State - Initialize with props values and defaults
 const sorting = ref<SortingState>(props.currentSortField ? [{ id: props.currentSortField, desc: props.currentSortDirection === 'desc' }] : []);
 const columnFilters = ref<ColumnFiltersState>(props.filter ? props.filter.map((f) => ({ id: f.id, value: f.value })) : []);
 const columnVisibility = ref<VisibilityState>({
-    middle_initial: false,
-})
+    ...props.columnVisibility, // Merge with props
+});
 const expanded = ref({});
 const pageSizes = [5, 10, 20, 30, 40, 50];
 const pagination = ref({
     pageIndex: (props.data?.current_page ?? 1) - 1,
     pageSize: props.data?.per_page ?? 10,
 });
+
+// Helper function to build column visibility for URL
+function buildColumnVisibility(visibility: VisibilityState) {
+    const result: Record<string, string> = {};
+    // Only include columns that are explicitly hidden (not visible)
+    Object.entries(visibility).forEach(([key, value]) => {
+        if (value === false) {
+            result[`hide_${key}`] = '1';
+        }
+    });
+    return result;
+}
 
 // Table instance
 const table = useVueTable({
@@ -132,7 +148,7 @@ const table = useVueTable({
     onPaginationChange: handlePaginationChange,
     onSortingChange: handleSortingChange,
     onColumnFiltersChange: handleFilterChange,
-    onColumnVisibilityChange: (v) => valueUpdater(v, columnVisibility),
+    onColumnVisibilityChange: handleColumnVisibilityChange, // Updated handler
     onExpandedChange: (v) => valueUpdater(v, expanded),
     state: {
         get sorting() {
@@ -203,18 +219,29 @@ const handleDelete = (id) => {
     selectedUserId.value = null;
 };
 
-// Event handlers
+// Updated event handlers to include column visibility
 function handlePaginationChange(updater) {
     pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater;
+    const filters = buildFilters(columnFilters.value);
+    const visibilityParams = buildColumnVisibility(columnVisibility.value);
+
     router.get(
         route('admins.index'),
-        { page: pagination.value.pageIndex + 1, per_page: pagination.value.pageSize },
+        {
+            page: pagination.value.pageIndex + 1,
+            per_page: pagination.value.pageSize,
+            ...filters,
+            ...visibilityParams
+        },
         { preserveState: false, preserveScroll: true },
     );
 }
+
 function handleSortingChange(updaterOrValue) {
     sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue;
     const filters = buildFilters(columnFilters.value);
+    const visibilityParams = buildColumnVisibility(columnVisibility.value);
+
     router.get(
         route('admins.index'),
         {
@@ -223,15 +250,49 @@ function handleSortingChange(updaterOrValue) {
             sort_field: sorting.value[0]?.id,
             sort_direction: sorting.value[0]?.desc ? 'desc' : 'asc',
             ...filters,
+            ...visibilityParams
         },
         { preserveState: false, preserveScroll: true },
     );
 }
+
 function handleFilterChange(updaterOrValue) {
     columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue;
     const filters = buildFilters(columnFilters.value);
-    router.get(route('admins.index'), { page: 1, per_page: pagination.value.pageSize, ...filters }, { preserveState: false, preserveScroll: true });
+    const visibilityParams = buildColumnVisibility(columnVisibility.value);
+
+    router.get(
+        route('admins.index'),
+        {
+            page: 1,
+            per_page: pagination.value.pageSize,
+            ...filters,
+            ...visibilityParams
+        },
+        { preserveState: false, preserveScroll: true }
+    );
 }
+
+// New handler for column visibility changes
+function handleColumnVisibilityChange(updaterOrValue) {
+    columnVisibility.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility.value) : updaterOrValue;
+    const filters = buildFilters(columnFilters.value);
+    const visibilityParams = buildColumnVisibility(columnVisibility.value);
+
+    router.get(
+        route('admins.index'),
+        {
+            page: pagination.value.pageIndex + 1,
+            per_page: pagination.value.pageSize,
+            sort_field: sorting.value[0]?.id,
+            sort_direction: sorting.value[0]?.desc ? 'desc' : 'asc',
+            ...filters,
+            ...visibilityParams
+        },
+        { preserveState: false, preserveScroll: true }
+    );
+}
+
 function buildFilters(filtersArr: ColumnFiltersState) {
     return filtersArr.reduce(
         (acc, f) => {

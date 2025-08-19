@@ -43,6 +43,15 @@ class AdminController extends Controller
             ];
         }
 
+        // Handle column visibility from URL parameters
+        $columnVisibility = [];
+        foreach ($request->query() as $key => $value) {
+            if (str_starts_with($key, 'hide_') && $value === '1') {
+                $columnName = substr($key, 5); // Remove 'hide_' prefix
+                $columnVisibility[$columnName] = false;
+            }
+        }
+
         $users = User::query()
             ->with('userType')
             ->when($adminUserTypeId, function ($query, $adminUserTypeId) {
@@ -65,6 +74,7 @@ class AdminController extends Controller
             'filter' => $filters,
             'currentSortField' => $sortField,
             'currentSortDirection' => $sortDirection,
+            'columnVisibility' => $columnVisibility, // Add this line
         ]);
     }
 
