@@ -43,7 +43,7 @@ class BookController extends Controller
         }
 
         // Define all possible columns that can be toggled
-        $toggleableColumns = ['accession_number', 'isbn', 'authors', 'publisher', 'publication_year', 'category']; // Add other columns as needed
+        $toggleableColumns = ['accession_number', 'isbn', 'authors', 'publisher', 'publication_year', 'category'];
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
@@ -78,24 +78,43 @@ class BookController extends Controller
         }
 
         $records = Record::query()
-            ->select('id', 'accession_number', 'title', 'status')
+            ->select('records.id', 'records.accession_number', 'records.title', 'records.status')
             ->with(['book' => function ($query) {
                 $query->select('id', 'record_id', 'isbn', 'authors', 'editors', 'publisher');
             }])
-            ->whereHas('book')
+            ->join('books', 'records.id', '=', 'books.record_id')
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($q) use ($searchTerm) {
-                    $q->where('accession_number', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('title', 'like', '%' . $searchTerm . '%')
-                        ->orWhereHas('book', function ($bookQuery) use ($searchTerm) {
-                            $bookQuery->where('isbn', 'like', '%' . $searchTerm . '%')
-                                ->orWhere('authors', 'like', '%' . $searchTerm . '%')
-                                ->orWhere('publisher', 'like', '%' . $searchTerm . '%');
-                        });
+                    $q->where('records.accession_number', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('records.title', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('books.isbn', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('books.authors', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('books.editors', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('books.publisher', 'like', '%' . $searchTerm . '%');
                 });
             })
             ->when($sortField, function ($query, $sortField) use ($sortDirection) {
-                $query->orderBy($sortField, $sortDirection);
+                // Map frontend column keys to actual database columns
+                $sortMappings = [
+                    'accession_number' => 'records.accession_number',
+                    'title' => 'records.title',
+                    'status' => 'records.status',
+                    'bookAuthors' => 'books.authors',
+                    'bookEditors' => 'books.editors',
+                    'isbn' => 'books.isbn',
+                    'publisher' => 'books.publisher',
+                    'publication_year' => 'books.publication_year',
+                ];
+
+                $actualSortField = $sortMappings[$sortField] ?? $sortField;
+
+                // Handle potential null values in book columns by using COALESCE or ISNULL
+                if (str_starts_with($actualSortField, 'books.')) {
+                    // For MySQL use COALESCE, for PostgreSQL use COALESCE, for SQLite use COALESCE
+                    $query->orderByRaw("COALESCE($actualSortField, '') $sortDirection");
+                } else {
+                    $query->orderBy($actualSortField, $sortDirection);
+                }
             })
             ->paginate(perPage: $perPage);
 
