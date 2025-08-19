@@ -229,18 +229,20 @@ const table = useVueTable({
     },
 });
 
-// Filtering
+// Filtering - Updated to trigger on Enter key press
 const filterInput = ref<string>('');
 const applyFilter = () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-        if (filterInput.value.trim()) {
-            newFilters.push({ id: 'search', value: filterInput.value.trim() });
-        }
-        columnFilters.value = newFilters; // Update columnFilters directly
-        handleFilterChange(newFilters); // Trigger the filter change handler
-    }, 300);
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
+    if (filterInput.value.trim()) {
+        newFilters.push({ id: 'search', value: filterInput.value.trim() });
+    }
+    columnFilters.value = newFilters; // Update columnFilters directly
+    handleFilterChange(newFilters); // Trigger the filter change handler
+};
+const handleSearchKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+        applyFilter();
+    }
 };
 const initializeSearchInput = () => {
     const searchFilter = props.filter?.find((f) => f.id === 'search');
@@ -255,7 +257,6 @@ const clearFilter = () => {
     handleFilterChange(newFilters); // Trigger filter change to update backend
 };
 initializeSearchInput();
-let searchTimeout: ReturnType<typeof setTimeout>;
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
@@ -379,9 +380,9 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                         <div class="relative">
                             <Input
                                 class="w-[380px] pr-8"
-                                placeholder="Search by acc no., title, authors, or isbn ..."
+                                placeholder="Search by acc no., title, authors, or isbn ... (Press Enter to search)"
                                 v-model="filterInput"
-                                @input="applyFilter"
+                                @keydown="handleSearchKeydown"
                             />
                             <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
                                 <X class="h-4 w-4" />
