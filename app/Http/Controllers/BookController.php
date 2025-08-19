@@ -78,7 +78,7 @@ class BookController extends Controller
         }
 
         $records = Record::query()
-            ->select('id', 'accession_number', 'title')
+            ->select('id', 'accession_number', 'title', 'status')
             ->with(['book' => function ($query) {
                 $query->select('id', 'record_id', 'isbn', 'authors', 'publisher');
             }])

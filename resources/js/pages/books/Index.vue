@@ -83,11 +83,18 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }: { row: Row<RowData> }) => {
             const book = row.original.book;
             if (book) {
-                return h('div', book.isbn  || '')
+                return h('div', book.isbn  || '-')
             } else {
                 return h('div', '(not found)')
             }
         },
+        enableHiding: false,
+    },
+    {
+        accessorKey: 'status',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Status', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: '' }, row.getValue('status')),
         enableHiding: false,
     },
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
