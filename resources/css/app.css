@@ -171,11 +171,11 @@
     --ring: hsl(45 100% 65%);
 
     /* Chart colors */
-    --chart-1: hsl(0 85% 65%);
-    --chart-2: hsl(120 70% 55%);
-    --chart-3: hsl(45 100% 65%);
-    --chart-4: hsl(25 85% 60%);
-    --chart-5: hsl(200 70% 60%);
+    --chart-1: hsl(120 70% 55%);   /* Green - growth, success, harmony */
+    --chart-2: hsl(200 70% 60%);   /* Blue - calm, trust, stability */
+    --chart-3: hsl(45 100% 65%);   /* Bright yellow - joy, optimism, energy */
+    --chart-4: hsl(25 85% 60%);    /* Orange - enthusiasm, warmth, creativity */
+    --chart-5: hsl(0 85% 65%);     /* Red - intensity, urgency, can be negative */
 
     /* Sidebar */
     --sidebar-background: hsl(0 20% 10%);

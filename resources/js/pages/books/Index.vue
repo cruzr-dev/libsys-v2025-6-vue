@@ -3,6 +3,7 @@
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -94,7 +95,38 @@ const columns: ColumnDef<RowData>[] = [
         accessorKey: 'status',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Status', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: '' }, row.getValue('status')),
+        cell: ({ row }) => {
+            const status = row.getValue('status');
+            const statusConfig = {
+                available: {
+                    label: 'Available',
+                    class: 'bg-chart-1/10 text-chart-1 border-chart-1/20 hover:bg-chart-1/20'
+                },
+                damaged: {
+                    label: 'Damaged',
+                    class: 'bg-chart-2/10 text-chart-2 border-chart-2/20 hover:bg-chart-2/20'
+                },
+                missing: {
+                    label: 'Missing',
+                    class: 'bg-chart-3/10 text-chart-3 border-chart-3/20 hover:bg-chart-3/20'
+                },
+                borrowed: {
+                    label: 'Borrowed',
+                    class: 'bg-chart-4/10 text-chart-4 border-chart-4/20 hover:bg-chart-4/20'
+                },
+                discarded: {
+                    label: 'Discarded',
+                    class: 'bg-chart-5/10 text-chart-5 border-chart-5/20 hover:bg-chart-5/20'
+                }
+            };
+
+            const config = statusConfig[status] || statusConfig.available;
+
+            return h(Badge, {
+                variant: 'outline',
+                class: config.class
+            }, config.label);
+        },
         enableHiding: false,
     },
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
