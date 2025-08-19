@@ -21,7 +21,6 @@ const submit = () => {
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
 };
-
 </script>
 
 <template>
@@ -33,19 +32,50 @@ const submit = () => {
                 <div class="grid gap-4">
                     <div class="grid gap-2">
                         <Label for="first_name">First name</Label>
-                        <Input id="first_name" type="text" required autofocus tabindex="1" autocomplete="given-name" v-model="form.first_name" placeholder="First name" class="w-full" />
+                        <Input
+                            id="first_name"
+                            type="text"
+                            required
+                            autofocus
+                            tabindex="1"
+                            autocomplete="given-name"
+                            v-model="form.first_name"
+                            @input="form.clearErrors('first_name')"
+                            placeholder="First name"
+                            class="w-full"
+                        />
                         <InputError :message="form.errors.first_name" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="last_name">Last name</Label>
-                        <Input id="last_name" type="text" required tabindex="2" autocomplete="family-name" v-model="form.last_name" placeholder="Last name" class="w-full" />
+                        <Input
+                            id="last_name"
+                            type="text"
+                            required
+                            tabindex="2"
+                            autocomplete="family-name"
+                            v-model="form.last_name"
+                            @input="form.clearErrors('last_name')"
+                            placeholder="Last name"
+                            class="w-full"
+                        />
                         <InputError :message="form.errors.last_name" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="email">Email address</Label>
-                        <Input id="email" type="email" required tabindex="3" autocomplete="email" v-model="form.email" placeholder="email@example.com" class="w-full" />
+                        <Input
+                            id="email"
+                            type="email"
+                            required
+                            tabindex="3"
+                            autocomplete="email"
+                            v-model="form.email"
+                            @input="form.clearErrors('email')"
+                            placeholder="email@example.com"
+                            class="w-full"
+                        />
                         <InputError :message="form.errors.email" />
                     </div>
 
@@ -61,6 +91,7 @@ const submit = () => {
                             tabindex="4"
                             autocomplete="new-password"
                             v-model="form.password"
+                            @input="form.clearErrors('password')"
                             placeholder="Password"
                             class="w-full"
                         />
@@ -76,6 +107,7 @@ const submit = () => {
                             tabindex="5"
                             autocomplete="new-password"
                             v-model="form.password_confirmation"
+                            @input="form.clearErrors('password_confirmation')"
                             placeholder="Confirm password"
                             class="w-full"
                         />
