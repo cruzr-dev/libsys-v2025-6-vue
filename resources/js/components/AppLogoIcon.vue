@@ -14,6 +14,6 @@ defineProps<Props>();
 
 <template>
     <div :class="className" v-bind="$attrs">
-        <img src="/storage/placeholders/logo_50.png" alt="Placeholder Image">
+        <img src="/storage/system_images/logo_50.png" alt="Placeholder Image">
     </div>
 </template>
