@@ -76,7 +76,11 @@ const columns: ColumnDef<RowData>[] = [
         accessorKey: 'sex',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Sex', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('sex')),
+        cell: ({ row }) => {
+            const sex = row.getValue('sex');
+            const displayValue = sex === 'm' ? 'Male' : sex === 'f' ? 'Female' : sex;
+            return h('div', displayValue);
+        },
     },
     {
         accessorKey: 'email',
@@ -101,6 +105,7 @@ const sorting = ref<SortingState>(props.currentSortField ? [{ id: props.currentS
 const columnFilters = ref<ColumnFiltersState>(props.filter ? props.filter.map((f) => ({ id: f.id, value: f.value })) : []);
 const columnVisibility = ref<VisibilityState>({
     searchName: false, // Hide the search column by default
+    middle_initial: false,
 })
 const rowSelection = ref({});
 const expanded = ref({});
