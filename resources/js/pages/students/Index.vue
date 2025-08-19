@@ -324,8 +324,8 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                     <div class="flex gap-2">
                         <div class="relative">
                             <Input
-                                class="w-[320px] pr-8"
-                                placeholder="Search by lib id, first name, or last name ..."
+                                class="w-[380px] pr-8"
+                                placeholder="Search by lib id, card #, first name, or last name ..."
                                 v-model="filterInput"
                                 @keyup.enter="applyFilter"
                             />

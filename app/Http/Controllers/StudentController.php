@@ -78,7 +78,8 @@ class StudentController extends Controller
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('first_name', 'like', '%' . $searchTerm . '%')
                         ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('library_id', 'like', '%' . $searchTerm . '%');
+                        ->orWhere('library_id', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('card_number', 'like', '%' . $searchTerm . '%');
                 });
             })
             ->when($sortField, function ($query, $sortField) use ($sortDirection) {
