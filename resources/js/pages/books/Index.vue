@@ -11,7 +11,7 @@ import { valueUpdater } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
+import type { Column, ColumnDef, ColumnFiltersState, Row, SortingState, VisibilityState } from '@tanstack/vue-table';
 import {
     FlexRender,
     getCoreRowModel,
@@ -65,7 +65,14 @@ const columns: ColumnDef<RowData>[] = [
         accessorKey: 'isbn',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: '' }, row.getValue('isbn')),
+        cell: ({ row }: { row: Row<RowData> }) => {
+            const user = row.original.book;
+            if (user) {
+                return h('div', user.isbn  || '')
+            } else {
+                return h('div', '(not found)')
+            }
+        },
         enableHiding: false,
     },
 

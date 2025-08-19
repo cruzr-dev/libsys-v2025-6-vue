@@ -80,7 +80,7 @@ class BookController extends Controller
         $records = Record::query()
             ->select('id', 'accession_number', 'title')
             ->with(['book' => function ($query) {
-                $query->select('id', 'record_id', 'isbn', 'authors', 'publisher'); // Add 'record_id'
+                $query->select('id', 'record_id', 'isbn', 'authors', 'publisher');
             }])
             ->whereHas('book')
             ->when($searchTerm, function ($query, $searchTerm) {
