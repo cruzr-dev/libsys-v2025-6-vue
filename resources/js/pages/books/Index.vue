@@ -182,7 +182,6 @@ const pagination = ref({
 // Helper function to build column visibility for URL
 function buildColumnVisibility(visibility: VisibilityState) {
     const result: Record<string, string> = {};
-    // Include both visible and hidden columns explicitly
     Object.entries(visibility).forEach(([key, value]) => {
         if (value === true) {
             result[`show_${key}`] = '1';
@@ -239,8 +238,9 @@ const applyFilter = () => {
         if (filterInput.value.trim()) {
             newFilters.push({ id: 'search', value: filterInput.value.trim() });
         }
-        table.setColumnFilters(newFilters);
-    }, 300); // 300ms delay
+        columnFilters.value = newFilters; // Update columnFilters directly
+        handleFilterChange(newFilters); // Trigger the filter change handler
+    }, 300);
 };
 const initializeSearchInput = () => {
     const searchFilter = props.filter?.find((f) => f.id === 'search');
@@ -250,9 +250,9 @@ const initializeSearchInput = () => {
 };
 const clearFilter = () => {
     filterInput.value = '';
-    // Remove search filter from column filters
     const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-    table.setColumnFilters(newFilters);
+    columnFilters.value = newFilters; // Update columnFilters
+    handleFilterChange(newFilters); // Trigger filter change to update backend
 };
 initializeSearchInput();
 let searchTimeout: ReturnType<typeof setTimeout>;
@@ -327,6 +327,8 @@ function handleFilterChange(updaterOrValue) {
         {
             page: 1,
             per_page: pagination.value.pageSize,
+            sort_field: sorting.value[0]?.id,
+            sort_direction: sorting.value[0]?.desc ? 'desc' : 'asc',
             ...filters,
             ...visibilityParams,
         },
@@ -379,7 +381,7 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                                 class="w-[380px] pr-8"
                                 placeholder="Search by acc no., title, authors, or isbn ..."
                                 v-model="filterInput"
-                                @keyup.enter="applyFilter"
+                                @input="applyFilter"
                             />
                             <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
                                 <X class="h-4 w-4" />

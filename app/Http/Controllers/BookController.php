@@ -54,19 +54,16 @@ class BookController extends Controller
             });
 
         if ($hasVisibilityParams) {
-            // Process explicit visibility settings from URL
             foreach ($toggleableColumns as $columnName) {
                 if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
                     $columnVisibility[$columnName] = true;
                 } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
                     $columnVisibility[$columnName] = false;
                 } else {
-                    // Default visibility based on column
                     $columnVisibility[$columnName] = in_array($columnName, ['accession_number', 'isbn']) ? true : false;
                 }
             }
         } else {
-            // First visit - apply default visibility
             $columnVisibility = [
                 'isbn' => false,
                 'bookEditors' => false,
