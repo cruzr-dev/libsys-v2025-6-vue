@@ -35,11 +35,30 @@ class AdminController extends Controller
             ];
         }
 
+        // Define columns that should be hidden by default
+        $defaultHiddenColumns = ['sex', 'middle_initial']; // Add any other columns you want hidden initially
+
         // Handle column visibility from URL parameters
         $columnVisibility = [];
-        foreach ($request->query() as $key => $value) {
-            if (str_starts_with($key, 'hide_') && $value === '1') {
-                $columnName = substr($key, 5); // Remove 'hide_' prefix
+
+        // Check if there are any visibility parameters in the URL
+        $hasVisibilityParams = collect($request->query())
+            ->keys()
+            ->contains(function ($key) {
+                return str_starts_with($key, 'hide_');
+            });
+
+        if ($hasVisibilityParams) {
+            // User has made visibility choices - respect them completely
+            foreach ($request->query() as $key => $value) {
+                if (str_starts_with($key, 'hide_') && $value === '1') {
+                    $columnName = substr($key, 5); // Remove 'hide_' prefix
+                    $columnVisibility[$columnName] = false;
+                }
+            }
+        } else {
+            // First visit - apply default hidden columns
+            foreach ($defaultHiddenColumns as $columnName) {
                 $columnVisibility[$columnName] = false;
             }
         }
