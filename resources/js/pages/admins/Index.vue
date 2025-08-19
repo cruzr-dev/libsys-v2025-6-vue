@@ -48,21 +48,6 @@ const data = props.data.data;
 const columns: ColumnDef<RowData>[] = [
     { id: 'search', accessorFn: (row) => `${row.first_name} ${row.last_name}`, enableSorting: false, enableHiding: false },
     {
-        id: 'select',
-        header: ({ table }) =>
-            h(Checkbox, {
-                checked: table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate'),
-                'onUpdate:checked': (v: boolean) => table.toggleAllPageRowsSelected(!!v),
-            }),
-        cell: ({ row }) =>
-            h(Checkbox, {
-                checked: row.getIsSelected(),
-                'onUpdate:checked': (v: boolean) => row.toggleSelected(!!v),
-            }),
-        enableSorting: false,
-        enableHiding: false,
-    },
-    {
         accessorKey: 'library_id',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Library ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
