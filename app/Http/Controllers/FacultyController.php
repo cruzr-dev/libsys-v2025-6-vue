@@ -34,8 +34,7 @@ class FacultyController extends Controller
             ];
         }
 
-        // Define all possible columns that can be toggled
-        $toggleableColumns = ['sex', 'middle_initial']; // Add other columns as needed
+        $toggleableColumns = ['sex', 'middle_initial', 'card_number', 'school_id'];
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
@@ -53,15 +52,18 @@ class FacultyController extends Controller
                 } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
                     $columnVisibility[$columnName] = false;
                 } else {
-                    // Default to hidden if no explicit show/hide is provided
-                    $columnVisibility[$columnName] = false;
+                    // Default visibility based on column
+                    $columnVisibility[$columnName] = $columnName === 'card_number' ? true : false;
                 }
             }
         } else {
-            // First visit - apply default hidden columns
-            foreach ($toggleableColumns as $columnName) {
-                $columnVisibility[$columnName] = false;
-            }
+            // First visit - apply default visibility
+            $columnVisibility = [
+                'sex' => false,
+                'middle_initial' => false,
+                'school_id' => false,
+                'card_number' => true,
+            ];
         }
 
         $users = User::query()

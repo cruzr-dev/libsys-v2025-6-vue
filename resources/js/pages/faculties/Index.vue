@@ -60,6 +60,20 @@ const columns: ColumnDef<RowData>[] = [
         enableHiding: false,
     },
     {
+        accessorKey: 'card_number',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Card Number', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('card_number')),
+        enableHiding: true,
+    },
+    {
+        accessorKey: 'school_id',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['School ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('school_id')),
+        enableHiding: true,
+    },
+    {
         accessorKey: 'first_name',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['First Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
