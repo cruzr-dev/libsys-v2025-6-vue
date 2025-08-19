@@ -22,17 +22,9 @@ class AdminController extends Controller
         $sortDirection = $request->input('sort_direction', 'asc');
         $filters = [];
 
-        // Get the admin user type ID by key - this is now the fixed filter
+        // Get the admin user type ID by key - fixed filter
         $adminUserType = UserType::where('key', 'staff_admin')->first();
         $adminUserTypeId = $adminUserType ? $adminUserType->id : null;
-
-        // Use admin user type as fixed filter (no longer from request)
-        if (!empty($adminUserTypeId)) {
-            $filters[] = [
-                'id' => 'user_type_id',
-                'value' => $adminUserTypeId
-            ];
-        }
 
         // Capture search parameters
         $searchTerm = $request->input('search');
@@ -74,7 +66,7 @@ class AdminController extends Controller
             'filter' => $filters,
             'currentSortField' => $sortField,
             'currentSortDirection' => $sortDirection,
-            'columnVisibility' => $columnVisibility, // Add this line
+            'columnVisibility' => $columnVisibility,
         ]);
     }
 

@@ -332,7 +332,7 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                         </Button>
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
-                                <Button variant="secondary" class="ml-auto">
+                                <Button variant="outline" class="ml-auto">
                                     Columns
                                     <ChevronDown class="ml-2 h-4 w-4" />
                                 </Button>
