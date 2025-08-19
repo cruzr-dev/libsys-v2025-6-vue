@@ -6,8 +6,6 @@ use App\Models\Faculty;
 use App\Models\User;
 use App\Models\UserType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 class FacultyController extends Controller
