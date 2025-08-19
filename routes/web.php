@@ -28,8 +28,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('users.index');
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
-            Route::get('/import', [UserController::class, 'import'])->name('users.import');
-            Route::post('/import', [UserController::class, 'importStore'])->name('users.import.store');
+//            Route::get('/import', [UserController::class, 'import'])->name('users.import');
+//            Route::post('/import', [UserController::class, 'importStore'])->name('users.import.store');
             Route::get('/admins',[AdminController::class, 'index'])->name('admins.index');
             Route::get('/admins/create', [AdminController::class, 'create'])->name('admins.create');
             Route::post('/admins', [AdminController::class, 'store'])->name('admins.store');
@@ -44,8 +44,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     Route::prefix('records')->group(function () {
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
-            Route::get('/import', [BookController::class, 'import'])->name('books.import');
-            Route::post('/import', [BookController::class, 'importStore'])->name('books.import.store');
+//            Route::get('/import', [BookController::class, 'import'])->name('books.import');
+//            Route::post('/import', [BookController::class, 'importStore'])->name('books.import.store');
         });
         Route::get('/', [RecordController::class, 'index'])->name('records.index');
         Route::get('/books', [BookController::class, 'index'])->name('books.index');
