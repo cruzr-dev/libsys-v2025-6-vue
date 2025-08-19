@@ -15,6 +15,11 @@ class UserPolicy
         return $user->UserType->key === 'super_admin';
     }
 
+    public function login(User $user): bool
+    {
+        return in_array($user->UserType->key, ['super_admin', 'admin']);
+    }
+
     /**
      * Determine whether the user can view the model.
      */
