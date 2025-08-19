@@ -61,7 +61,16 @@ const submit = () => {
                                 <Label for="library_id" class="text-sm font-medium">
                                     Library ID <span class="text-red-500">*</span>
                                 </Label>
-                                <Input id="library_id" type="number" required :tabindex="1" v-model="form.library_id" placeholder="Library ID" class="h-10" />
+                                <Input
+                                    id="library_id"
+                                    type="number"
+                                    required
+                                    :tabindex="1"
+                                    v-model="form.library_id"
+                                    @input="form.clearErrors('library_id')"
+                                    placeholder="Library ID"
+                                    class="h-10"
+                                />
                                 <InputError :message="form.errors.library_id" />
                             </div>
 
@@ -69,13 +78,33 @@ const submit = () => {
                                 <Label for="first_name" class="text-sm font-medium">
                                     First Name <span class="text-red-500">*</span>
                                 </Label>
-                                <Input id="first_name" type="text" required autofocus :tabindex="2" autocomplete="given-name" v-model="form.first_name" placeholder="First name" class="h-10" />
+                                <Input
+                                    id="first_name"
+                                    type="text"
+                                    required
+                                    autofocus
+                                    :tabindex="2"
+                                    autocomplete="given-name"
+                                    v-model="form.first_name"
+                                    @input="form.clearErrors('first_name')"
+                                    placeholder="First name"
+                                    class="h-10"
+                                />
                                 <InputError :message="form.errors.first_name" />
                             </div>
 
                             <div class="grid gap-2">
                                 <Label for="middle_initial" class="text-sm font-medium">Middle Initial</Label>
-                                <Input id="middle_initial" type="text" :tabindex="3" v-model="form.middle_initial" placeholder="Middle Initial" maxlength="1" class="h-10" />
+                                <Input
+                                    id="middle_initial"
+                                    type="text"
+                                    :tabindex="3"
+                                    v-model="form.middle_initial"
+                                    @input="form.clearErrors('middle_initial')"
+                                    placeholder="Middle Initial"
+                                    maxlength="1"
+                                    class="h-10"
+                                />
                                 <InputError :message="form.errors.middle_initial" />
                             </div>
 
@@ -83,7 +112,17 @@ const submit = () => {
                                 <Label for="last_name" class="text-sm font-medium">
                                     Last Name <span class="text-red-500">*</span>
                                 </Label>
-                                <Input id="last_name" type="text" required :tabindex="4" autocomplete="family-name" v-model="form.last_name" placeholder="Last name" class="h-10" />
+                                <Input
+                                    id="last_name"
+                                    type="text"
+                                    required
+                                    :tabindex="4"
+                                    autocomplete="family-name"
+                                    v-model="form.last_name"
+                                    @input="form.clearErrors('last_name')"
+                                    placeholder="Last name"
+                                    class="h-10"
+                                />
                                 <InputError :message="form.errors.last_name" />
                             </div>
 
@@ -91,7 +130,7 @@ const submit = () => {
                                 <Label for="sex" class="text-sm font-medium">
                                     Sex <span class="text-red-500">*</span>
                                 </Label>
-                                <Select v-model="form.sex" required>
+                                <Select v-model="form.sex" @update:model-value="form.clearErrors('sex')" required>
                                     <SelectTrigger id="sex" :tabindex="5" class="h-10">
                                         <SelectValue placeholder="Select sex" />
                                     </SelectTrigger>
@@ -111,15 +150,33 @@ const submit = () => {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="grid gap-2">
                                 <Label for="contact_number" class="text-sm font-medium">Contact Number</Label>
-                                <Input id="contact_number" type="text" :tabindex="6" v-model="form.contact_number"
-                                       placeholder="ex. 9123456789" class="h-10" />
+                                <Input
+                                    id="contact_number"
+                                    type="text"
+                                    :tabindex="6"
+                                    v-model="form.contact_number"
+                                    @input="form.clearErrors('contact_number')"
+                                    placeholder="ex. 9123456789"
+                                    class="h-10"
+                                />
                                 <InputError :message="form.errors.contact_number" />
                             </div>
 
                             <div class="grid gap-2">
                                 <Label for="email" class="text-sm font-medium">
                                     Email Address <span class="text-red-500">*</span>
-                                </Label>                                <Input id="email" type="email" required :tabindex="7" autocomplete="email" v-model="form.email" placeholder="email@example.com" class="h-10" />
+                                </Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    required
+                                    :tabindex="7"
+                                    autocomplete="email"
+                                    v-model="form.email"
+                                    @input="form.clearErrors('email')"
+                                    placeholder="email@example.com"
+                                    class="h-10"
+                                />
                                 <InputError :message="form.errors.email" />
                             </div>
                         </div>
@@ -133,7 +190,16 @@ const submit = () => {
                                 <Label for="role_title" class="text-sm font-medium">
                                     Role Title <span class="text-red-500">*</span>
                                 </Label>
-                                <Input id="role_title" type="text" required :tabindex="8" v-model="form.role_title" placeholder="Role Title" class="h-10" />
+                                <Input
+                                    id="role_title"
+                                    type="text"
+                                    required
+                                    :tabindex="8"
+                                    v-model="form.role_title"
+                                    @input="form.clearErrors('role_title')"
+                                    placeholder="Role Title"
+                                    class="h-10"
+                                />
                                 <InputError :message="form.errors.role_title" />
                             </div>
                         </div>
@@ -141,7 +207,8 @@ const submit = () => {
                             <div class="grid gap-2">
                                 <Label for="password" class="text-sm font-medium">
                                     Password <span class="text-red-500">*</span>
-                                </Label>                                <span class="text-xs text-gray-500">
+                                </Label>
+                                <span class="text-xs text-gray-500">
                                     Must be at least 8 characters, include uppercase, lowercase, number, and symbol.
                                 </span>
                                 <Input
@@ -151,6 +218,7 @@ const submit = () => {
                                     :tabindex="9"
                                     autocomplete="new-password"
                                     v-model="form.password"
+                                    @input="form.clearErrors('password')"
                                     placeholder="Password"
                                     class="h-10"
                                 />
@@ -160,13 +228,15 @@ const submit = () => {
                             <div class="grid gap-2">
                                 <Label for="password_confirmation" class="text-sm font-medium">
                                     Confirm Password <span class="text-red-500">*</span>
-                                </Label>                                <Input
+                                </Label>
+                                <Input
                                     id="password_confirmation"
                                     type="password"
                                     required
                                     :tabindex="10"
                                     autocomplete="new-password"
                                     v-model="form.password_confirmation"
+                                    @input="form.clearErrors('password_confirmation')"
                                     placeholder="Confirm password"
                                     class="h-10"
                                 />
