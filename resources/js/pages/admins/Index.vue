@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Imports
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu-radix';
 import { Input } from '@/components/ui/input';
 import { valueUpdater } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
