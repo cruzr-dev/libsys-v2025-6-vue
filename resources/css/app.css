@@ -118,11 +118,11 @@
     --ring: hsl(45 100% 55%);
 
     /* Chart colors */
-    --chart-1: hsl(0 75% 35%);
-    --chart-2: hsl(120 60% 40%);
+    --chart-1: hsl(120 60% 40%);
+    --chart-2: hsl(200 60% 45%);
     --chart-3: hsl(45 100% 50%);
     --chart-4: hsl(25 80% 45%);
-    --chart-5: hsl(200 60% 45%);
+    --chart-5: hsl(0 75% 35%);
 
     --radius: 0.5rem;
 
