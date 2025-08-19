@@ -22,20 +22,8 @@ class FacultyController extends Controller
         $sortDirection = $request->input('sort_direction', 'asc');
         $filters = [];
 
-        // Get the admin user type ID by key
-        $adminUserType = UserType::where('key', 'faculty')->first();
-        $adminUserTypeId = $adminUserType ? $adminUserType->id : null;
-
-        // Set default filter to admin user type, or use request parameter
-        $user_type_id = $request->input('user_type_id', $adminUserTypeId);
-
-        // Handle user_type_id filter (can be single value or array)
-        if (!empty($user_type_id)) {
-            $filters[] = [
-                'id' => 'user_type_id',
-                'value' => $user_type_id
-            ];
-        }
+        $userType = UserType::where('key', 'faculty')->first();
+        $userTypeId = $userType ? $userType->id : null;
 
         // Capture search parameters
         $searchTerm = $request->input('search');
@@ -46,24 +34,40 @@ class FacultyController extends Controller
             ];
         }
 
-        // Get all user types for filter dropdown
-        $userTypes = UserType::select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        // Define all possible columns that can be toggled
+        $toggleableColumns = ['sex', 'middle_initial']; // Add other columns as needed
+        $columnVisibility = [];
+
+        // Check for visibility parameters in the URL
+        $hasVisibilityParams = collect($request->query())
+            ->keys()
+            ->contains(function ($key) {
+                return str_starts_with($key, 'hide_') || str_starts_with($key, 'show_');
+            });
+
+        if ($hasVisibilityParams) {
+            // Process explicit visibility settings from URL
+            foreach ($toggleableColumns as $columnName) {
+                if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
+                    $columnVisibility[$columnName] = true;
+                } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
+                    $columnVisibility[$columnName] = false;
+                } else {
+                    // Default to hidden if no explicit show/hide is provided
+                    $columnVisibility[$columnName] = false;
+                }
+            }
+        } else {
+            // First visit - apply default hidden columns
+            foreach ($toggleableColumns as $columnName) {
+                $columnVisibility[$columnName] = false;
+            }
+        }
 
         $users = User::query()
             ->with('userType')
-            ->when($user_type_id, function ($query, $user_type_id) {
-                // Handle both single values and arrays
-                if (is_array($user_type_id) && !empty($user_type_id)) {
-                    // Convert string values to integers if needed
-                    $userTypeIds = array_map('intval', array_filter($user_type_id));
-                    if (!empty($userTypeIds)) {
-                        $query->whereIn('user_type_id', $userTypeIds);
-                    }
-                } elseif (!empty($user_type_id)) {
-                    $query->where('user_type_id', intval($user_type_id));
-                }
+            ->when($userTypeId, function ($query, $userTypeId) {
+                $query->where('user_type_id', $userTypeId);
             })
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($q) use ($searchTerm) {
@@ -80,9 +84,9 @@ class FacultyController extends Controller
         return Inertia::render('faculties/Index', [
             'data' => $users,
             'filter' => $filters,
-            'userTypes' => $userTypes,
             'currentSortField' => $sortField,
             'currentSortDirection' => $sortDirection,
+            'columnVisibility' => $columnVisibility,
         ]);
     }
 
