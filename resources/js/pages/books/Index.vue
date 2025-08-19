@@ -377,7 +377,7 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                         <div class="relative">
                             <Input
                                 class="w-[380px] pr-8"
-                                placeholder="Search by lib id, card #, first name, or last name ..."
+                                placeholder="Search by acc no., title, authors, or isbn ..."
                                 v-model="filterInput"
                                 @keyup.enter="applyFilter"
                             />
