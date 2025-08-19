@@ -45,7 +45,6 @@ const props = withDefaults(defineProps<Props>(), {
 type RowData = any;
 const data = props.data.data;
 const columns: ColumnDef<RowData>[] = [
-    { id: 'searchName', accessorFn: (row) => `${row.first_name} ${row.last_name}`, enableSorting: false, enableHiding: false },
     {
         accessorKey: 'library_id',
         header: ({ column }) =>
@@ -103,7 +102,6 @@ function cycleSort(column: Column<RowData, any>) {
 const sorting = ref<SortingState>(props.currentSortField ? [{ id: props.currentSortField, desc: props.currentSortDirection === 'desc' }] : []);
 const columnFilters = ref<ColumnFiltersState>(props.filter ? props.filter.map((f) => ({ id: f.id, value: f.value })) : []);
 const columnVisibility = ref<VisibilityState>({
-    searchName: false, // Hide the search column by default
     middle_initial: false,
 })
 const expanded = ref({});
@@ -151,12 +149,31 @@ const table = useVueTable({
 });
 
 // Filtering
-const filterInput = ref<string>((table.getColumn('searchName')?.getFilterValue() as string) ?? '');
-const applyFilter = () => table.getColumn('searchName')?.setFilterValue(filterInput.value);
+const filterInput = ref<string>('');
+const applyFilter = () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const newFilters = columnFilters.value.filter(f => f.id !== 'search');
+        if (filterInput.value.trim()) {
+            newFilters.push({ id: 'search', value: filterInput.value.trim() });
+        }
+        table.setColumnFilters(newFilters);
+    }, 300); // 300ms delay
+};
+const initializeSearchInput = () => {
+    const searchFilter = props.filter?.find(f => f.id === 'search');
+    if (searchFilter) {
+        filterInput.value = searchFilter.value || '';
+    }
+};
 const clearFilter = () => {
     filterInput.value = '';
-    table.getColumn('searchName')?.setFilterValue('');
+    // Remove search filter from column filters
+    const newFilters = columnFilters.value.filter(f => f.id !== 'search');
+    table.setColumnFilters(newFilters);
 };
+initializeSearchInput();
+let searchTimeout: ReturnType<typeof setTimeout>;
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
@@ -236,7 +253,6 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                                 placeholder="Search by lib id, first name, or last name ..."
                                 v-model="filterInput"
                                 @keyup.enter="applyFilter"
-                                @blur="applyFilter"
                             />
                             <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
                                 <X class="h-4 w-4" />
