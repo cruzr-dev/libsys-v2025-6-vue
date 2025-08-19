@@ -1,7 +1,12 @@
 <script setup lang="ts">
 // Imports
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu-radix';
+import {
+    DropdownMenuRoot,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuCheckboxItem,
+} from 'radix-vue';
 import { Input } from '@/components/ui/input';
 import { valueUpdater } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
@@ -264,7 +269,7 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                             <Plus class="h-4"></Plus>
                             Add New Admin
                         </Button>
-                        <DropdownMenu>
+                        <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
                                 <Button variant="secondary" class="ml-auto">
                                     Columns
@@ -281,7 +286,7 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                                     {{ column.id }}
                                 </DropdownMenuCheckboxItem>
                             </DropdownMenuContent>
-                        </DropdownMenu>
+                        </DropdownMenuRoot>
                     </div>
                 </div>
                 <div class="rounded-md border">
