@@ -48,12 +48,9 @@ class BorrowingTransactionController extends Controller
     public function indexActive(Request $request)
     {
         $perPage = $request->input('per_page', 10);
-        $sortField = $request->input('sort_field', null);
+        $sortField = $request->input('sort_field', 'transaction_number');
         $sortDirection = $request->input('sort_direction', 'asc');
         $filters = [];
-
-        $userType = UserType::where('key', 'student')->first();
-        $userTypeId = $userType ? $userType->id : null;
 
         // Capture search parameters
         $searchTerm = $request->input('search');
@@ -64,8 +61,8 @@ class BorrowingTransactionController extends Controller
             ];
         }
 
-        // Define all possible columns that can be toggled
-        $toggleableColumns = ['sex', 'middle_initial', 'card_number', 'school_id']; // Add other columns as needed
+        // Define toggleable columns (only transaction_number for now)
+        $toggleableColumns = ['transaction_number'];
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
@@ -76,39 +73,27 @@ class BorrowingTransactionController extends Controller
             });
 
         if ($hasVisibilityParams) {
-            // Process explicit visibility settings from URL
             foreach ($toggleableColumns as $columnName) {
                 if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
                     $columnVisibility[$columnName] = true;
                 } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
                     $columnVisibility[$columnName] = false;
                 } else {
-                    // Default visibility based on column
-                    $columnVisibility[$columnName] = $columnName === 'card_number' ? true : false;
+                    $columnVisibility[$columnName] = true; // Default to visible for transaction_number
                 }
             }
         } else {
-            // First visit - apply default visibility
+            // Default visibility
             $columnVisibility = [
-                'sex' => false,
-                'middle_initial' => false,
-                'school_id' => false,
-                'card_number' => true,
+                'transaction_number' => true,
             ];
         }
 
-        $users = User::query()
-            ->with('userType')
-            ->when($userTypeId, function ($query, $userTypeId) {
-                $query->where('user_type_id', $userTypeId);
-            })
+        $borrowings = BorrowingTransaction::query()
+            ->select('transaction_number')
+            ->whereIn('status', ['active'])
             ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where(function ($q) use ($searchTerm) {
-                    $q->where('first_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('library_id', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('card_number', 'like', '%' . $searchTerm . '%');
-                });
+                $query->where('transaction_number', 'like', '%' . $searchTerm . '%');
             })
             ->when($sortField, function ($query, $sortField) use ($sortDirection) {
                 $query->orderBy($sortField, $sortDirection);
@@ -116,7 +101,7 @@ class BorrowingTransactionController extends Controller
             ->paginate(perPage: $perPage);
 
         return Inertia::render('borrowings/IndexActive', [
-            'data' => $users,
+            'data' => $borrowings,
             'filter' => $filters,
             'currentSortField' => $sortField,
             'currentSortDirection' => $sortDirection,
