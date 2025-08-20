@@ -9,6 +9,30 @@ const sidebarNavItems: NavItem[] = [
         title: 'Active',
         href: '/borrowings/active',
     },
+    {
+        title: 'Overdue',
+        href: '/borrowings/overdue',
+    },
+    {
+        title: 'Returned',
+        href: '/borrowings/returned',
+    },
+    {
+        title: 'Lost',
+        href: '/borrowings/returned',
+    },
+    {
+        title: 'Damaged',
+        href: '/borrowings/returned',
+    },
+    {
+        title: 'Renewed',
+        href: '/borrowings/returned',
+    },
+    {
+        title: 'Inside',
+        href: '/borrowings/inside',
+    },
 ];
 
 const rightNavItems: NavItem[] = [
@@ -20,13 +44,6 @@ const rightNavItems: NavItem[] = [
 
 
 const page = usePage();
-if (page.props.auth.permissions.can_view_any_users)
-{
-    // rightNavItems.unshift( {
-    //     title: 'Import Books',
-    //     href: '/records/import',
-    // })
-}
 
 const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.location).pathname : '';
 </script>
