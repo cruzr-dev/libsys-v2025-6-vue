@@ -83,9 +83,9 @@
 <template>
     <Head title="Borrow/Return Books" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
+        <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
             <div :class="[
-                'flex gap-8',
+                'flex gap-4',
                 search_ac_result ? '' : 'justify-center'
             ]">
                 <Card :class="[
@@ -142,6 +142,45 @@
                     v-if="search_ac_result"
                     class="w-full flex flex-col gap-4 flex-1"
                 >
+                    <div class="search-result rounded-lg border p-4">
+                        <h3 class="text-lg font-semibold mb-2">Book Information</h3>
+                        <div class="space-y-2">
+                            <p>
+                                <strong>Accession Number:</strong>
+                                <span v-if="search_ac_result" class="text-muted-foreground">
+                                    {{ search_ac_result.accession_number }}
+                                </span>
+                                <span v-else class="text-muted-foreground">
+                                    Enter accession number below
+                                </span>
+                            </p>
+                            <p>
+                                <strong>Title:</strong>
+                                <span v-if="search_ac_result" class="text-muted-foreground">
+                                    {{ search_ac_result.title || 'N/A' }}
+                                </span>
+                                <span v-else class="text-muted-foreground">
+                                    Book title will appear here
+                                </span>
+                            </p>
+                            <p>
+                                <strong>Status:</strong>
+                                <span v-if="search_ac_result" class="text-muted-foreground">
+                                    {{ search_ac_result.status || 'N/A' }}
+                                </span>
+                                <span v-else class="text-muted-foreground">
+                                    Availability status will appear here
+                                </span>
+                            </p>
+                        </div>
+                        <Button v-if="search_ac_result"
+                                @click="borrow('inside')"
+                                :disabled="borrowForm.processing"
+                                class="flex-1"
+                        >
+                            Borrow (Inside)
+                        </Button>
+                    </div>
                     <SearchUsers :accessionNumber="selectedAccessionNumber" />
                 </div>
             </div>
