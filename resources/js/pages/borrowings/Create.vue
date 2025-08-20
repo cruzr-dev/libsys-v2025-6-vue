@@ -8,6 +8,7 @@
     import { computed, ref, watchEffect } from 'vue';
     import BookScannerDialog from '@/components/BookScannerDialog.vue';
     import SearchUsers from '@/components/SearchUsers.vue';
+    import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
     const breadcrumbs: BreadcrumbItem[] = [
       {
@@ -83,93 +84,57 @@
     <Head title="Borrow/Return Books" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
-            <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-                <!-- Book Search and Result Section -->
-                <div class="flex flex-col gap-4 w-full">
-                    <!-- Book Result Placeholder -->
-                    <div class="search-result rounded-lg border p-4">
-                        <h3 class="text-lg font-semibold mb-2">Book Information</h3>
-                        <div class="space-y-2">
-                            <p>
-                                <strong>Accession Number:</strong>
-                                <span v-if="search_ac_result" class="text-muted-foreground">
-                                    {{ search_ac_result.accession_number }}
-                                </span>
-                                <span v-else class="text-muted-foreground">
-                                    Enter accession number below
-                                </span>
-                            </p>
-                            <p>
-                                <strong>Title:</strong>
-                                <span v-if="search_ac_result" class="text-muted-foreground">
-                                    {{ search_ac_result.title || 'N/A' }}
-                                </span>
-                                <span v-else class="text-muted-foreground">
-                                    Book title will appear here
-                                </span>
-                            </p>
-                            <p>
-                                <strong>Status:</strong>
-                                <span v-if="search_ac_result" class="text-muted-foreground">
-                                    {{ search_ac_result.status || 'N/A' }}
-                                </span>
-                                <span v-else class="text-muted-foreground">
-                                    Availability status will appear here
-                                </span>
-                            </p>
-                        </div>
-                        <Button v-if="search_ac_result"
-                            @click="borrow('inside')"
-                            :disabled="borrowForm.processing"
-                            class="flex-1"
-                        >
-                            Borrow (Inside)
-                        </Button>
-                    </div>
-                    <!-- Search Form -->
-                    <BookScannerDialog />
-                    <form @submit.prevent="searchAcc" class="flex flex-col gap-3">
-                        <div class="relative">
-                            <Input
-                                required
-                                id="search"
-                                placeholder="Search Accession Number..."
-                                type="number"
-                                class="pl-10"
-                                v-model="form.searchAcc"
-                            />
-                            <span class="absolute left-0 inset-y-0 flex items-center justify-center px-2">
+            <div class="grid grid-cols-2 gap-8">
+                <Card class="w-full">
+                    <CardHeader>
+                        <CardTitle>Create project</CardTitle>
+                        <CardDescription>Deploy your new project in one-click.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="flex flex-col gap-4 w-full">
+                            <!-- Search Form -->
+                            <BookScannerDialog />
+                            <form @submit.prevent="searchAcc" class="flex flex-col gap-3">
+                                <div class="relative">
+                                    <Input
+                                        required
+                                        id="search"
+                                        placeholder="Search Accession Number..."
+                                        type="number"
+                                        class="pl-10"
+                                        v-model="form.searchAcc"
+                                    />
+                                    <span class="absolute left-0 inset-y-0 flex items-center justify-center px-2">
                                 <Search class="size-6 text-muted-foreground" />
                             </span>
+                                </div>
+                                <div class="flex gap-3">
+                                    <Button
+                                        variant="outline"
+                                        class="flex-1"
+                                        tabindex="6"
+                                        :disabled="form.processing"
+                                        @click="clearSearch"
+                                    >
+                                        Clear
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        class="flex-1"
+                                        tabindex="5"
+                                        :disabled="form.processing"
+                                    >
+                                        <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
+                                        <span v-else>Find Book</span>
+                                    </Button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="flex gap-3">
-                            <Button
-                                variant="outline"
-                                class="flex-1"
-                                tabindex="6"
-                                :disabled="form.processing"
-                                @click="clearSearch"
-                            >
-                                Clear
-                            </Button>
-                            <Button
-                                type="submit"
-                                class="flex-1"
-                                tabindex="5"
-                                :disabled="form.processing"
-                            >
-                                <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                                <span v-else>Find Book</span>
-                            </Button>
-                        </div>
-                    </form>
-                </div>
-
+                    </CardContent>
+                </Card>
                 <!-- Patron Search and Result Section -->
                 <div class="flex flex-col gap-4">
-
                     <SearchUsers :accessionNumber="selectedAccessionNumber" />
-
                 </div>
             </div>
         </div>
