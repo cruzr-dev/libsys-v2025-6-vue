@@ -67,12 +67,12 @@ watch(searchQuery, (newQuery) => {
 </script>
 
 <template>
-    <Combobox by="label" class="w-sm">
+    <Combobox by="label" class="w-sm rounded-lg border">
         <ComboboxAnchor class="w-full">
             <div class="relative w-full items-center">
                 <ComboboxInput
                     v-model="searchQuery"
-                    class="pl-9"
+                    class="pl-2"
                     :display-value="(val) => val?.label ?? ''"
                     placeholder="Search users by name or email..."
                 />

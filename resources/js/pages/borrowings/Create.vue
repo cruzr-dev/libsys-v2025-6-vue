@@ -84,13 +84,8 @@
     <Head title="Borrow/Return Books" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-            <div :class="[
-                'flex gap-4',
-                search_ac_result ? '' : 'justify-center'
-            ]">
-                <Card :class="[
-                    search_ac_result ? 'w-lg flex-1' : 'w-lg max-w-lg'
-                ]">
+            <div class="flex gap-4">
+                <Card class="w-lg flex-1">
                     <CardHeader>
                         <CardTitle>Search Book</CardTitle>
                         <CardDescription>Find the book to borrow.</CardDescription>
@@ -139,7 +134,6 @@
                 </Card>
                 <!-- Patron Search and Result Section - Only show when search_ac_result exists -->
                 <div
-                    v-if="search_ac_result"
                     class="w-full flex flex-col gap-4 flex-1"
                 >
                     <div class="search-result rounded-lg border p-4">
