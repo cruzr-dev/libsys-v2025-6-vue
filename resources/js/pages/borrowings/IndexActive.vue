@@ -163,6 +163,8 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Active Borrowings', href: '/borrowings/active' },
 ];
 
+console.log(data)
+
 // Add Handling
 const createNew = () => {
     router.get(route('borrowings.create'));

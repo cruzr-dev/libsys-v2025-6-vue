@@ -61,8 +61,8 @@ class BorrowingTransactionController extends Controller
             ];
         }
 
-        // Define toggleable columns (only transaction_number for now)
-        $toggleableColumns = ['transaction_number'];
+        // Define toggleable columns (including user columns)
+        $toggleableColumns = ['transaction_number', 'user_name'];
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
@@ -79,24 +79,55 @@ class BorrowingTransactionController extends Controller
                 } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
                     $columnVisibility[$columnName] = false;
                 } else {
-                    $columnVisibility[$columnName] = true; // Default to visible for transaction_number
+                    // Default visibility
+                    $columnVisibility[$columnName] = match($columnName) {
+                        'transaction_number', 'user_name' => true,
+                        default => false
+                    };
                 }
             }
         } else {
             // Default visibility
             $columnVisibility = [
                 'transaction_number' => true,
+                'user_name' => true,
             ];
         }
 
         $borrowings = BorrowingTransaction::query()
-            ->select('transaction_number')
+            ->select([
+                'id',
+                'transaction_number',
+                'user_id',
+                'record_id',
+                'borrowing_policy_id',
+                // Add other fields you need from borrowing_transactions table
+            ])
+            ->with([
+                'user:id,first_name,middle_initial,last_name', // Load user relationship with specific fields
+                'record:id,title', // Assuming you want record info too
+            ])
             ->whereIn('status', ['active'])
             ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where('transaction_number', 'like', '%' . $searchTerm . '%');
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('transaction_number', 'like', '%' . $searchTerm . '%')
+                        ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                            $userQuery->where('first_name', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('middle_initial', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('last_name', 'like', '%' . $searchTerm . '%');
+                        });
+                });
             })
             ->when($sortField, function ($query, $sortField) use ($sortDirection) {
-                $query->orderBy($sortField, $sortDirection);
+                // Handle sorting for user fields
+                if ($sortField === 'user_name') {
+                    $query->join('users', 'borrowing_transactions.user_id', '=', 'users.id')
+                        ->orderBy('users.first_name', $sortDirection)
+                        ->orderBy('users.last_name', $sortDirection)
+                        ->select('borrowing_transactions.*'); // Ensure we only select borrowing_transactions fields
+                } else {
+                    $query->orderBy($sortField, $sortDirection);
+                }
             })
             ->paginate(perPage: $perPage);
 
