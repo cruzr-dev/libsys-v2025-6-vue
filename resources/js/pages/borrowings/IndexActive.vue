@@ -48,10 +48,10 @@ type RowData = any;
 const data = props.data.data;
 const columns: ColumnDef<RowData>[] = [
     {
-        accessorKey: 'accession_number',
+        accessorKey: 'transaction_number',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('accession_number')),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['T.N. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('transaction_number')),
         enableHiding: false,
     },
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
