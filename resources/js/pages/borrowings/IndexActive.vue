@@ -54,6 +54,22 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('transaction_number')),
         enableHiding: false,
     },
+    {
+        accessorKey: 'client',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Client', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }: { row: Row<RowData> }) => {
+            const user = row.original.user;
+            if (user.middle_initial) {
+                return h('div', (user.first_name + ' ' + user.middle_initial + '. ' + user.last_name) || '-')
+            } else if (user) {
+                return h('div', (user.first_name + ' ' + user.last_name) || '-')
+            } else {
+                return h('div', '(not found)')
+            }
+        },
+        enableHiding: false,
+    },
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
 ];
 
