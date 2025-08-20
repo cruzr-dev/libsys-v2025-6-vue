@@ -7,6 +7,7 @@ use App\Models\BorrowingPolicy;
 use App\Models\BorrowingTransaction;
 use App\Models\Record;
 use App\Models\User;
+use App\Models\UserType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -18,68 +19,9 @@ class BorrowingTransactionController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): \Inertia\Response
+    public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
-        $sortField = $request->input('sort_field', null);
-        $sortDirection = $request->input('sort_direction', 'desc'); // Default to desc for latest first
-        $filters = [];
-
-        // Capture search parameters
-        $searchTerm = $request->input('search');
-        if (!empty($searchTerm)) {
-            $filters[] = [
-                'id' => 'search',
-                'value' => $searchTerm
-            ];
-        }
-
-        // Capture transaction type filter
-        $transactionTypes = $request->input('transaction_type');
-        if (!empty($transactionTypes)) {
-            $filters[] = [
-                'id' => 'transaction_type',
-                'value' => is_array($transactionTypes) ? $transactionTypes : [$transactionTypes]
-            ];
-        }
-
-        $latest_transactions = BorrowingTransaction::with('user')
-            ->with('record')
-            ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where(function ($q) use ($searchTerm) {
-                    // Search by transaction number (assuming you have a transaction_number field)
-                    $q->where('transaction_number', 'like', '%' . $searchTerm . '%')
-                        // Search by user name
-                        ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
-                            $userQuery->where('first_name', 'like', '%' . $searchTerm . '%')
-                                ->orWhere('last_name', 'like', '%' . $searchTerm . '%');
-                        })
-                        // Search by record title
-                        ->orWhereHas('record', function ($recordQuery) use ($searchTerm) {
-                            $recordQuery->where('title', 'like', '%' . $searchTerm . '%')
-                                ->orWhere('accession_number', 'like', '%' . $searchTerm . '%');
-                        });
-                });
-            })
-            ->when($transactionTypes, function ($query, $transactionTypes) {
-                // Handle both single values and arrays
-                $types = is_array($transactionTypes) ? $transactionTypes : [$transactionTypes];
-                $query->whereIn('transaction_type', $types);
-            })
-            ->when($sortField, function ($query, $sortField) use ($sortDirection) {
-                $query->orderBy($sortField, $sortDirection);
-            }, function ($query) {
-                // Default sorting when no sort field is specified
-                $query->latest();
-            })
-            ->paginate(perPage: $perPage);
-
-        return Inertia::render('borrowings/Index', [
-            'data' => $latest_transactions,
-            'filter' => $filters,
-            'currentSortField' => $sortField,
-            'currentSortDirection' => $sortDirection,
-        ]);
+        return to_route('borrowings.active');
     }
 
     /**
@@ -100,6 +42,85 @@ class BorrowingTransactionController extends Controller
 
         return Inertia::render('borrowings/Create', [
             'search_ac_result' => $search_result,
+        ]);
+    }
+
+    public function indexActive(Request $request)
+    {
+        $perPage = $request->input('per_page', 10);
+        $sortField = $request->input('sort_field', null);
+        $sortDirection = $request->input('sort_direction', 'asc');
+        $filters = [];
+
+        $userType = UserType::where('key', 'student')->first();
+        $userTypeId = $userType ? $userType->id : null;
+
+        // Capture search parameters
+        $searchTerm = $request->input('search');
+        if (!empty($searchTerm)) {
+            $filters[] = [
+                'id' => 'search',
+                'value' => $searchTerm
+            ];
+        }
+
+        // Define all possible columns that can be toggled
+        $toggleableColumns = ['sex', 'middle_initial', 'card_number', 'school_id']; // Add other columns as needed
+        $columnVisibility = [];
+
+        // Check for visibility parameters in the URL
+        $hasVisibilityParams = collect($request->query())
+            ->keys()
+            ->contains(function ($key) {
+                return str_starts_with($key, 'hide_') || str_starts_with($key, 'show_');
+            });
+
+        if ($hasVisibilityParams) {
+            // Process explicit visibility settings from URL
+            foreach ($toggleableColumns as $columnName) {
+                if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
+                    $columnVisibility[$columnName] = true;
+                } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
+                    $columnVisibility[$columnName] = false;
+                } else {
+                    // Default visibility based on column
+                    $columnVisibility[$columnName] = $columnName === 'card_number' ? true : false;
+                }
+            }
+        } else {
+            // First visit - apply default visibility
+            $columnVisibility = [
+                'sex' => false,
+                'middle_initial' => false,
+                'school_id' => false,
+                'card_number' => true,
+            ];
+        }
+
+        $users = User::query()
+            ->with('userType')
+            ->when($userTypeId, function ($query, $userTypeId) {
+                $query->where('user_type_id', $userTypeId);
+            })
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('first_name', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('library_id', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('card_number', 'like', '%' . $searchTerm . '%');
+                });
+            })
+            ->when($sortField, function ($query, $sortField) use ($sortDirection) {
+                $query->orderBy($sortField, $sortDirection);
+            })
+            ->paginate(perPage: $perPage);
+
+        return Inertia::render('borrowings/IndexActive', [
+            'data' => $users,
+            'filter' => $filters,
+            'currentSortField' => $sortField,
+            'currentSortDirection' => $sortDirection,
+            'columnVisibility' => $columnVisibility,
         ]);
     }
 

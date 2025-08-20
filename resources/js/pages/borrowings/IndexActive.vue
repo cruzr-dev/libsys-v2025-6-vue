@@ -3,11 +3,10 @@
 import DeleteDialog from '@/components/DeleteDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
-import Layout from '@/layouts/records/Layout.vue';
+import Layout from '@/layouts/borrowings/Layout.vue';
 import { valueUpdater } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
@@ -161,6 +160,7 @@ initializeSearchInput();
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Borrowings', href: '/borrowings' },
+    { title: 'Active Borrowings', href: '/borrowings/active' },
 ];
 
 // Add Handling
