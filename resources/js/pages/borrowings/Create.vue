@@ -15,8 +15,8 @@
           href: '/borrowings',
       },
       {
-          title: 'Borrow/Return',
-          href: '/borrow-return',
+          title: 'Borrow',
+          href: '/borrowings/create',
       },
     ];
 

@@ -63,8 +63,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/active', [BorrowingTransactionController::class, 'indexActive'])->name('borrowings.active');
         Route::post('/', [BorrowingTransactionController::class, 'store'])->name('borrowings.store');
         Route::get('/create', [BorrowingTransactionController::class, 'create'])->name('borrowings.create');
-        Route::get('/users/search', [BorrowingTransactionController::class, 'searchUser'])->name('borrowings.users.search');
         Route::post('/borrow', [BorrowingTransactionController::class, 'borrow'])->name('borrowings.borrow');
+        Route::get('/users/search', [BorrowingTransactionController::class, 'searchUser'])->name('borrowings.users.search');
     });
     Route::prefix('logger')->group(function () {
         Route::get('/', [LibraryVisitController::class, 'index'])->name('logger.index');
