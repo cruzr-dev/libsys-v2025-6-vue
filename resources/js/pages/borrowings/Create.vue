@@ -84,11 +84,16 @@
     <Head title="Borrow/Return Books" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
-            <div class="grid grid-cols-2 gap-8">
-                <Card class="w-full">
+            <div :class="[
+                'flex gap-8',
+                search_ac_result ? '' : 'justify-center'
+            ]">
+                <Card :class="[
+                    search_ac_result ? 'w-lg flex-1' : 'w-lg max-w-lg'
+                ]">
                     <CardHeader>
-                        <CardTitle>Create project</CardTitle>
-                        <CardDescription>Deploy your new project in one-click.</CardDescription>
+                        <CardTitle>Search Book</CardTitle>
+                        <CardDescription>Find the book to borrow.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div class="flex flex-col gap-4 w-full">
@@ -105,8 +110,8 @@
                                         v-model="form.searchAcc"
                                     />
                                     <span class="absolute left-0 inset-y-0 flex items-center justify-center px-2">
-                                <Search class="size-6 text-muted-foreground" />
-                            </span>
+                                        <Search class="size-6 text-muted-foreground" />
+                                    </span>
                                 </div>
                                 <div class="flex gap-3">
                                     <Button
@@ -132,8 +137,11 @@
                         </div>
                     </CardContent>
                 </Card>
-                <!-- Patron Search and Result Section -->
-                <div class="flex flex-col gap-4">
+                <!-- Patron Search and Result Section - Only show when search_ac_result exists -->
+                <div
+                    v-if="search_ac_result"
+                    class="w-full flex flex-col gap-4 flex-1"
+                >
                     <SearchUsers :accessionNumber="selectedAccessionNumber" />
                 </div>
             </div>
