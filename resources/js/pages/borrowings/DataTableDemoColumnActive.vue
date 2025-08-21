@@ -1,7 +1,7 @@
 <script setup>
 import { MoreHorizontal } from 'lucide-vue-next'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu/index.ts'
+import { Button } from '@/components/ui/button/index.ts'
 
 const props = defineProps({
     payment: Object,
@@ -29,9 +29,8 @@ const edit = (id) => {
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem @click="edit(payment.id)">
-                Edit
+                Return Book
             </DropdownMenuItem>
-            <DropdownMenuItem>Delete</DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>
 </template>

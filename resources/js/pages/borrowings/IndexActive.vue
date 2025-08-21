@@ -25,8 +25,8 @@ import { ArrowUpDown, ChevronDown, Plus, X } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref } from 'vue';
 import { route } from 'ziggy-js';
-import DropdownAction from '../records/DataTableDemoColumn.vue';
-import { formatDistanceToNow, formatRelative } from 'date-fns';
+import DropdownAction from '../borrowings/DataTableDemoColumnActive.vue';
+import { formatDistanceToNow } from 'date-fns';
 
 // Props - Add columnVisibility to props
 interface Props {
