@@ -297,6 +297,7 @@ class BorrowingTransactionController extends Controller
 
     public function borrow(Request $request)
     {
+        dd($request->all());
         $user = null;
         $policy = null;
         $book = null;

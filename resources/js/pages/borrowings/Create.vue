@@ -7,6 +7,8 @@ import BookScannerDialog from '@/components/BookScannerDialog.vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import BookSearchComboBox from '@/components/BookSearchComboBox.vue';
 import UserSearchComboBox from '@/components/UserSearchComboBox.vue';
+import BorrowBookDialog from '@/components/BorrowBookDialog.vue';
+import { Button } from '@/components/ui/button';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -43,7 +45,6 @@ const handleBookSelected = (book: any) => {
 // Handle user selection
 const handleUserSelected = (user: any) => {
     selectedUser.value = user;
-    console.log('Selected user:', user);
 };
 
 // Log the search result for debugging
@@ -109,6 +110,12 @@ console.log('Search result from props:', props.searchAcResult);
                                         {{ selectedBook.status }}
                                     </span>
                                 </div>
+                                <!-- leave this as it is for now -->
+                                <Button
+                                        class="flex-1"
+                                >
+                                    Borrow (Inside)
+                                </Button>
                             </div>
 
                             <!-- User Search appears when book is available -->
@@ -117,6 +124,12 @@ console.log('Search result from props:', props.searchAcResult);
                                     v-model:selectedUser="selectedUser"
                                     @user-selected="handleUserSelected"
                                 />
+                                <div v-if="selectedUser" class="mt-4">
+                                    <BorrowBookDialog
+                                        :user="selectedUser"
+                                        :book_accession="selectedBook.accession_number"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </CardContent>

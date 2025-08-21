@@ -4,6 +4,8 @@ import {
     Dialog,
     DialogContent,
     DialogTrigger,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -46,29 +48,35 @@ const borrowBook = (user_id, book_accession) => {
 <template>
     <Dialog>
         <DialogTrigger as-child>
-            <Button variant="ghost" class="w-full text-left">
-                {{ user.label }} ({{ user.email }})
+            <Button class="w-full">
+                Borrow Book
             </Button>
         </DialogTrigger>
         <DialogContent class="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>Confirm Book Borrowing</DialogTitle>
+            </DialogHeader>
             <div class="space-y-4">
                 <div>
-                    <h3 class="text-lg font-semibold">{{ user.fullName }}</h3>
+                    <h3 class="text-lg font-semibold">Borrower Details</h3>
+                    <p class="text-sm text-gray-600">{{ user.first_name }}</p>
                     <p class="text-sm text-gray-600">{{ user.email }}</p>
                 </div>
 
                 <div>
-                    <strong>Book Accession:</strong>
-                    {{ book_accession ? book_accession : 'No book selected' }}
+                    <h3 class="text-lg font-semibold">Book Details</h3>
+                    <p class="text-sm text-gray-600">
+                        <strong>Accession Number:</strong> {{ book_accession }}
+                    </p>
                 </div>
 
                 <Button
-                    @click="borrowBook(user.value, book_accession)"
-                    v-if="user.fullName && book_accession"
+                    @click="borrowBook(user.value || user.id, book_accession)"
+                    v-if="user && book_accession"
                     :disabled="isLoading"
                     class="w-full"
                 >
-                    {{ isLoading ? 'Processing...' : 'Borrow Book' }}
+                    {{ isLoading ? 'Processing...' : 'Confirm Borrow' }}
                 </Button>
             </div>
         </DialogContent>
