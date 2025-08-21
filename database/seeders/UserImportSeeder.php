@@ -41,6 +41,9 @@ class UserImportSeeder extends Seeder
             $facultyTypeId = UserType::where('key', 'faculty')->firstOrFail()->id;
             $staffTypeId = UserType::where('key', 'staff')->firstOrFail()->id;
 
+            $progressBar = $this->command->getOutput()->createProgressBar(count($csv_data));
+            $progressBar->start();
+
             foreach ($csv_data as $row_index => $row) {
                 try {
                     // Trim all values in the row and check for emptiness
@@ -175,9 +178,13 @@ class UserImportSeeder extends Seeder
                         throw new \Exception("Too many errors occurred during processing");
                     }
                 }
+                $progressBar->advance();
             }
 
+            $progressBar->finish();
+            $this->command->newLine();
             $this->command->info("Import completed! {$imported_count} user(s) imported successfully.");
+
             if ($failed_count > 0) {
                 $this->command->warn("{$failed_count} row(s) failed.");
                 foreach ($errors as $error) {

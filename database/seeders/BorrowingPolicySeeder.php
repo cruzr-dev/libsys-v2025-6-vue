@@ -17,6 +17,7 @@ class BorrowingPolicySeeder extends Seeder
         $studentType = UserType::where('key', 'undergrad_student')->firstOrFail();
         $graduateType = UserType::where('key', 'grad_student')->firstOrFail();
         $facultyType = UserType::where('key', 'faculty')->firstOrFail();
+        $staffType = UserType::where('key', 'staff')->firstOrFail();
         $staffAdminType = UserType::where('key', 'staff_admin')->firstOrFail();
         $superAdminType = UserType::where('key', 'super_admin')->firstOrFail();
 
@@ -70,8 +71,24 @@ class BorrowingPolicySeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Staff Policy',
+                'name' => 'Staff Admin Policy',
                 'user_type_id' => $staffAdminType->id,
+                'max_items' => 10,
+                'loan_period_days' => 120,
+                'renewal_limit' => 3,
+                'renewal_period_days' => 10,
+                'hold_period_days' => 10,
+                'overdue_fine_per_day' => 7.50,
+                'max_fine_amount' => 750.00,
+                'grace_period_days' => 2,
+                'can_place_holds' => true,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Staff Policy',
+                'user_type_id' => $staffType->id,
                 'max_items' => 10,
                 'loan_period_days' => 120,
                 'renewal_limit' => 3,
