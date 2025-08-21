@@ -122,6 +122,7 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }) =>
             h(DropdownAction, {
                 transaction: row.original,
+                onReturn
             }),
     },
 ];
@@ -336,6 +337,10 @@ function buildFilters(filtersArr: ColumnFiltersState) {
         },
         {} as Record<string, any>,
     );
+}
+
+const onReturn = async (id) => {
+    alert('return: ' + id)
 }
 </script>
 

@@ -5,16 +5,12 @@ import { Button } from '@/components/ui/button/index.ts'
 
 const props = defineProps({
     transaction: Object,
-    onEdit: Function,
+    onReturn: Function,
 })
 
-
-
-
 const returnBook = (id) => {
-    props.onReturnBook(id);
+    props.onReturn(id);
 }
-
 
 </script>
 
