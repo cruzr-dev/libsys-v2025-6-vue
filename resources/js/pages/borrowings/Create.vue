@@ -4,6 +4,7 @@
     import type { BreadcrumbItem } from '@/types';
     import BookScannerDialog from '@/components/BookScannerDialog.vue';
     import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+    import BookSearchComboBox from '@/components/BookSearchComboBox.vue';
 
     const breadcrumbs: BreadcrumbItem[] = [
       {
@@ -42,6 +43,7 @@
                     <CardContent>
                         <div class="flex flex-col gap-4 w-full">
                             <BookScannerDialog />
+                            <BookSearchComboBox />
                         </div>
                     </CardContent>
                 </Card>
