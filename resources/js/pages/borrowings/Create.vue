@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import BookScannerDialog from '@/components/BookScannerDialog.vue';
@@ -45,6 +45,15 @@ const handleBookSelected = (book: any) => {
 // Handle user selection
 const handleUserSelected = (user: any) => {
     selectedUser.value = user;
+};
+
+// Handle Borrow (Inside) button click
+const handleBorrowInside = () => {
+    if (selectedBook.value) {
+        router.post('/borrowings/borrow/inside', {
+            accession_number: selectedBook.value.accession_number
+        });
+    }
 };
 
 // Log the search result for debugging
@@ -110,9 +119,9 @@ console.log('Search result from props:', props.searchAcResult);
                                         {{ selectedBook.status }}
                                     </span>
                                 </div>
-                                <!-- leave this as it is for now -->
                                 <Button
-                                        class="flex-1"
+                                    class="flex-1"
+                                    @click="handleBorrowInside"
                                 >
                                     Borrow (Inside)
                                 </Button>
