@@ -90,6 +90,10 @@ class BorrowingTransactionController extends Controller
 
     public function indexActive(Request $request)
     {
+        if ($request->returnedABook) {
+            session()->flash('success', 'Successfully returned the book!');
+        }
+
         $perPage = $request->input('per_page', 10);
         $sortField = $request->input('sort_field', 'id'); // Keep 'id' as default
         $sortDirection = $request->input('sort_direction', 'desc'); // Change to 'desc' for latest first
@@ -367,8 +371,7 @@ class BorrowingTransactionController extends Controller
                 'status' => 'available'
             ]);
 
-            return to_route('borrowings.active')
-                ->with('success', 'Book returned successfully for transaction ID: ' . $transaction->id);
+            return to_route('borrowings.active');
 
         } catch (\Exception $e) {
             // Log the error

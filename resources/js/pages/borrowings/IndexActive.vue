@@ -233,8 +233,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Active Borrowings', href: '/borrowings/active' },
 ];
 
-console.log(data);
-
 // Add Handling
 const createNew = () => {
     router.get(route('borrowings.create'));
@@ -340,10 +338,24 @@ function buildFilters(filtersArr: ColumnFiltersState) {
 }
 
 const onReturn = async (id) => {
-    router.post(route('borrowings.return'), {
-        transactionId: id
-    });
-}
+    router.post(
+        route('borrowings.return'),
+        { transactionId: id },
+        {
+            onSuccess: () => {
+                // Reload the entire page
+                router.get(
+                    route('borrowings.active'),
+                    { returnedABook: true },
+                    { preserveState: false }
+                );
+            },
+            onError: (errors) => {
+                console.error('Error returning book:', errors);
+            },
+        },
+    );
+};
 </script>
 
 <template>
