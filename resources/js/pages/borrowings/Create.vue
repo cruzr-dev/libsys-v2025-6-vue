@@ -134,6 +134,7 @@ console.log('Search result from props:', props.searchAcResult);
                                     class="flex-1"
                                     @click="handleBorrowInside"
                                     variant="secondary"
+                                    v-if="selectedBook.status == 'available'"
                                 >
                                     <MapPinPlusInside class="w-4 h-4 mr-2" />
                                     Borrow (Inside)
