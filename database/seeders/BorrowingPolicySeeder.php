@@ -14,7 +14,8 @@ class BorrowingPolicySeeder extends Seeder
      */
     public function run(): void
     {
-        $studentType = UserType::where('key', 'student')->firstOrFail();
+        $studentType = UserType::where('key', 'undergrad_student')->firstOrFail();
+        $graduateType = UserType::where('key', 'grad_student')->firstOrFail();
         $facultyType = UserType::where('key', 'faculty')->firstOrFail();
         $staffAdminType = UserType::where('key', 'staff_admin')->firstOrFail();
         $superAdminType = UserType::where('key', 'super_admin')->firstOrFail();
@@ -38,7 +39,7 @@ class BorrowingPolicySeeder extends Seeder
             ],
             [
                 'name' => 'Graduate Student Policy',
-                'user_type_id' => $studentType->id, // Same user_type, different use-case
+                'user_type_id' => $graduateType->id, // Same user_type, different use-case
                 'max_items' => 10,
                 'loan_period_days' => 7,
                 'renewal_limit' => 3,

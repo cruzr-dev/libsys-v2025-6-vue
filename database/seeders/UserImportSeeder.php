@@ -36,6 +36,11 @@ class UserImportSeeder extends Seeder
             $failed_count = 0;
             $errors = [];
 
+            $undergradStudTypeId = UserType::where('key', 'undergrad_student')->firstOrFail()->id;
+            $gradStudTypeId = UserType::where('key', 'grad_student')->firstOrFail()->id;
+            $facultyTypeId = UserType::where('key', 'faculty')->firstOrFail()->id;
+            $staffTypeId = UserType::where('key', 'staff')->firstOrFail()->id;
+
             foreach ($csv_data as $row_index => $row) {
                 try {
                     // Trim all values in the row and check for emptiness
@@ -108,22 +113,16 @@ class UserImportSeeder extends Seeder
                     }
 
                     $user_type_id = null;
-                    $student_type = null;
                     if (!empty($row[11]) && is_string($row[11]) && $row[11] !== '') {
                         $user_type = ucwords($row[11]);
-                        if ($user_type === 'Undergraduate' || $user_type === 'Graduate') {
-                            $student_type = $user_type;
-                            $user_type = 'Student';
-                        }
-                        $user_type_from_db = UserType::where('name', $user_type)->first();
-                        if ($user_type_from_db) {
-                            $user_type_id = $user_type_from_db->id;
-                        } else {
-                            $key = strtolower(str_replace(' ', '_', $user_type));
-                            $user_type_id = UserType::create([
-                                'key' => $key,
-                                'name' => $user_type,
-                            ])->id;
+                        if ($user_type === 'Undergraduate') {
+                            $user_type_id = $undergradStudTypeId;
+                        } elseif ($user_type === 'Graduate School' || $user_type === 'Graduate') {
+                            $user_type_id = $gradStudTypeId;
+                        } elseif ($user_type === 'Faculty') {
+                            $user_type_id = $facultyTypeId;
+                        } elseif ($user_type === 'Staff') {
+                            $user_type_id = $staffTypeId;
                         }
                     }
 
@@ -155,14 +154,14 @@ class UserImportSeeder extends Seeder
                     ];
 
                     $student_data = [
-                        'student_type' => $student_type,
                         'college_id' => $college_id,
                         'program_id' => $program_id,
                     ];
 
                     $user = User::create($user_data);
 
-                    if ($student_type) {
+                    if ($user->user_type_id === $undergradStudTypeId
+                        || $user->user_type_id === $gradStudTypeId) {
                         $user->student()->create($student_data);
                     }
 

@@ -16,8 +16,10 @@ class UserTypeSeeder extends Seeder
         $userTypes = [
             ['key' => 'super_admin', 'name' => 'Super Admin'],
             ['key' => 'staff_admin', 'name' => 'Staff Admin'],
-            ['key' => 'student', 'name' => 'Student'],
+            ['key' => 'undergrad_student', 'name' => 'Undergraduate Student'],
+            ['key' => 'grad_student', 'name' => 'Graduate School Student'],
             ['key' => 'faculty', 'name' => 'Faculty'],
+            ['key' => 'staff', 'name' => 'Staff'],
         ];
         DB::table('user_types')->insert($userTypes);
     }

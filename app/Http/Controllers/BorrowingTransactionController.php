@@ -298,6 +298,7 @@ class BorrowingTransactionController extends Controller
             $user = User::findOrFail($request->user_id);
             $book = Record::where('accession_number', $request->book_accession)->first();
             $policy = BorrowingPolicy::where('user_type_id', $user->user_type_id)->first();
+            dd($user);
 
             if ($book->status === 'borrowed') {
                 session()->flash('error', 'Book already borrowed');
