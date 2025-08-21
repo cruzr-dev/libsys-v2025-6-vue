@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('borrowing_transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('transaction_number')->unique(); // e.g., 'BT-2024-000001'
 
             $table->foreignId('user_id')->nullable()
                 ->constrained('users')->onDelete('cascade');
@@ -40,7 +39,6 @@ return new class extends Migration
 
             $table->index(['user_id', 'status']);
             $table->index(['due_date', 'status']);
-            $table->index('transaction_number');
         });
     }
 
