@@ -52,6 +52,10 @@ const handleBorrowInside = () => {
     if (selectedBook.value) {
         router.post('/borrowings/borrow/inside', {
             accession_number: selectedBook.value.accession_number
+        }, {
+            onSuccess: () => {
+                selectedBook.value = null;
+            }
         });
     }
 };
