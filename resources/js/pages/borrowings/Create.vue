@@ -48,6 +48,12 @@ const handleUserSelected = (user: any) => {
     selectedUser.value = user;
 };
 
+// Handle borrow success - clear both book and user
+const handleBorrowSuccess = () => {
+    selectedBook.value = null;
+    selectedUser.value = null;
+};
+
 // Handle Borrow (Inside) button click
 const handleBorrowInside = () => {
     if (selectedBook.value) {
@@ -55,7 +61,7 @@ const handleBorrowInside = () => {
             accession_number: selectedBook.value.accession_number
         }, {
             onSuccess: () => {
-                selectedBook.value = null;
+                handleBorrowSuccess()
             }
         });
     }
@@ -144,6 +150,7 @@ console.log('Search result from props:', props.searchAcResult);
                                     <BorrowBookDialog
                                         :user="selectedUser"
                                         :book_accession="selectedBook.accession_number"
+                                        @borrow-success="handleBorrowSuccess"
                                     />
                                 </div>
                             </div>

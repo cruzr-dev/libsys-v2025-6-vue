@@ -14,6 +14,9 @@ const props = defineProps({
     book_accession: String,
 });
 
+// Define emits
+const emit = defineEmits(['borrow-success']);
+
 const isLoading = ref(false);
 const isOpen = ref(false);
 
@@ -40,6 +43,9 @@ const borrowBook = (user_id, book_accession) => {
             console.log('Book borrowed successfully');
             isLoading.value = false;
             isOpen.value = false; // Close dialog on success
+
+            // Emit success event to parent
+            emit('borrow-success');
         },
         onError: (errors) => {
             // Handle validation errors
