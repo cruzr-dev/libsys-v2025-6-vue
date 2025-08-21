@@ -99,9 +99,10 @@ const displayValue = (book: any) => {
         v-model="selectedBook"
         by="accession_number"
         @update:model-value="handleBookSelect"
+        class=""
     >
-        <ComboboxAnchor>
-            <div class="relative w-full items-center">
+        <ComboboxAnchor class=" w-full">
+            <div class="relative w-full items-center ">
                 <ComboboxInput
                     v-model="searchQuery"
                     class="pl-9"
