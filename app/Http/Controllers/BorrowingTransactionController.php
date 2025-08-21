@@ -41,7 +41,7 @@ class BorrowingTransactionController extends Controller
         }
 
         return Inertia::render('borrowings/Create', [
-            'search_ac_result' => $search_result,
+            'searchAcResult' => $search_result,
         ]);
     }
 

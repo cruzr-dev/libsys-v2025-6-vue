@@ -16,6 +16,17 @@
       },
     ];
 
+    // Get the props
+    const props = defineProps({
+        searchAcResult: {
+            type: [Object, null],
+            default: null,
+        },
+    });
+
+    // Now you can access it
+    console.log(props.searchAcResult);
+
 </script>
 
 <template>
