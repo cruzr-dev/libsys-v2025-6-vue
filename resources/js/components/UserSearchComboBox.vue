@@ -95,11 +95,11 @@ const displayValue = (user: any) => {
             by="id"
             @update:model-value="handleUserSelect"
         >
-            <ComboboxAnchor>
+            <ComboboxAnchor class="w-full border-1 rounded-lg">
                 <div class="relative w-full items-center">
                     <ComboboxInput
                         v-model="searchQuery"
-                        class="pl-9"
+                        class="pl-2"
                         :display-value="displayValue"
                         placeholder="Search by name or library ID..."
                     />
@@ -118,7 +118,7 @@ const displayValue = (user: any) => {
 
             <ComboboxList>
                 <ComboboxEmpty>
-                    <div class="flex flex-col items-center py-6 text-center">
+                    <div class="flex flex-col items-center p-4 text-center">
                         <User class="size-8 text-muted-foreground mb-2" />
                         <p class="text-sm text-muted-foreground">
                             {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No users found' }}
