@@ -3,19 +3,26 @@ import { Button } from "@/components/ui/button"
 import {
     Dialog,
     DialogContent,
-    DialogTrigger,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
 import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
-defineProps({
+const props = defineProps({
     user: Object,
     book_accession: String,
 });
 
 const isLoading = ref(false);
+const isOpen = ref(false);
+
+// Watch for user selection and auto-open dialog
+watch(() => props.user, (newUser) => {
+    if (newUser && props.book_accession) {
+        isOpen.value = true;
+    }
+}, { immediate: true });
 
 const borrowBook = (user_id, book_accession) => {
     if (isLoading.value) return;
@@ -32,6 +39,7 @@ const borrowBook = (user_id, book_accession) => {
             // Handle success - maybe show a toast notification
             console.log('Book borrowed successfully');
             isLoading.value = false;
+            isOpen.value = false; // Close dialog on success
         },
         onError: (errors) => {
             // Handle validation errors
@@ -46,12 +54,7 @@ const borrowBook = (user_id, book_accession) => {
 </script>
 
 <template>
-    <Dialog>
-        <DialogTrigger as-child>
-            <Button class="w-full">
-                Borrow Book
-            </Button>
-        </DialogTrigger>
+    <Dialog v-model:open="isOpen">
         <DialogContent class="sm:max-w-[425px]">
             <DialogHeader>
                 <DialogTitle>Confirm Book Borrowing</DialogTitle>
@@ -59,8 +62,8 @@ const borrowBook = (user_id, book_accession) => {
             <div class="space-y-4">
                 <div>
                     <h3 class="text-lg font-semibold">Borrower Details</h3>
-                    <p class="text-sm text-gray-600">{{ user.first_name }}</p>
-                    <p class="text-sm text-gray-600">{{ user.email }}</p>
+                    <p class="text-sm text-gray-600">{{ user?.first_name }}</p>
+                    <p class="text-sm text-gray-600">{{ user?.library_id }}</p>
                 </div>
 
                 <div>
@@ -70,14 +73,24 @@ const borrowBook = (user_id, book_accession) => {
                     </p>
                 </div>
 
-                <Button
-                    @click="borrowBook(user.value || user.id, book_accession)"
-                    v-if="user && book_accession"
-                    :disabled="isLoading"
-                    class="w-full"
-                >
-                    {{ isLoading ? 'Processing...' : 'Confirm Borrow' }}
-                </Button>
+                <div class="flex gap-2">
+                    <Button
+                        variant="outline"
+                        @click="isOpen = false"
+                        :disabled="isLoading"
+                        class="flex-1"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        @click="borrowBook(user?.value || user?.id, book_accession)"
+                        v-if="user && book_accession"
+                        :disabled="isLoading"
+                        class="flex-1"
+                    >
+                        {{ isLoading ? 'Processing...' : 'Confirm Borrow' }}
+                    </Button>
+                </div>
             </div>
         </DialogContent>
     </Dialog>
