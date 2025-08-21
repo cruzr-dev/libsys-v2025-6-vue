@@ -338,7 +338,49 @@ class BorrowingTransactionController extends Controller
 
     public function return(Request $request)
     {
-        dd($request->all());
+        try {
+            // Validate the request
+            $request->validate([
+                'transactionId' => 'required|exists:borrowing_transactions,id'
+            ]);
+
+            // Find the borrowing transaction
+            $transaction = BorrowingTransaction::findOrFail($request->transactionId);
+
+            // Check if the book is already returned
+            if ($transaction->status === 'returned') {
+                session()->flash('error', 'Book already returned');
+                return to_route('borrowings.create');
+            }
+
+            // Get the associated book
+            $book = Record::findOrFail($transaction->record_id);
+
+            // Update transaction
+            $transaction->update([
+                'status' => 'returned',
+                'return_date' => now(),
+                'checked_in_by' => Auth::id(),
+            ]);
+
+            // Update book status
+            $book->update([
+                'status' => 'available'
+            ]);
+
+            return to_route('borrowings.index')
+                ->with('success', 'Book returned successfully for transaction ID: ' . $transaction->id);
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Something went wrong during return process');
+            // Log the error
+            \Log::error('Error in book return: ' . $e->getMessage(), [
+                'transaction_id' => $request->transactionId,
+                'exception' => $e
+            ]);
+
+            return Inertia::render('borrowings/IndexActive');
+        }
     }
 
 }
