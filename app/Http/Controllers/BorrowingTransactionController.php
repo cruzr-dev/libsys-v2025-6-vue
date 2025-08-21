@@ -147,8 +147,8 @@ class BorrowingTransactionController extends Controller
                 // Add other fields you need from borrowing_transactions table
             ])
             ->with([
-                'user:id,first_name,middle_initial,last_name', // Load user relationship with specific fields
-                'record:id,title', // Assuming you want record info too
+                'user:id,library_id,first_name,middle_initial,last_name', // Load user relationship with specific fields
+                'record:id,title,accession_number', // Assuming you want record info too
             ])
             ->whereIn('status', ['active'])
             ->when($searchTerm, function ($query, $searchTerm) {

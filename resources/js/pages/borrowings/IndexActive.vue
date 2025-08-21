@@ -61,7 +61,7 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }: { row: Row<RowData> }) => {
             const user = row.original.user;
             if (user.middle_initial) {
-                return h('div', (user.first_name + ' ' + user.middle_initial + '. ' + user.last_name) || '-')
+                return h('div', ('(' + user.library_id + ') ' + user.first_name + ' ' + user.middle_initial + '. ' + user.last_name) || '-')
             } else if (user) {
                 return h('div', (user.first_name + ' ' + user.last_name) || '-')
             } else {
