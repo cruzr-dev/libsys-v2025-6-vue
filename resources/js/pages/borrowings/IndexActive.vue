@@ -340,7 +340,9 @@ function buildFilters(filtersArr: ColumnFiltersState) {
 }
 
 const onReturn = async (id) => {
-    alert('return: ' + id)
+    router.post(route('borrowings.return'), {
+        transactionId: id
+    });
 }
 </script>
 

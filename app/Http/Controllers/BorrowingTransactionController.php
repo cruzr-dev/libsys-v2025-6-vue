@@ -336,4 +336,9 @@ class BorrowingTransactionController extends Controller
             ->with('success', 'Borrowing transaction ID:' . $transaction->id . ' added successfully');
     }
 
+    public function return(Request $request)
+    {
+        dd($request->all());
+    }
+
 }
