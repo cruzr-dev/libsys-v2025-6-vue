@@ -21,12 +21,12 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
+import { formatDistanceToNow } from 'date-fns';
 import { ArrowUpDown, ChevronDown, Plus, X } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref } from 'vue';
 import { route } from 'ziggy-js';
 import DropdownAction from '../borrowings/DataTableDemoColumnActive.vue';
-import { formatDistanceToNow } from 'date-fns';
 
 // Props - Add columnVisibility to props
 interface Props {
@@ -62,11 +62,15 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }: { row: Row<RowData> }) => {
             const user = row.original.user;
             if (user.middle_initial) {
-                return h('div', { class: 'w-56 truncate'}, ('(' + user.library_id + ') ' + user.first_name + ' ' + user.middle_initial + '. ' + user.last_name) || '-')
+                return h(
+                    'div',
+                    { class: 'w-56 truncate' },
+                    '(' + user.library_id + ') ' + user.first_name + ' ' + user.middle_initial + '. ' + user.last_name || '-',
+                );
             } else if (user) {
-                return h('div', (user.first_name + ' ' + user.last_name) || '-')
+                return h('div', user.first_name + ' ' + user.last_name || '-');
             } else {
-                return h('div', '(not found)')
+                return h('div', '(not found)');
             }
         },
         enableHiding: false,
@@ -78,9 +82,9 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }: { row: Row<RowData> }) => {
             const book = row.original.record;
             if (book) {
-                return h('div', { class: 'w-56 truncate'}, ('(' + book.accession_number + ') ' + book.title || '-'))
+                return h('div', { class: 'w-56 truncate' }, '(' + book.accession_number + ') ' + book.title || '-');
             } else {
-                return h('div', '(not found)')
+                return h('div', '(not found)');
             }
         },
         enableHiding: false,
@@ -112,7 +116,14 @@ const columns: ColumnDef<RowData>[] = [
         },
         enableHiding: false,
     },
-    { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { transaction: row.original }) },
+    {
+        id: 'actions',
+        enableHiding: false,
+        cell: ({ row }) =>
+            h(DropdownAction, {
+                transaction: row.original,
+            }),
+    },
 ];
 
 // Sorting helper
@@ -221,7 +232,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Active Borrowings', href: '/borrowings/active' },
 ];
 
-console.log(data)
+console.log(data);
 
 // Add Handling
 const createNew = () => {
@@ -412,7 +423,8 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                 </div>
                 <div class="flex items-center justify-end space-x-2 py-4">
                     <div class="flex-1 text-sm text-muted-foreground">
-                        Showing {{ table.getFilteredRowModel().rows.length }} items of {{ props.data.total }} {{ props.data.total === 1 || props.data.total === 0 ? 'borrowing' : 'borrowings' }}.
+                        Showing {{ table.getFilteredRowModel().rows.length }} items of {{ props.data.total }}
+                        {{ props.data.total === 1 || props.data.total === 0 ? 'borrowing' : 'borrowings' }}.
                     </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
