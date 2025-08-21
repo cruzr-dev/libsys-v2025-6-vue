@@ -91,8 +91,8 @@ class BorrowingTransactionController extends Controller
     public function indexActive(Request $request)
     {
         $perPage = $request->input('per_page', 10);
-        $sortField = $request->input('sort_field', 'id');
-        $sortDirection = $request->input('sort_direction', 'asc');
+        $sortField = $request->input('sort_field', 'id'); // Keep 'id' as default
+        $sortDirection = $request->input('sort_direction', 'desc'); // Change to 'desc' for latest first
         $filters = [];
 
         // Capture search parameters
@@ -146,8 +146,8 @@ class BorrowingTransactionController extends Controller
                 'due_date',
             ])
             ->with([
-                'user:id,library_id,first_name,middle_initial,last_name', // Load user relationship with specific fields
-                'record:id,title,accession_number', // Assuming you want record info too
+                'user:id,library_id,first_name,middle_initial,last_name',
+                'record:id,title,accession_number',
             ])
             ->whereIn('status', ['active'])
             ->when($searchTerm, function ($query, $searchTerm) {
@@ -166,7 +166,7 @@ class BorrowingTransactionController extends Controller
                     $query->join('users', 'borrowing_transactions.user_id', '=', 'users.id')
                         ->orderBy('users.first_name', $sortDirection)
                         ->orderBy('users.last_name', $sortDirection)
-                        ->select('borrowing_transactions.*'); // Ensure we only select borrowing_transactions fields
+                        ->select('borrowing_transactions.*');
                 } else {
                     $query->orderBy($sortField, $sortDirection);
                 }
