@@ -91,6 +91,13 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('checkout_date')),
         enableHiding: false,
     },
+    {
+        accessorKey: 'due_date',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Due in', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('due_date')),
+        enableHiding: false,
+    },
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
 ];
 

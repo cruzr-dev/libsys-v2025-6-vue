@@ -144,6 +144,7 @@ class BorrowingTransactionController extends Controller
                 'user_id',
                 'record_id',
                 'checkout_date',
+                'due_date',
             ])
             ->with([
                 'user:id,library_id,first_name,middle_initial,last_name', // Load user relationship with specific fields
