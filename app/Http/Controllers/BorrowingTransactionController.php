@@ -314,7 +314,7 @@ class BorrowingTransactionController extends Controller
             ]);
         }
 
-        $transactionNumber = 'BRW-O' . date('ymdHis') . '-' . str_pad(random_int(1, 99999), 4, '0', STR_PAD_LEFT);        $policy_loan_period_days = $policy->loan_period_days;
+        $policy_loan_period_days = $policy->loan_period_days;
 
         $transaction = BorrowingTransaction::create([
             'user_id' => $user->id,
