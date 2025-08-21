@@ -25,7 +25,7 @@ const returnBook = (id) => {
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem @click="returnBook(transaction.id)">
-                Return Book
+                Return Book {{ transaction.record.accession_number }}
             </DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>
