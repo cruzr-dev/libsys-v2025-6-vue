@@ -64,7 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/create', [BorrowingTransactionController::class, 'create'])->name('borrowings.create');
         Route::post('/borrow/inside', [BorrowingTransactionController::class, 'borrowInside'])->name('borrowings.borrow.inside');
         Route::post('/borrow', [BorrowingTransactionController::class, 'borrow'])->name('borrowings.borrow');
-        Route::post('/return', [BorrowingTransactionController::class, 'return'])->name('borrowings.return');
+        Route::post('/return', [BorrowingTransactionController::class, 'returnBook'])->name('borrowings.return');
     });
     Route::prefix('logger')->group(function () {
         Route::get('/', [LibraryVisitController::class, 'index'])->name('logger.index');

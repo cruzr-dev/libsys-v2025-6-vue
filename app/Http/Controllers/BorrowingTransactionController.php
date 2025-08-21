@@ -336,7 +336,7 @@ class BorrowingTransactionController extends Controller
             ->with('success', 'Borrowing transaction ID:' . $transaction->id . ' added successfully');
     }
 
-    public function return(Request $request)
+    public function returnBook(Request $request)
     {
         try {
             // Validate the request
@@ -368,18 +368,18 @@ class BorrowingTransactionController extends Controller
                 'status' => 'available'
             ]);
 
-            return to_route('borrowings.index')
+            return to_route('borrowings.active')
                 ->with('success', 'Book returned successfully for transaction ID: ' . $transaction->id);
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Something went wrong during return process');
             // Log the error
             \Log::error('Error in book return: ' . $e->getMessage(), [
                 'transaction_id' => $request->transactionId,
                 'exception' => $e
             ]);
 
-            return Inertia::render('borrowings/IndexActive');
+            return to_route('borrowings.active')
+                ->with('error', 'Something went wrong during return process');
         }
     }
 
