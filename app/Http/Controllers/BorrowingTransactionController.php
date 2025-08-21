@@ -294,7 +294,6 @@ class BorrowingTransactionController extends Controller
 
     public function borrow(Request $request)
     {
-        dd($request->all());
         $user = null;
         $policy = null;
         $book = null;
@@ -336,9 +335,8 @@ class BorrowingTransactionController extends Controller
             'status' => 'borrowed'
         ]);
 
-        return to_route('borrowings.index')
+        return to_route('borrowings.create')
             ->with('success', 'Borrowing transaction ' . $transaction->transaction_number . ' added successfully');
-
     }
 
 }
