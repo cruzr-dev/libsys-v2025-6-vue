@@ -26,6 +26,7 @@ import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, Dropdo
 import { h, ref } from 'vue';
 import { route } from 'ziggy-js';
 import DropdownAction from '../records/DataTableDemoColumn.vue';
+import { formatDistanceToNow, formatRelative } from 'date-fns';
 
 // Props - Add columnVisibility to props
 interface Props {
@@ -95,7 +96,20 @@ const columns: ColumnDef<RowData>[] = [
         accessorKey: 'due_date',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Due in', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('due_date')),
+        cell: ({ row }) => {
+            const dueDate = row.getValue('due_date') as string | number | Date | null;
+            if (!dueDate) {
+                return h('div', { class: 'lowercase' }, 'No date');
+            }
+
+            const date = dueDate ? new Date(dueDate) : null;
+            if (isNaN(date.getTime())) {
+                return h('div', { class: 'lowercase' }, 'Invalid date');
+            }
+
+            const relativeDate = formatDistanceToNow(date, new Date());
+            return h('div', { class: 'lowercase' }, relativeDate);
+        },
         enableHiding: false,
     },
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
