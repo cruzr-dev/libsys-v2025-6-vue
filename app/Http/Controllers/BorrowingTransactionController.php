@@ -91,7 +91,7 @@ class BorrowingTransactionController extends Controller
     public function indexActive(Request $request)
     {
         $perPage = $request->input('per_page', 10);
-        $sortField = $request->input('sort_field', 'transaction_number');
+        $sortField = $request->input('sort_field', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
         $filters = [];
 
@@ -105,7 +105,7 @@ class BorrowingTransactionController extends Controller
         }
 
         // Define toggleable columns (including user columns)
-        $toggleableColumns = ['transaction_number', 'user_name'];
+        $toggleableColumns = ['id', 'client'];
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
@@ -124,7 +124,7 @@ class BorrowingTransactionController extends Controller
                 } else {
                     // Default visibility
                     $columnVisibility[$columnName] = match($columnName) {
-                        'transaction_number', 'user_name' => true,
+                        'id', 'client' => true,
                         default => false
                     };
                 }
@@ -132,15 +132,14 @@ class BorrowingTransactionController extends Controller
         } else {
             // Default visibility
             $columnVisibility = [
-                'transaction_number' => true,
-                'user_name' => true,
+                'id' => true,
+                'client' => true,
             ];
         }
 
         $borrowings = BorrowingTransaction::query()
             ->select([
                 'id',
-                'transaction_number',
                 'user_id',
                 'record_id',
                 'checkout_date',
@@ -153,7 +152,7 @@ class BorrowingTransactionController extends Controller
             ->whereIn('status', ['active'])
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($q) use ($searchTerm) {
-                    $q->where('transaction_number', 'like', '%' . $searchTerm . '%')
+                    $q->where('id', 'like', '%' . $searchTerm . '%')
                         ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
                             $userQuery->where('first_name', 'like', '%' . $searchTerm . '%')
                                 ->orWhere('middle_initial', 'like', '%' . $searchTerm . '%')
@@ -262,7 +261,6 @@ class BorrowingTransactionController extends Controller
 
             // Create the borrowing transaction
             $transaction = BorrowingTransaction::create([
-                'transaction_number' => $transactionNumber,
                 'record_id' => $record_id,
                 'borrowing_policy_id' => $insideBorrowingPolicy->id,
                 'transaction_type' => 'borrow-inside',
@@ -272,7 +270,7 @@ class BorrowingTransactionController extends Controller
             ]);
 
             return to_route('borrowings.create')
-                ->with('success', 'Borrowing transaction ' . $transaction->transaction_number . ' added successfully');
+                ->with('success', 'Borrowing transaction ID:' . $transaction->id . ' added successfully');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed in BorrowingController@store', [
@@ -320,7 +318,6 @@ class BorrowingTransactionController extends Controller
         $transactionNumber = 'BRW-O' . date('ymdHis') . '-' . str_pad(random_int(1, 99999), 4, '0', STR_PAD_LEFT);        $policy_loan_period_days = $policy->loan_period_days;
 
         $transaction = BorrowingTransaction::create([
-            'transaction_number' => $transactionNumber,
             'user_id' => $user->id,
             'record_id' => $book->id,
             'borrowing_policy_id' => $policy->id,
@@ -336,7 +333,7 @@ class BorrowingTransactionController extends Controller
         ]);
 
         return to_route('borrowings.create')
-            ->with('success', 'Borrowing transaction ' . $transaction->transaction_number . ' added successfully');
+            ->with('success', 'Borrowing transaction ID:' . $transaction->id . ' added successfully');
     }
 
 }

@@ -48,10 +48,10 @@ type RowData = any;
 const data = props.data.data;
 const columns: ColumnDef<RowData>[] = [
     {
-        accessorKey: 'transaction_number',
+        accessorKey: 'id',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['T.N. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('transaction_number')),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('id')),
         enableHiding: false,
     },
     {
@@ -61,7 +61,7 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }: { row: Row<RowData> }) => {
             const user = row.original.user;
             if (user.middle_initial) {
-                return h('div', ('(' + user.library_id + ') ' + user.first_name + ' ' + user.middle_initial + '. ' + user.last_name) || '-')
+                return h('div', { class: 'w-56 truncate'}, ('(' + user.library_id + ') ' + user.first_name + ' ' + user.middle_initial + '. ' + user.last_name) || '-')
             } else if (user) {
                 return h('div', (user.first_name + ' ' + user.last_name) || '-')
             } else {
@@ -77,7 +77,7 @@ const columns: ColumnDef<RowData>[] = [
         cell: ({ row }: { row: Row<RowData> }) => {
             const book = row.original.record;
             if (book) {
-                return h('div', { class: 'w-sm truncate'}, ('(' + book.accession_number + ') ' + book.title || '-'))
+                return h('div', { class: 'w-56 truncate'}, ('(' + book.accession_number + ') ' + book.title || '-'))
             } else {
                 return h('div', '(not found)')
             }
