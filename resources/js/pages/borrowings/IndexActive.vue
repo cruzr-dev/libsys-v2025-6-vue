@@ -70,6 +70,20 @@ const columns: ColumnDef<RowData>[] = [
         },
         enableHiding: false,
     },
+    {
+        accessorKey: 'book',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Book', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }: { row: Row<RowData> }) => {
+            const book = row.original.record;
+            if (book) {
+                return h('div', { class: 'w-sm truncate'}, ('(' + book.accession_number + ') ' + book.title || '-'))
+            } else {
+                return h('div', '(not found)')
+            }
+        },
+        enableHiding: false,
+    },
     { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
 ];
 
