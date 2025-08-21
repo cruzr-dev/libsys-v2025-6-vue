@@ -9,6 +9,7 @@ import BookSearchComboBox from '@/components/BookSearchComboBox.vue';
 import UserSearchComboBox from '@/components/UserSearchComboBox.vue';
 import BorrowBookDialog from '@/components/BorrowBookDialog.vue';
 import { Button } from '@/components/ui/button';
+import { MapPinPlusInside } from "lucide-vue-next"
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -126,7 +127,9 @@ console.log('Search result from props:', props.searchAcResult);
                                 <Button
                                     class="flex-1"
                                     @click="handleBorrowInside"
+                                    variant="secondary"
                                 >
+                                    <MapPinPlusInside class="w-4 h-4 mr-2" />
                                     Borrow (Inside)
                                 </Button>
                             </div>
