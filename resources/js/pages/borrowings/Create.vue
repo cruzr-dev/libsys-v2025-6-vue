@@ -46,8 +46,13 @@ console.log('Search result from props:', props.searchAcResult);
     <Head title="Borrow/Return Books" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-            <div class="flex gap-4">
-                <Card class="w-lg flex-1">
+            <div :class="[
+                'flex gap-4',
+                searchAcResult ? '' : 'justify-center'
+            ]">
+                <Card :class="[
+                    searchAcResult ? 'w-lg flex-1' : 'w-lg'
+                ]">
                     <CardHeader>
                         <CardTitle>Search Book</CardTitle>
                         <CardDescription>Find the book to borrow by searching title, author, or accession number.</CardDescription>
