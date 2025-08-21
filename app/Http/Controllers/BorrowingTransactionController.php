@@ -8,6 +8,7 @@ use App\Models\BorrowingTransaction;
 use App\Models\Record;
 use App\Models\User;
 use App\Models\UserType;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -43,6 +44,48 @@ class BorrowingTransactionController extends Controller
         return Inertia::render('borrowings/Create', [
             'searchAcResult' => $search_result,
         ]);
+    }
+
+    public function searchBook(Request $request): JsonResponse
+    {
+        {
+            $query = $request->get('q');
+
+            if (empty($query) || strlen($query) < 2) {
+                return response()->json([
+                    'books' => [],
+                    'message' => 'Query must be at least 2 characters long'
+                ]);
+            }
+
+            try {
+                $books = Record::where(function ($q) use ($query) {
+                    $q->where('title', 'LIKE', "%{$query}%")
+                        ->orWhere('accession_number', 'LIKE', "%{$query}%");
+
+                })
+                    ->select([
+                        'id',
+                        'title',
+                        'accession_number',
+                        'status', // Add status column if you have it
+                    ])
+                    ->limit(10) // Limit results to prevent overwhelming the UI
+                    ->get();
+
+                return response()->json([
+                    'books' => $books,
+                    'count' => $books->count()
+                ]);
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'books' => [],
+                    'error' => 'Search failed',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        }
     }
 
     public function indexActive(Request $request)

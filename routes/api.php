@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BorrowingTransactionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -12,3 +13,5 @@ Route::get('/sample', function () {
         'message' => 'This data came from Laravel!',
     ]);
 });
+
+Route::get('/books/search', [BorrowingTransactionController::class, 'searchBook']);
