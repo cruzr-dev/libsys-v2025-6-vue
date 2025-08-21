@@ -183,22 +183,47 @@ class BorrowingTransactionController extends Controller
         ]);
     }
 
-    public function searchUser(Request $request)
+    public function searchUser(Request $request): JsonResponse
     {
-        $query = $request->get('q', '');
+        $query = $request->get('q');
 
-        $users = User::select('id', 'first_name', 'last_name', 'email')
-            ->where(function ($q) use ($query) {
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([
+                'users' => [],
+                'message' => 'Query must be at least 2 characters long'
+            ]);
+        }
+
+        try {
+            $users = User::where(function ($q) use ($query) {
                 $q->where('first_name', 'LIKE', "%{$query}%")
                     ->orWhere('last_name', 'LIKE', "%{$query}%")
-                    ->orWhere('email', 'LIKE', "%{$query}%");
+                    ->orWhere('middle_initial', 'LIKE', "%{$query}%")
+                    ->orWhere('library_id', 'LIKE', "%{$query}%");
             })
-            ->limit(8)
-            ->get();
+                ->select([
+                    'id',
+                    'first_name',
+                    'last_name',
+                    'middle_initial',
+                    'library_id'
+                ])
+                ->limit(10) // Limit results
+                ->orderBy('first_name')
+                ->get();
 
-        return inertia()->render('borrowings/Create', [
-            'users' => $users
-        ]);
+            return response()->json([
+                'users' => $users,
+                'count' => $users->count()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'users' => [],
+                'error' => 'User search failed',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

@@ -14,4 +14,6 @@ Route::get('/sample', function () {
     ]);
 });
 
-Route::get('/books/search', [BorrowingTransactionController::class, 'searchBook']);
+Route::get('/borrowings/books/search', [BorrowingTransactionController::class, 'searchBook']);
+
+Route::get('/borrowings/users/search', [BorrowingTransactionController::class, 'searchUser']);

@@ -43,7 +43,7 @@ const debouncedSearch = debounce(async (query: string) => {
 
     try {
         // Make request to your Laravel backend
-        const response = await fetch(`/api/books/search?q=${encodeURIComponent(query)}`, {
+        const response = await fetch(`/api/borrowings/books/search?q=${encodeURIComponent(query)}`, {
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',

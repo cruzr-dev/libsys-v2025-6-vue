@@ -6,6 +6,7 @@ import type { BreadcrumbItem } from '@/types';
 import BookScannerDialog from '@/components/BookScannerDialog.vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import BookSearchComboBox from '@/components/BookSearchComboBox.vue';
+import UserSearchComboBox from '@/components/UserSearchComboBox.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -26,16 +27,23 @@ const props = defineProps({
     },
 });
 
-// Reactive state for selected book
+// Reactive state for selected book and user
 const selectedBook = ref(props.searchAcResult);
+const selectedUser = ref(null);
 
 // Handle book selection
 const handleBookSelected = (book: any) => {
     selectedBook.value = book;
     console.log('Selected book:', book);
 
-    // You can perform additional actions here when a book is selected
-    // such as updating a form, fetching borrower info, etc.
+    // Reset selected user when book changes
+    selectedUser.value = null;
+};
+
+// Handle user selection
+const handleUserSelected = (user: any) => {
+    selectedUser.value = user;
+    console.log('Selected user:', user);
 };
 
 // Log the search result for debugging
@@ -75,30 +83,40 @@ console.log('Search result from props:', props.searchAcResult);
                         <CardDescription>Book details for borrowing.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div class="space-y-2">
-                            <div>
-                                <strong>Title:</strong> {{ selectedBook.title }}
+                        <div class="space-y-4">
+                            <div class="space-y-2">
+                                <div>
+                                    <strong>Title:</strong> {{ selectedBook.title }}
+                                </div>
+                                <div>
+                                    <strong>Author:</strong> {{ selectedBook.author || 'Unknown' }}
+                                </div>
+                                <div>
+                                    <strong>Accession Number:</strong> {{ selectedBook.accession_number }}
+                                </div>
+                                <div v-if="selectedBook.isbn">
+                                    <strong>ISBN:</strong> {{ selectedBook.isbn }}
+                                </div>
+                                <div v-if="selectedBook.status">
+                                    <strong>Status:</strong>
+                                    <span
+                                        :class="{
+                                            'text-green-600': selectedBook.status === 'available',
+                                            'text-red-600': selectedBook.status === 'borrowed',
+                                            'text-yellow-600': selectedBook.status === 'reserved'
+                                        }"
+                                    >
+                                        {{ selectedBook.status }}
+                                    </span>
+                                </div>
                             </div>
-                            <div>
-                                <strong>Author:</strong> {{ selectedBook.author || 'Unknown' }}
-                            </div>
-                            <div>
-                                <strong>Accession Number:</strong> {{ selectedBook.accession_number }}
-                            </div>
-                            <div v-if="selectedBook.isbn">
-                                <strong>ISBN:</strong> {{ selectedBook.isbn }}
-                            </div>
-                            <div v-if="selectedBook.status">
-                                <strong>Status:</strong>
-                                <span
-                                    :class="{
-                                        'text-green-600': selectedBook.status === 'available',
-                                        'text-red-600': selectedBook.status === 'borrowed',
-                                        'text-yellow-600': selectedBook.status === 'reserved'
-                                    }"
-                                >
-                                    {{ selectedBook.status }}
-                                </span>
+
+                            <!-- User Search appears when book is available -->
+                            <div v-if="selectedBook.status === 'available'">
+                                <UserSearchComboBox
+                                    v-model:selectedUser="selectedUser"
+                                    @user-selected="handleUserSelected"
+                                />
                             </div>
                         </div>
                     </CardContent>
