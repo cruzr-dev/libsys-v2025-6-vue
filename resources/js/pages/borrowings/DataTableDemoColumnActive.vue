@@ -4,15 +4,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from '@/components/ui/button/index.ts'
 
 const props = defineProps({
-    payment: Object,
+    transaction: Object,
     onEdit: Function,
 })
 
 
 
 
-const edit = (id) => {
-    props.onEdit(id);
+const returnBook = (id) => {
+    props.onReturnBook(id);
 }
 
 
@@ -28,7 +28,7 @@ const edit = (id) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem @click="edit(payment.id)">
+            <DropdownMenuItem @click="returnBook(transaction.id)">
                 Return Book
             </DropdownMenuItem>
         </DropdownMenuContent>

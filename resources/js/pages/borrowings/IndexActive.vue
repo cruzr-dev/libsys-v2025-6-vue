@@ -112,7 +112,7 @@ const columns: ColumnDef<RowData>[] = [
         },
         enableHiding: false,
     },
-    { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
+    { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { transaction: row.original }) },
 ];
 
 // Sorting helper
