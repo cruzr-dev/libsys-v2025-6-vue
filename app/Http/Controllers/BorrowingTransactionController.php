@@ -469,7 +469,7 @@ class BorrowingTransactionController extends Controller
             ]);
 
             return to_route('borrowings.create')
-                ->with('success', 'Borrowing transaction ID:' . $transaction->id . ' added successfully');
+                ->with('success', 'Borrowing transaction ID: ' . $transaction->id . ' added successfully');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed in BorrowingController@store', [
@@ -532,7 +532,7 @@ class BorrowingTransactionController extends Controller
         ]);
 
         return to_route('borrowings.create')
-            ->with('success', 'Borrowing transaction ID:' . $transaction->id . ' added successfully');
+            ->with('success', 'Borrowing transaction ID: ' . $transaction->id . ' added successfully');
     }
 
     public function returnBook(Request $request)
