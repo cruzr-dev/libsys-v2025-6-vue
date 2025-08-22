@@ -30,7 +30,11 @@ const sidebarNavItems: NavItem[] = [
         href: '/borrowings/renewed',
     },
     {
-        title: 'Inside',
+        title: 'Borrowed inside',
+        href: '/borrowings/inside',
+    },
+    {
+        title: 'All transactions',
         href: '/borrowings/inside',
     },
 ];
