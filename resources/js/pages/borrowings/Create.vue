@@ -122,7 +122,7 @@ const handleBorrowInside = () => {
                     v-if="selectedBook"
                     :class="[
                         'w-full flex-1 lg:w-2/3',
-                        'rounded-[var(--radius)] bg-[var(--card)] shadow-lg transition-all duration-300 hover:shadow-xl',
+                        'rounded-[var(--radius)] bg-[var(--card)] p-0 gap-0 shadow-lg transition-all duration-300 hover:shadow-xl',
                     ]"
                 >
                     <CardHeader class="p-6">
@@ -145,7 +145,7 @@ const handleBorrowInside = () => {
                         </div>
                         <CardDescription class="mt-2 text-[var(--muted-foreground)]"> Book details for borrowing. </CardDescription>
                     </CardHeader>
-                    <CardContent class="p-6">
+                    <CardContent class="p-6 pt-0">
                         <div class="space-y-8">
                             <div class="flex flex-col gap-6 md:flex-row">
                                 <!-- Cover Image -->
