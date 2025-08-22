@@ -27,7 +27,7 @@ class StudentController extends Controller
         $sortDirection = $request->input('sort_direction', 'asc');
         $filters = [];
 
-        $userType = UserType::where('key', 'student')->first();
+        $userType = UserType::where('key', 'undergrad_student')->first();
         $userTypeId = $userType ? $userType->id : null;
 
         // Capture search parameters
@@ -148,7 +148,7 @@ class StudentController extends Controller
             DB::beginTransaction();
 
             // Get the "student" user type dynamically
-            $studentType = UserType::where('key', 'student')->firstOrFail();
+            $studentType = UserType::where('key', 'undergrad_student')->firstOrFail();
 
             // Create the User record
             $user = User::create([
