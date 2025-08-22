@@ -80,7 +80,7 @@ const handleBorrowInside = () => {
                 <Card
                     :class="[
                         searchAcResult ? 'w-full flex-1 lg:w-2/3' : 'w-full lg:w-1/2',
-                        'rounded-[var(--radius)] bg-[var(--card)] shadow-sm transition-all duration-300 hover:shadow-xl',
+                        'rounded-[var(--radius)] bg-[var(--card)] shadow-sm',
                     ]"
                 >
                     <CardHeader class="p-6">
@@ -102,7 +102,7 @@ const handleBorrowInside = () => {
                             <CardTitle class="text-2xl font-semibold text-[var(--card-foreground)]">Search Book</CardTitle>
                         </div>
                         <CardDescription class="mt-2 text-[var(--muted-foreground)]"
-                            >Find the book to borrow by searching title, author, or accession number.</CardDescription
+                        >Find the book to borrow by searching title, author, or accession number.</CardDescription
                         >
                     </CardHeader>
                     <CardContent class="p-6">
@@ -111,7 +111,7 @@ const handleBorrowInside = () => {
                             <BookSearchComboBox
                                 v-model:selectedBook="selectedBook"
                                 @book-selected="handleBookSelected"
-                                class="w-full rounded-[var(--radius)] transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--ring)]"
+                                class="w-full rounded-[var(--radius)] focus-within:ring-1 focus-within:ring-[var(--ring)] focus-within:ring-opacity-50 transition-shadow duration-200"
                             />
                         </div>
                     </CardContent>
@@ -122,7 +122,7 @@ const handleBorrowInside = () => {
                     v-if="selectedBook"
                     :class="[
                         'w-full flex-1 lg:w-2/3',
-                        'rounded-[var(--radius)] bg-[var(--card)] p-0 gap-0 shadow-sm transition-all duration-300 hover:shadow-xl',
+                        'rounded-[var(--radius)] bg-[var(--card)] shadow-sm',
                     ]"
                 >
                     <CardHeader class="p-6">
@@ -154,7 +154,7 @@ const handleBorrowInside = () => {
                                         v-if="selectedBook.cover_image"
                                         :src="selectedBook.cover_image"
                                         alt="Book cover"
-                                        class="h-48 w-32 rounded-[var(--radius)] border border-[var(--border)] object-cover transition-transform duration-300 hover:scale-105"
+                                        class="h-48 w-32 rounded-[var(--radius)] border border-[var(--border)] object-cover"
                                         loading="lazy"
                                     />
                                     <div
@@ -191,7 +191,7 @@ const handleBorrowInside = () => {
                                         </span>
                                     </div>
                                     <Button
-                                        class="flex-1 bg-[var(--secondary)] text-[var(--secondary-foreground)] transition-colors duration-200 hover:bg-[var(--secondary)]/90"
+                                        class="flex-1 bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[var(--secondary)]/90 transition-colors duration-200"
                                         @click="handleBorrowInside"
                                         variant="secondary"
                                         v-if="selectedBook.status == 'available'"
@@ -206,7 +206,7 @@ const handleBorrowInside = () => {
                                 <UserSearchComboBox
                                     v-model:selectedUser="selectedUser"
                                     @user-selected="handleUserSelected"
-                                    class="w-full rounded-[var(--radius)] transition-all duration-200"
+                                    class="w-full rounded-[var(--radius)]"
                                 />
                                 <div v-if="selectedUser" class="mt-4">
                                     <BorrowBookDialog
