@@ -61,25 +61,53 @@ const borrowBook = (user_id, book_accession) => {
 
 <template>
     <Dialog v-model:open="isOpen">
-        <DialogContent class="sm:max-w-[425px]">
+        <DialogContent class="sm:max-w-[500px]">
             <DialogHeader>
                 <DialogTitle>Confirm Book Borrowing</DialogTitle>
             </DialogHeader>
-            <div class="space-y-4">
-                <div>
-                    <h3 class="text-lg font-semibold">Borrower Details</h3>
-                    <p class="text-sm text-gray-600">{{ user?.first_name }}</p>
-                    <p class="text-sm text-gray-600">{{ user?.library_id }}</p>
+
+            <div class="space-y-6 py-4">
+                <!-- Borrower Section with Profile Image -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="text-lg font-semibold mb-3">Borrower Details</h3>
+                    <div class="flex items-center gap-4">
+                        <!-- Profile Image -->
+                        <div class="flex-shrink-0">
+                            <img
+                                v-if="user?.profile_image"
+                                :src="user.profile_image"
+                                :alt="`${user?.first_name}'s profile`"
+                                class="w-16 h-16 rounded-full object-cover border"
+                            />
+                            <!-- Fallback Avatar -->
+                            <div
+                                v-else
+                                class="w-16 h-16 rounded-full border flex items-center justify-center"
+                            >
+                            <span class="font-semibold text-lg">
+                                {{ user?.first_name?.charAt(0)?.toUpperCase() }}
+                            </span>
+                            </div>
+                        </div>
+
+                        <!-- User Info -->
+                        <div class="flex-1">
+                            <p class="font-medium text-base">{{ user?.first_name }}</p>
+                            <p class="text-sm text-gray-600">{{ user?.library_id }}</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div>
-                    <h3 class="text-lg font-semibold">Book Details</h3>
-                    <p class="text-sm text-gray-600">
+                <!-- Book Details Section -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="text-lg font-semibold mb-3">Book Details</h3>
+                    <p class="text-sm">
                         <strong>Accession Number:</strong> {{ book_accession }}
                     </p>
                 </div>
 
-                <div class="flex gap-2">
+                <!-- Action Buttons -->
+                <div class="flex gap-3">
                     <Button
                         variant="outline"
                         @click="isOpen = false"
