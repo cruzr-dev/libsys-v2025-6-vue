@@ -89,13 +89,15 @@ const displayValue = (user: any) => {
 
 <template>
     <div class="space-y-2">
-        <label class="text-sm font-medium">Select Borrower</label>
+        <label class="text-lg font-medium text-[var(--card-foreground)]">
+            Select Borrower to Borrow (Take Home)
+        </label>
         <Combobox
             v-model="selectedUser"
             by="id"
             @update:model-value="handleUserSelect"
         >
-            <ComboboxAnchor class="w-full border-1 rounded-lg">
+            <ComboboxAnchor class="w-full border-1 rounded-lg focus-within:ring-2 focus-within:ring-[var(--ring)]">
                 <div class="relative w-full items-center">
                     <ComboboxInput
                         v-model="searchQuery"
