@@ -80,7 +80,7 @@ const handleBorrowInside = () => {
                 <Card
                     :class="[
                         searchAcResult ? 'w-full flex-1 lg:w-2/3' : 'w-full lg:w-1/2',
-                        'rounded-[var(--radius)] bg-[var(--card)] shadow-lg transition-all duration-300 hover:shadow-xl',
+                        'rounded-[var(--radius)] bg-[var(--card)] shadow-sm transition-all duration-300 hover:shadow-xl',
                     ]"
                 >
                     <CardHeader class="p-6">
@@ -122,7 +122,7 @@ const handleBorrowInside = () => {
                     v-if="selectedBook"
                     :class="[
                         'w-full flex-1 lg:w-2/3',
-                        'rounded-[var(--radius)] bg-[var(--card)] p-0 gap-0 shadow-lg transition-all duration-300 hover:shadow-xl',
+                        'rounded-[var(--radius)] bg-[var(--card)] p-0 gap-0 shadow-sm transition-all duration-300 hover:shadow-xl',
                     ]"
                 >
                     <CardHeader class="p-6">
