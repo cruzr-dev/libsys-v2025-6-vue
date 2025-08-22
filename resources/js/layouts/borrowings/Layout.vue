@@ -19,15 +19,15 @@ const sidebarNavItems: NavItem[] = [
     },
     {
         title: 'Lost',
-        href: '/borrowings/returned',
+        href: '/borrowings/lost',
     },
     {
         title: 'Damaged',
-        href: '/borrowings/returned',
+        href: '/borrowings/damaged',
     },
     {
         title: 'Renewed',
-        href: '/borrowings/returned',
+        href: '/borrowings/renewed',
     },
     {
         title: 'Inside',

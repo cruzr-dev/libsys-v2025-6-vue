@@ -62,6 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [BorrowingTransactionController::class, 'index'])->name('borrowings.index');
         Route::get('/active', [BorrowingTransactionController::class, 'indexActive'])->name('borrowings.active');
         Route::get('/overdue', [BorrowingTransactionController::class, 'indexOverdue'])->name('borrowings.overdue');
+        Route::get('/returned', [BorrowingTransactionController::class, 'indexReturned'])->name('borrowings.returned');
         Route::get('/create', [BorrowingTransactionController::class, 'create'])->name('borrowings.create');
         Route::post('/borrow/inside', [BorrowingTransactionController::class, 'borrowInside'])->name('borrowings.borrow.inside');
         Route::post('/borrow', [BorrowingTransactionController::class, 'borrow'])->name('borrowings.borrow');
