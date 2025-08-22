@@ -186,6 +186,104 @@ class BorrowingTransactionController extends Controller
         ]);
     }
 
+    public function indexOverdue(Request $request)
+    {
+        if ($request->returnedABook) {
+            session()->flash('success', 'Successfully returned the book!');
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $sortField = $request->input('sort_field', 'id'); // Keep 'id' as default
+        $sortDirection = $request->input('sort_direction', 'desc'); // Change to 'desc' for latest first
+        $filters = [];
+
+        // Capture search parameters
+        $searchTerm = $request->input('search');
+        if (!empty($searchTerm)) {
+            $filters[] = [
+                'id' => 'search',
+                'value' => $searchTerm
+            ];
+        }
+
+        // Define toggleable columns (including user columns)
+        $toggleableColumns = ['id', 'client'];
+        $columnVisibility = [];
+
+        // Check for visibility parameters in the URL
+        $hasVisibilityParams = collect($request->query())
+            ->keys()
+            ->contains(function ($key) {
+                return str_starts_with($key, 'hide_') || str_starts_with($key, 'show_');
+            });
+
+        if ($hasVisibilityParams) {
+            foreach ($toggleableColumns as $columnName) {
+                if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
+                    $columnVisibility[$columnName] = true;
+                } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
+                    $columnVisibility[$columnName] = false;
+                } else {
+                    // Default visibility
+                    $columnVisibility[$columnName] = match($columnName) {
+                        'id', 'client' => true,
+                        default => false
+                    };
+                }
+            }
+        } else {
+            // Default visibility
+            $columnVisibility = [
+                'id' => true,
+                'client' => true,
+            ];
+        }
+
+        $borrowings = BorrowingTransaction::query()
+            ->select([
+                'id',
+                'user_id',
+                'record_id',
+                'checkout_date',
+                'due_date',
+            ])
+            ->with([
+                'user:id,library_id,first_name,middle_initial,last_name',
+                'record:id,title,accession_number',
+            ])
+            ->whereIn('status', ['overdue'])
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('id', 'like', '%' . $searchTerm . '%')
+                        ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                            $userQuery->where('first_name', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('middle_initial', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('last_name', 'like', '%' . $searchTerm . '%');
+                        });
+                });
+            })
+            ->when($sortField, function ($query, $sortField) use ($sortDirection) {
+                // Handle sorting for user fields
+                if ($sortField === 'user_name') {
+                    $query->join('users', 'borrowing_transactions.user_id', '=', 'users.id')
+                        ->orderBy('users.first_name', $sortDirection)
+                        ->orderBy('users.last_name', $sortDirection)
+                        ->select('borrowing_transactions.*');
+                } else {
+                    $query->orderBy($sortField, $sortDirection);
+                }
+            })
+            ->paginate(perPage: $perPage);
+
+        return Inertia::render('borrowings/IndexOverdue', [
+            'data' => $borrowings,
+            'filter' => $filters,
+            'currentSortField' => $sortField,
+            'currentSortDirection' => $sortDirection,
+            'columnVisibility' => $columnVisibility,
+        ]);
+    }
+
     public function searchUser(Request $request): JsonResponse
     {
         $query = $request->get('q');
