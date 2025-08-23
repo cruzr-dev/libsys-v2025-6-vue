@@ -107,7 +107,8 @@ const handleBorrowInside = () => {
                             <BookSearchComboBox
                                 v-model:selectedBook="selectedBook"
                                 @book-selected="handleBookSelected"
-                                class="w-full rounded-lg transition-shadow duration-200"
+                                class="w-full rounded-lg transition-shadow duration-200
+                                focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]"
                             />
                         </div>
                     </CardContent>
