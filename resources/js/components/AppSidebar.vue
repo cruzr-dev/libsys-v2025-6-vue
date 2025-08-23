@@ -31,7 +31,7 @@ const mainNavItems: NavItem[] = [
         icon: BookOpenCheck,
     },
     {
-        title: 'Visitors',
+        title: 'Library Visits',
         href: '/logger',
         icon: FileClock ,
     },
