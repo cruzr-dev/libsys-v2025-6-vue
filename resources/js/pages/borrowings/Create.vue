@@ -117,7 +117,7 @@ const handleBorrowInside = () => {
                 <!-- Selected Book Card - Slides in smoothly -->
                 <Card
                     v-show="selectedBook"
-                    class="rounded-lg bg-white shadow-sm transition-all duration-300 ease-in-out"
+                    class="rounded-lg bg-white shadow-sm transition-all duration-1000 ease-in-out"
                     :class="selectedBook ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'"
                 >
                     <CardHeader class="p-6">
