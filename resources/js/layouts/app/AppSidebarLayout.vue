@@ -80,10 +80,10 @@ onMounted(() => {
 <template>
     <AppShell variant="sidebar">
         <AppSidebar />
-        <AppContent variant="sidebar" class="overflow-x-hidden">
+        <AppContent variant="sidebar" class="overflow-x-hidden relative">
             <!-- Error Alert -->
             <Alert
-                class="fixed top-5 left-1/2 z-50 w-fit max-w-md -translate-x-1/2 transform overflow-hidden pr-8"
+                class="absolute top-5 left-1/2 z-50 w-fit max-w-md -translate-x-1/2 transform overflow-hidden pr-8"
                 variant="destructive"
                 v-if="page.props.flash.error && showAlert"
             >
@@ -102,7 +102,7 @@ onMounted(() => {
 
             <!-- Success Alert -->
             <Alert
-                class="fixed top-5 left-1/2 z-50 w-fit max-w-md -translate-x-1/2 transform overflow-hidden border-2 border-green-500 pr-8"
+                class="absolute top-5 left-1/2 z-50 w-fit max-w-md -translate-x-1/2 transform overflow-hidden border-2 border-green-500 pr-8"
                 v-if="page.props.flash.success && showAlert"
             >
                 <CircleCheckBig />
