@@ -76,13 +76,9 @@ const handleBorrowInside = () => {
     <Head title="Borrow/Return Books" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-            <div :class="['flex gap-4', searchAcResult ? '' : 'justify-center']">
-                <Card
-                    :class="[
-                        searchAcResult ? 'w-full flex-1 lg:w-2/3' : 'w-full lg:w-1/2',
-                        'rounded-[var(--radius)] bg-[var(--card)] shadow-sm',
-                    ]"
-                >
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 transition-all duration-300 ease-in-out">
+                <!-- Search Book Card - Always takes consistent space -->
+                <Card class="rounded-[var(--radius)] bg-[var(--card)] shadow-sm">
                     <CardHeader class="p-6">
                         <div class="flex items-center gap-3">
                             <svg
@@ -117,13 +113,11 @@ const handleBorrowInside = () => {
                     </CardContent>
                 </Card>
 
-                <!-- Display selected book information -->
+                <!-- Selected Book Card - Slides in smoothly -->
                 <Card
-                    v-if="selectedBook"
-                    :class="[
-                        'w-full flex-1 lg:w-2/3',
-                        'rounded-[var(--radius)] bg-[var(--card)] shadow-sm',
-                    ]"
+                    v-show="selectedBook"
+                    class="rounded-[var(--radius)] bg-[var(--card)] shadow-sm transition-all duration-300 ease-in-out"
+                    :class="selectedBook ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'"
                 >
                     <CardHeader class="p-6">
                         <div class="flex items-center gap-3">
@@ -145,7 +139,7 @@ const handleBorrowInside = () => {
                         </div>
                         <CardDescription class="mt-2 text-[var(--muted-foreground)]"> Book details for borrowing. </CardDescription>
                     </CardHeader>
-                    <CardContent class="p-6 pt-0">
+                    <CardContent class="p-6 pt-0" v-if="selectedBook">
                         <div class="space-y-8">
                             <div class="flex flex-col gap-6 md:flex-row">
                                 <!-- Cover Image -->
