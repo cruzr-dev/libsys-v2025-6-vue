@@ -78,11 +78,11 @@ const handleBorrowInside = () => {
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 transition-all duration-300 ease-in-out">
                 <!-- Search Book Card - Always takes consistent space -->
-                <Card class="rounded-[var(--radius)] bg-[var(--card)] shadow-sm">
+                <Card class="rounded-lg bg-white shadow-sm">
                     <CardHeader class="p-6">
                         <div class="flex items-center gap-3">
                             <svg
-                                class="h-6 w-6 text-[var(--primary)]"
+                                class="h-6 w-6 text-blue-500"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -95,9 +95,9 @@ const handleBorrowInside = () => {
                                     d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
                                 ></path>
                             </svg>
-                            <CardTitle class="text-2xl font-semibold text-[var(--card-foreground)]">Search Book</CardTitle>
+                            <CardTitle class="text-2xl font-semibold">Search Book</CardTitle>
                         </div>
-                        <CardDescription class="mt-2 text-[var(--muted-foreground)]"
+                        <CardDescription class="mt-2"
                         >Find the book to borrow by searching title, author, or accession number.</CardDescription
                         >
                     </CardHeader>
@@ -107,7 +107,7 @@ const handleBorrowInside = () => {
                             <BookSearchComboBox
                                 v-model:selectedBook="selectedBook"
                                 @book-selected="handleBookSelected"
-                                class="w-full rounded-[var(--radius)] focus-within:ring-1 focus-within:ring-[var(--ring)] focus-within:ring-opacity-50 transition-shadow duration-200"
+                                class="w-full rounded-lg transition-shadow duration-200"
                             />
                         </div>
                     </CardContent>
@@ -116,13 +116,13 @@ const handleBorrowInside = () => {
                 <!-- Selected Book Card - Slides in smoothly -->
                 <Card
                     v-show="selectedBook"
-                    class="rounded-[var(--radius)] bg-[var(--card)] shadow-sm transition-all duration-300 ease-in-out"
+                    class="rounded-lg bg-white shadow-sm transition-all duration-300 ease-in-out"
                     :class="selectedBook ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'"
                 >
                     <CardHeader class="p-6">
                         <div class="flex items-center gap-3">
                             <svg
-                                class="h-6 w-6 text-[var(--primary)]"
+                                class="h-6 w-6 text-blue-500"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -135,9 +135,9 @@ const handleBorrowInside = () => {
                                     d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
                                 ></path>
                             </svg>
-                            <CardTitle class="text-2xl font-semibold text-[var(--card-foreground)]"> Selected Book </CardTitle>
+                            <CardTitle class="text-2xl font-semibold"> Selected Book </CardTitle>
                         </div>
-                        <CardDescription class="mt-2 text-[var(--muted-foreground)]"> Book details for borrowing. </CardDescription>
+                        <CardDescription class="mt-2"> Book details for borrowing. </CardDescription>
                     </CardHeader>
                     <CardContent class="p-6 pt-0" v-if="selectedBook">
                         <div class="space-y-8">
@@ -148,44 +148,38 @@ const handleBorrowInside = () => {
                                         v-if="selectedBook.cover_image"
                                         :src="selectedBook.cover_image"
                                         alt="Book cover"
-                                        class="h-48 w-32 rounded-[var(--radius)] border border-[var(--border)] object-cover"
+                                        class="h-48 w-32 rounded-lg border object-cover"
                                         loading="lazy"
                                     />
                                     <div
                                         v-else
-                                        class="flex h-48 w-32 items-center justify-center rounded-[var(--radius)] border border-[var(--border)] bg-[var(--muted)] text-sm text-[var(--muted-foreground)]"
+                                        class="flex h-48 w-32 items-center justify-center rounded-lg border bg-gray-100 text-sm"
                                     >
                                         No Cover Image
                                     </div>
                                 </div>
                                 <!-- Book Details -->
                                 <div class="flex-1 space-y-3">
-                                    <div><strong class="text-[var(--card-foreground)]">Title:</strong> {{ selectedBook.title }}</div>
+                                    <div><strong>Title:</strong> {{ selectedBook.title }}</div>
                                     <div>
-                                        <strong class="text-[var(--card-foreground)]">Author:</strong>
+                                        <strong>Author:</strong>
                                         {{ selectedBook.author || 'Unknown' }}
                                     </div>
                                     <div>
-                                        <strong class="text-[var(--card-foreground)]">Accession Number:</strong>
+                                        <strong>Accession Number:</strong>
                                         {{ selectedBook.accession_number }}
                                     </div>
                                     <div v-if="selectedBook.isbn">
-                                        <strong class="text-[var(--card-foreground)]">ISBN:</strong> {{ selectedBook.isbn }}
+                                        <strong>ISBN:</strong> {{ selectedBook.isbn }}
                                     </div>
                                     <div v-if="selectedBook.status">
-                                        <strong class="text-[var(--card-foreground)]">Status:</strong>
-                                        <span
-                                            :class="{
-                                                'text-[var(--chart-1)]': selectedBook.status === 'available',
-                                                'text-[var(--destructive)]': selectedBook.status === 'borrowed',
-                                                'text-[var(--chart-3)]': selectedBook.status === 'reserved',
-                                            }"
-                                        >
+                                        <strong>Status:</strong>
+                                        <span>
                                             {{ selectedBook.status }}
                                         </span>
                                     </div>
                                     <Button
-                                        class="flex-1 bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[var(--secondary)]/90 transition-colors duration-200"
+                                        class="flex-1 bg-gray-200 transition-colors duration-200"
                                         @click="handleBorrowInside"
                                         variant="secondary"
                                         v-if="selectedBook.status == 'available'"
@@ -200,7 +194,7 @@ const handleBorrowInside = () => {
                                 <UserSearchComboBox
                                     v-model:selectedUser="selectedUser"
                                     @user-selected="handleUserSelected"
-                                    class="w-full rounded-[var(--radius)]"
+                                    class="w-full rounded-lg"
                                 />
                                 <div v-if="selectedUser" class="mt-4">
                                     <BorrowBookDialog
