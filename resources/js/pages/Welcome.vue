@@ -10,6 +10,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
 import { onMounted, ref } from 'vue';
 import WelcomeFooter from '@/components/WelcomeFooter.vue';
+import { Input } from '@/components/ui/input';
 
 // Page and alert handling
 const page = usePage();
@@ -133,11 +134,19 @@ onMounted(() => {
 
         <!-- Main content -->
         <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
+
             <!-- Search section -->
             <div class="px-4">
-                <div class="flex h-[360px] min-w-full items-center justify-center rounded-2xl bg-[url(/storage/system_images/eagle.jpg)] bg-cover">
-                    <div class="grid rounded-lg bg-background">
-                        <WelcomeSearch :search_result="search_result" :search_term="search_term" :search_button="search_button" />
+                <div class="relative flex h-[360px] min-w-full items-center justify-center rounded-2xl bg-[url(/storage/system_images/eagle.jpg)] bg-cover">
+                    <!-- Heading + Sub-heading -->
+                    <div class="absolute top-10 text-center text-primary-foreground">
+                        <h1 class="text-3xl font-bold">USeP Tagum-Mabini Library</h1>
+                        <p class="text-lg">Your gateway to knowledge and discovery</p>
+                    </div>
+
+                    <!-- Search Box -->
+                    <div class="grid rounded-lg bg-background z-10">
+                        <Input type="text" placeholder="Search here" />
                     </div>
                 </div>
             </div>
