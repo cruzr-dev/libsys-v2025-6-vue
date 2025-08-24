@@ -131,7 +131,7 @@ const stats = [
         <!-- The content itself -->
         <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
 
-            <div class="p-4 pb-0">
+            <div class="px-4">
                 <div class="h-[360px] bg-[url(/storage/system_images/eagle.jpg)] bg-cover rounded-2xl
                 min-w-full flex justify-center items-center">
                     <div class="grid bg-background rounded-lg">
@@ -142,7 +142,7 @@ const stats = [
                 </div>
             </div>
 
-            <div class="grid gap-4 p-16 pb-0 md:grid-cols-2 lg:grid-cols-4">
+            <div class="grid gap-4 px-16 py-12 pb-0 md:grid-cols-2 lg:grid-cols-4">
                 <Card
                     v-for="stat in stats"
                     :key="stat.title"
