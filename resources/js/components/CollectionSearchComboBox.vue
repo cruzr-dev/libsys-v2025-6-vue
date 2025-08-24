@@ -98,7 +98,7 @@ const displayValue = (user: any) => {
                 <div class="relative w-full items-center">
                     <ComboboxInput
                         v-model="searchQuery"
-                        class="pl-2"
+                        class="pl-2 dark:text-muted-foreground"
                         :display-value="displayValue"
                         placeholder="Search by name or library ID..."
                     />
@@ -119,7 +119,7 @@ const displayValue = (user: any) => {
                 <ComboboxEmpty>
                     <div class="flex flex-col items-center p-4 text-center">
                         <User class="size-8 text-muted-foreground mb-2" />
-                        <p class="text-sm text-muted-foreground">
+                        <p class="text-sm">
                             {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No users found' }}
                         </p>
                     </div>
