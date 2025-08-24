@@ -12,7 +12,7 @@ const appName = props.appName;
 </script>
 
 <template>
-    <footer class="border-t border-border bg-primary text-sm text-primary-foreground">
+    <footer class="border-t border-border bg-primary text-sm text-primary-foreground dark:bg-sidebar dark:text-sidebar-foreground">
         <div class="container mx-auto grid grid-cols-1 gap-8 px-8 py-12 md:grid-cols-3 lg:px-16">
             <!-- Brand / Logo -->
             <div>
@@ -56,7 +56,7 @@ const appName = props.appName;
             </div>
 
             <!-- Social / Actions -->
-            <div class="flex flex-col items-start gap-4 text-primary-foreground md:items-end">
+            <div class="flex flex-col items-start gap-4 md:items-end">
                 <div class="flex space-x-4">
                     <a href="https://www.facebook.com/USePTMLRC" target="_blank" rel="noopener noreferrer">
                         <Button variant="ghost" size="icon" class="rounded-full">

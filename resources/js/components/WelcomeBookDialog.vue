@@ -66,7 +66,7 @@ defineProps({
                     </div>
 
                     <!-- Book cover area -->
-                    <div class="flex w-32 items-center justify-center bg-gray-50 p-4">
+                    <div class="flex w-32 items-center justify-center bg-gray-50 p-4 dark:bg-muted">
                         <img
                             class="h-auto max-h-40 w-full rounded-lg object-cover shadow-sm"
                             :src="getCoverUrl(record?.book.cover_image)"
@@ -80,7 +80,7 @@ defineProps({
         <DialogContent class="grid gap-6 h-full max-h-9/10 sm:grid-cols-2 sm:max-w-6xl justify-between">
             <div class="flex items-center justify-center">
                 <img
-                    class="max-w-xs rounded-lg shadow-md"
+                    class="max-w-xs rounded-lg shadow-md "
                     loading="lazy"
                     :src="getCoverUrl(record?.book.cover_image)"
                     alt="Book Cover"
