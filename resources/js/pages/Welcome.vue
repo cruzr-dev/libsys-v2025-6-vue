@@ -52,26 +52,26 @@ defineProps({
 const stats = [
     {
         title: 'Collections',
-        value: '$45,231.89',
-        change: 'Some text here',
+        value: '15,821',
+        change: 'Book, CDs, Magazines, Thesis, etc.',
         icon: DollarSign,
     },
     {
         title: 'Clients',
-        value: '+2350',
-        change: '+180.1% from last month',
+        value: '2,350',
+        change: 'Students, Staffs, Faculties',
         icon: Users,
     },
     {
         title: 'New Arrivals',
-        value: '+12,234',
+        value: '+234',
         change: '+19% from last month',
         icon: CreditCard,
     },
     {
-        title: 'Active Now',
-        value: '+573',
-        change: '+201 since last hour',
+        title: 'Borrowing Transactions',
+        value: '+73',
+        change: '+20 since last week',
         icon: Activity,
     },
 ]
