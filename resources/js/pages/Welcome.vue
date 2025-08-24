@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle, X } from 'lucide-vue-next'
+import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue'
 import WelcomeBookDialog from '@/components/WelcomeBookDialog.vue';
 import WelcomeSearch from '@/components/WelcomeSearch.vue';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 
 // for alert
@@ -48,6 +48,33 @@ defineProps({
     recordCount: Number,
     transactionCount: Number,
 });
+
+const stats = [
+    {
+        title: 'Total Revenue',
+        value: '$45,231.89',
+        change: '+20.1% from last month',
+        icon: DollarSign,
+    },
+    {
+        title: 'Subscriptions',
+        value: '+2350',
+        change: '+180.1% from last month',
+        icon: Users,
+    },
+    {
+        title: 'Sales',
+        value: '+12,234',
+        change: '+19% from last month',
+        icon: CreditCard,
+    },
+    {
+        title: 'Active Now',
+        value: '+573',
+        change: '+201 since last hour',
+        icon: Activity,
+    },
+]
 
 </script>
 
@@ -124,6 +151,25 @@ defineProps({
                 <Card class="p-4 gap-2">
                     <h4 class="text-6xl">{{ transactionCount }}</h4>
                     <div>Transactions</div>
+                </Card>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card
+                    v-for="stat in stats"
+                    :key="stat.title"
+                    class="hover:shadow-md transition p-4"
+                >
+                    <CardHeader class="flex p-0 flex-row items-center justify-between pb-2 space-y-0">
+                        <CardTitle class="text-sm font-medium text-muted-foreground">
+                            {{ stat.title }}
+                        </CardTitle>
+                        <component :is="stat.icon" class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent class="p-0">
+                        <div class="text-2xl font-bold">{{ stat.value }}</div>
+                        <p class="text-xs text-muted-foreground">{{ stat.change }}</p>
+                    </CardContent>
                 </Card>
             </div>
 
