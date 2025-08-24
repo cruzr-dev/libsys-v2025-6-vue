@@ -9,6 +9,7 @@ import WelcomeSearch from '@/components/WelcomeSearch.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
 import { onMounted, ref } from 'vue';
+import WelcomeFooter from '@/components/WelcomeFooter.vue';
 
 // Page and alert handling
 const page = usePage();
@@ -169,6 +170,6 @@ onMounted(() => {
         </div>
 
         <!-- Footer spacing -->
-        <div class="hidden h-14.5 lg:block"></div>
+        <WelcomeFooter />
     </div>
 </template>
