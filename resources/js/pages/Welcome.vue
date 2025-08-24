@@ -162,7 +162,7 @@ const stats = [
             </div>
 
             <div class="w-full px-16 py-12" v-if="Object.keys(records?.data).length">
-                <CardTitle class="text-2xl text-center pb-8 font-medium text-foreground">
+                <CardTitle class="text-2xl text-center pb-12 font-medium text-foreground">
                     Latest in Collections
                 </CardTitle>
                 <div class="grid grid-cols-3 gap-4">
