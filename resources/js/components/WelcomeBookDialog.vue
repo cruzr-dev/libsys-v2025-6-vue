@@ -16,7 +16,7 @@ defineProps({
 <template>
     <Dialog class="">
         <DialogTrigger as-child>
-            <Card class="overflow-hidden p-0">
+            <Card class="overflow-hidden p-0 hover:shadow-md transition">
                 <div class="flex">
                     <!-- Main content area -->
                     <div class="flex-1 p-6">
