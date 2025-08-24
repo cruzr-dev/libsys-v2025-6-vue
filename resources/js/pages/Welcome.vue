@@ -170,6 +170,8 @@ onMounted(() => {
         </div>
 
         <!-- Footer spacing -->
-        <WelcomeFooter :appName="name" />
+        <div class="w-full p-4">
+            <WelcomeFooter :appName="name" class="rounded-2xl"/>
+        </div>
     </div>
 </template>
