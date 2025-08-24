@@ -51,19 +51,19 @@ defineProps({
 
 const stats = [
     {
-        title: 'Total Revenue',
+        title: 'Collections',
         value: '$45,231.89',
-        change: '+20.1% from last month',
+        change: 'Some text here',
         icon: DollarSign,
     },
     {
-        title: 'Subscriptions',
+        title: 'Clients',
         value: '+2350',
         change: '+180.1% from last month',
         icon: Users,
     },
     {
-        title: 'Sales',
+        title: 'New Arrivals',
         value: '+12,234',
         change: '+19% from last month',
         icon: CreditCard,
@@ -139,22 +139,7 @@ const stats = [
                 </div>
             </div>
 
-            <div class="w-full p-16 pb-0 grid grid-cols-3 gap-16">
-                <Card class="p-4 gap-2">
-                    <h4 class="text-6xl">{{ userCount }}</h4>
-                    <div>Patrons</div>
-                </Card>
-                <Card class="p-4 gap-2">
-                    <h4 class="text-6xl">{{ recordCount }}</h4>
-                    <div>Books, Multimedia, Magazine, Periodals Thesis, Dissertations</div>
-                </Card>
-                <Card class="p-4 gap-2">
-                    <h4 class="text-6xl">{{ transactionCount }}</h4>
-                    <div>Transactions</div>
-                </Card>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div class="grid gap-4 p-12 pb-0 md:grid-cols-2 lg:grid-cols-4">
                 <Card
                     v-for="stat in stats"
                     :key="stat.title"
