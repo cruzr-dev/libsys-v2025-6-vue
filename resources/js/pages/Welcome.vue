@@ -1,35 +1,29 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
-import { ref, onMounted } from 'vue'
-import WelcomeBookDialog from '@/components/WelcomeBookDialog.vue';
-import WelcomeSearch from '@/components/WelcomeSearch.vue';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import WelcomeBookDialog from '@/components/WelcomeBookDialog.vue';
+import WelcomeSearch from '@/components/WelcomeSearch.vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
+import { onMounted, ref } from 'vue';
 
-// for alert
-const page = usePage()
+// Page and alert handling
+const page = usePage();
 const name = page.props.name;
-const showAlert = ref(true)
-onMounted(() => {
-    if (page.props.flash.error) {
-        setTimeout(() => {
-            showAlert.value = false
-        }, 5000)
-    }
-})
+const showAlert = ref(true);
 
+// Types definition
 interface Flash {
     success?: string | null;
     error?: string | null;
 }
 
 interface Config {
-    registration_enabled?: boolean | null
-    login_enabled?: boolean | null
+    registration_enabled?: boolean | null;
+    login_enabled?: boolean | null;
 }
 
 declare module '@inertiajs/core' {
@@ -39,16 +33,15 @@ declare module '@inertiajs/core' {
     }
 }
 
-defineProps({
-    records: Object,
-    search_result: Object,
-    search_term: String,
-    search_button: Boolean,
-    userCount: Number,
-    recordCount: Number,
-    transactionCount: Number,
-});
+// Component props
+defineProps<{
+    records: object;
+    search_result: object;
+    search_term: string;
+    search_button: boolean;
+}>();
 
+// Statistics data
 const stats = [
     {
         title: 'Collections',
@@ -74,28 +67,37 @@ const stats = [
         change: '+20 since last week',
         icon: Activity,
     },
-]
+];
 
+// Alert timeout logic
+onMounted(() => {
+    if (page.props.flash.error) {
+        setTimeout(() => {
+            showAlert.value = false;
+        }, 5000);
+    }
+});
 </script>
 
 <template>
-    <Head title="Welcome">
-    </Head>
-    <div class="flex flex-col bg-background text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a]">
-        <Link :href="route('logger.create')" class="fixed top-0 left-0 opacity-0 bg-green-500">hi</Link>
+    <Head title="Welcome" />
 
-        <Alert class="absolute top-5 right-5 w-fit pr-8" variant="destructive" v-if="page.props.flash.error && showAlert">
-            <AlertCircle class="w-4 h-4" />
-            <button @click="showAlert = false" class="absolute top-2 right-2 p-1 hover:bg-red-100 rounded-full transition-colors">
-                <X class="w-4 h-4" />
+    <div class="flex flex-col bg-background text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a]">
+        <!-- Hidden logger link -->
+        <Link :href="route('logger.create')" class="fixed top-0 left-0 bg-green-500 opacity-0">hi</Link>
+
+        <!-- Error alert -->
+        <Alert v-if="page.props.flash.error && showAlert" class="absolute top-5 right-5 w-fit pr-8" variant="destructive">
+            <AlertCircle class="h-4 w-4" />
+            <button @click="showAlert = false" class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-red-100">
+                <X class="h-4 w-4" />
             </button>
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-                {{ page.props.flash.error }}
-            </AlertDescription>
+            <AlertDescription>{{ page.props.flash.error }}</AlertDescription>
         </Alert>
 
-        <header class="flex justify-between items-center w-full p-4 px-16 text-sm not-has-[nav]:hidden">
+        <!-- Header section -->
+        <header class="flex w-full items-center justify-between p-4 px-16 text-sm not-has-[nav]:hidden">
             <div class="relative z-20 flex items-center text-lg font-medium dark:text-foreground">
                 <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
                 {{ name }}
@@ -128,27 +130,21 @@ const stats = [
             </nav>
         </header>
 
-        <!-- The content itself -->
+        <!-- Main content -->
         <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
-
+            <!-- Search section -->
             <div class="px-4">
-                <div class="h-[360px] bg-[url(/storage/system_images/eagle.jpg)] bg-cover rounded-2xl
-                min-w-full flex justify-center items-center">
-                    <div class="grid bg-background rounded-lg">
-                        <WelcomeSearch :search_result="search_result" :search_term="search_term"
-                                       :search_button="search_button"
-                        />
+                <div class="flex h-[360px] min-w-full items-center justify-center rounded-2xl bg-[url(/storage/system_images/eagle.jpg)] bg-cover">
+                    <div class="grid rounded-lg bg-background">
+                        <WelcomeSearch :search_result="search_result" :search_term="search_term" :search_button="search_button" />
                     </div>
                 </div>
             </div>
 
+            <!-- Statistics section -->
             <div class="grid gap-4 px-16 py-12 pb-0 md:grid-cols-2 lg:grid-cols-4">
-                <Card
-                    v-for="stat in stats"
-                    :key="stat.title"
-                    class="hover:shadow-md transition p-4"
-                >
-                    <CardHeader class="flex p-0 flex-row items-center justify-between pb-2 space-y-0">
+                <Card v-for="stat in stats" :key="stat.title" class="p-4 transition hover:shadow-md">
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
                         <CardTitle class="text-sm font-medium text-muted-foreground">
                             {{ stat.title }}
                         </CardTitle>
@@ -161,18 +157,18 @@ const stats = [
                 </Card>
             </div>
 
+            <!-- Latest collections section -->
             <div class="w-full px-16 py-12" v-if="Object.keys(records?.data).length">
-                <CardTitle class="text-2xl text-center pb-12 font-medium text-foreground">
-                    Latest in Collections
-                </CardTitle>
+                <CardTitle class="pb-12 text-center text-2xl font-medium text-foreground"> Latest in Collections </CardTitle>
                 <div class="grid grid-cols-3 gap-4">
                     <div v-for="record in records?.data" :key="record.id">
                         <WelcomeBookDialog :record="record" />
                     </div>
                 </div>
             </div>
-
         </div>
+
+        <!-- Footer spacing -->
         <div class="hidden h-14.5 lg:block"></div>
     </div>
 </template>
