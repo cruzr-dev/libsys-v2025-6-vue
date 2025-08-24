@@ -95,11 +95,11 @@ const stats = [
             </AlertDescription>
         </Alert>
 
-        <header class="flex justify-between items-center w-full p-2 px-8 text-sm not-has-[nav]:hidden">
-            <Link :href="route('home')" class="relative z-20 flex items-center text-lg font-medium dark:text-foreground">
+        <header class="flex justify-between items-center w-full p-4 px-16 text-sm not-has-[nav]:hidden">
+            <div class="relative z-20 flex items-center text-lg font-medium dark:text-foreground">
                 <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
                 {{ name }}
-            </Link>
+            </div>
             <nav class="flex items-center justify-end gap-4">
                 <AppearanceTabs />
                 <Link
@@ -113,7 +113,7 @@ const stats = [
                     <Link
                         v-if="$page.props.config.login_enabled"
                         :href="route('login')"
-                        class="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
+                        class="inline-block rounded-sm border border-transparent text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
                     >
                         <Button class="w-[120px]">Log in</Button>
                     </Link>
@@ -131,15 +131,18 @@ const stats = [
         <!-- The content itself -->
         <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
 
-            <div class="p-8 h-[360px] bg-[url(/storage/system_images/eagle.jpg)] bg-cover min-w-full flex justify-center items-center">
-                <div class="grid bg-background rounded-lg">
-                    <WelcomeSearch :search_result="search_result" :search_term="search_term"
-                                   :search_button="search_button"
-                    />
+            <div class="p-4 pb-0">
+                <div class="h-[360px] bg-[url(/storage/system_images/eagle.jpg)] bg-cover rounded-2xl
+                min-w-full flex justify-center items-center">
+                    <div class="grid bg-background rounded-lg">
+                        <WelcomeSearch :search_result="search_result" :search_term="search_term"
+                                       :search_button="search_button"
+                        />
+                    </div>
                 </div>
             </div>
 
-            <div class="grid gap-4 p-12 pb-0 md:grid-cols-2 lg:grid-cols-4">
+            <div class="grid gap-4 p-16 pb-0 md:grid-cols-2 lg:grid-cols-4">
                 <Card
                     v-for="stat in stats"
                     :key="stat.title"
