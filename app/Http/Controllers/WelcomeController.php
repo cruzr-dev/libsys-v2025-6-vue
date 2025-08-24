@@ -50,18 +50,11 @@ class WelcomeController extends Controller
             }
         }
 
-        $user_count = User::count();
-        $record_count = Record::count();
-        $transaction_count = BorrowingTransaction::count() + LibraryVisit::count();
-
         return Inertia::render('Welcome', [
             'records' => $records,
             'search_result' => $search_result,
             'search_term' => $request->search,
             'search_button' => $request->search_button,
-            'userCount' => $user_count,
-            'recordCount' => $record_count,
-            'transactionCount' => $transaction_count,
         ]);
     }
 
