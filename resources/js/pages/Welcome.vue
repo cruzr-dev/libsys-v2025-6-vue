@@ -10,7 +10,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
 import { onMounted, ref } from 'vue';
 import WelcomeFooter from '@/components/WelcomeFooter.vue';
-import { Input } from '@/components/ui/input';
+import CollectionSearchComboBox from '@/components/CollectionSearchComboBox.vue';
 
 // Page and alert handling
 const page = usePage();
@@ -146,7 +146,11 @@ onMounted(() => {
 
                     <!-- Search Box -->
                     <div class="w-full max-w-md p-1 rounded-lg bg-background">
-                        <Input type="text" placeholder="Search here" class="w-full" />
+                        <CollectionSearchComboBox
+                            v-model:selectedUser="selectedCollection"
+                            @user-selected="handleCollectionSelected"
+                            class="w-full rounded-lg"
+                        />
                     </div>
                 </div>
             </div>
