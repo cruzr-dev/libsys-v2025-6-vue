@@ -139,13 +139,13 @@ onMounted(() => {
             <div class="px-4">
                 <div class="relative flex h-[360px] min-w-full items-center justify-center rounded-2xl bg-[url(/storage/system_images/eagle.jpg)] bg-cover">
                     <!-- Heading + Sub-heading -->
-                    <div class="absolute top-10 left-1/2 transform -translate-x-1/2 text-center text-primary-foreground">
+                    <div class="absolute top-10 left-1/2 transform -translate-x-1/2 text-center text-primary-foreground  dark:text-muted-foreground">
                         <h1 class="text-3xl font-bold">USeP Tagum-Mabini Library</h1>
                         <p class="text-lg">Your gateway to knowledge and discovery</p>
                     </div>
 
                     <!-- Search Box -->
-                    <div class="w-full max-w-md px-4">
+                    <div class="w-full max-w-md p-1 rounded-lg bg-background">
                         <Input type="text" placeholder="Search here" class="w-full" />
                     </div>
                 </div>
