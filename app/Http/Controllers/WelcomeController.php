@@ -23,7 +23,7 @@ class WelcomeController extends Controller
                     ->groupBy('title');
             })
             ->latest()
-            ->paginate(10);
+            ->paginate(9);
 
         $search_result = null;
         if ($request->search_button)

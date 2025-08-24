@@ -161,8 +161,10 @@ const stats = [
                 </Card>
             </div>
 
-            <div class="w-full p-16" v-if="Object.keys(records?.data).length">
-                <h3 class="text-3xl text-center mb-8">Latest in Book Collections</h3>
+            <div class="w-full px-16 py-12" v-if="Object.keys(records?.data).length">
+                <CardTitle class="text-2xl text-center pb-8 font-medium text-foreground">
+                    Latest in Collections
+                </CardTitle>
                 <div class="grid grid-cols-3 gap-4">
                     <div v-for="record in records?.data" :key="record.id">
                         <WelcomeBookDialog :record="record" />
