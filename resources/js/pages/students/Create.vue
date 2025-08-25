@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/users/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
-import { LoaderCircle } from 'lucide-vue-next';
+import { LoaderCircle, ArrowLeft } from 'lucide-vue-next';
 
 // Define the props passed from the controller
 defineProps<{
@@ -43,6 +43,11 @@ const form = useForm({
 const submit = () => {
     form.post(route('students.store'));
 };
+
+const goBack = () => {
+    window.history.back();
+};
+
 </script>
 
 <template>
@@ -50,7 +55,15 @@ const submit = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
-            <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm">
+            <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm relative">
+
+                <!-- Back Button -->
+                <div class="absolute right-4 top-2">
+                    <Button variant="outline" @click="goBack">
+                        <ArrowLeft class="w-4 h-4" /> Back
+                    </Button>
+                </div>
+
                 <form @submit.prevent="submit" class="mx-auto flex max-w-4xl flex-col gap-8">
                     <!-- Personal Information Section -->
                     <div class="space-y-6">
