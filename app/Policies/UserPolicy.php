@@ -17,7 +17,7 @@ class UserPolicy
 
     public function login(User $user): bool
     {
-        return in_array($user->UserType->key, ['super_admin', 'staff_admin']);
+        return in_array($user->UserType->key, ['super_admin', 'library_staff']);
     }
 
     /**

@@ -14,18 +14,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // users related
         $this->call(UserTypeSeeder::class);
-        $this->call(AcademicPeriodSeeder::class);
-        $this->call(StatusSeeder::class);
-        $this->call(BorrowingPolicySeeder::class);
         $this->call(OfficeSeeder::class);
         $this->call(AcademicSeeder::class);
-        $this->call(DdcClassificationSeeder::class);
-        $this->call(LcClassificationSeeder::class);
-        $this->call(PhysicalLocationSeeder::class);
-        $this->call(CoverTypeSeeder::class);
-        $this->call(SourceSeeder::class);
         $this->call(UserImportSeeder::class);
-        $this->call(BookImportSeeder::class);
+
+        // records related seeders
+//        $this->call(CoverTypeSeeder::class);
+//        $this->call(SourceSeeder::class);
+//        $this->call(DdcClassificationSeeder::class);
+//        $this->call(PhysicalLocationSeeder::class);
+//        $this->call(BorrowingPolicySeeder::class);
+//        $this->call(BookImportSeeder::class);
+//        $this->call(StatusSeeder::class);
+
+        // other seeders
+//        $this->call(AcademicPeriodSeeder::class);
     }
 }

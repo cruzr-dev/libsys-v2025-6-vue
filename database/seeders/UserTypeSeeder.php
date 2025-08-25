@@ -15,7 +15,7 @@ class UserTypeSeeder extends Seeder
     {
         $userTypes = [
             ['key' => 'super_admin', 'name' => 'Super Admin'],
-            ['key' => 'staff_admin', 'name' => 'Staff Admin'],
+            ['key' => 'library_staff', 'name' => 'Library Staff'],
             ['key' => 'undergrad_student', 'name' => 'Undergraduate Student'],
             ['key' => 'grad_student', 'name' => 'Graduate School Student'],
             ['key' => 'faculty', 'name' => 'Faculty'],
