@@ -150,7 +150,6 @@ class UserImportSeeder extends Seeder
                         'middle_initial' => $middle_initial,
                         'last_name' => $last_name,
                         'sex' => $sex,
-                        'contact_number' => $contact_number,
                         'email' => $email,
                         'profile_image' => $user_profile,
                         'user_type_id' => $user_type_id,
@@ -159,6 +158,7 @@ class UserImportSeeder extends Seeder
                     $student_data = [
                         'college_id' => $college_id,
                         'program_id' => $program_id,
+                        'contact_number' => $contact_number,
                     ];
 
                     $user = User::create($user_data);
