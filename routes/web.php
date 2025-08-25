@@ -23,7 +23,8 @@ Route::get('/logger/create', [LibraryVisitController::class, 'create'])->name('l
 Route::post('/', [LibraryVisitController::class, 'store'])->name('logger.store');
 
 // Routes that require authentication and verification
-Route::middleware(['auth', 'verified'])->group(function () {
+// add verified next time, middleware(['auth', 'verified'])
+Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('users.index');

@@ -89,7 +89,7 @@ onMounted(() => {
         <Link :href="route('logger.create')" class="fixed top-0 left-0 bg-green-500 opacity-0">hi</Link>
 
         <!-- Error alert -->
-        <Alert v-if="page.props.flash.error && showAlert" class="absolute top-5 right-5 w-fit pr-8" variant="destructive">
+        <Alert v-if="page.props.flash.error && showAlert" class="absolute top-5 right-5 w-fit pr-8 z-50" variant="destructive">
             <AlertCircle class="h-4 w-4" />
             <button @click="showAlert = false" class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-red-100">
                 <X class="h-4 w-4" />
