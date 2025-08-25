@@ -22,9 +22,11 @@ Route::get('/', [WelcomeController::class, 'index'])->name('home');
 Route::get('/logger/create', [LibraryVisitController::class, 'create'])->name('logger.create');
 Route::post('/', [LibraryVisitController::class, 'store'])->name('logger.store');
 
-// Routes that require authentication and verification
-// add verified next time, middleware(['auth', 'verified'])
-Route::middleware(['auth'])->group(function () {
+$middleware = ['auth'];
+if (app()->environment(['production', 'staging'])) {
+    $middleware[] = 'verified';
+}
+Route::middleware($middleware)->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('users.index');
