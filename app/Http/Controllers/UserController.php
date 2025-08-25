@@ -21,6 +21,11 @@ class UserController extends Controller
     {
         $query = User::query();
 
+        // Exclude super admin users
+        $query->whereHas('userType', function ($q) {
+            $q->where('key', '!=', 'super_admin');
+        });
+
         // Handle search
         if ($request->has('search')) {
             $searchTerm = $request->get('search');
@@ -43,7 +48,6 @@ class UserController extends Controller
 
         // Handle pagination
         $perPage = $request->get('per_page', 10);
-
         return $query->paginate($perPage);
     }
 
