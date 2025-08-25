@@ -19,7 +19,7 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, X, Loader2, Eye, Search } from 'lucide-vue-next';
+import { ArrowUpDown, ChevronDown, X, Loader2, Eye, Search, Plus } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import { route } from 'ziggy-js';
@@ -443,6 +443,9 @@ watch(() => window.location.search, () => {
                         </div>
                     </div>
                     <div class="flex gap-2">
+                        <Button variant="secondary">
+                            <Plus class="w-4 h-4" /> Add Student
+                        </Button>
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
                                 <Button variant="outline" class="ml-auto" :disabled="isLoading">
