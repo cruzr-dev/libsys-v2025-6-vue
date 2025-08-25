@@ -278,6 +278,7 @@ function handleColumnVisibilityChange(updaterOrValue) {
 
 // Search functionality
 const filterInput = ref<string>('');
+
 const applyFilter = () => {
     const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
     if (filterInput.value.trim()) {
@@ -291,6 +292,18 @@ const clearFilter = () => {
     const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
     table.setColumnFilters(newFilters);
 };
+
+// Debounced search - automatically triggers on input change
+const debouncedApplyFilter = debounce(() => {
+    applyFilter();
+}, 300);
+
+// Watch for search input changes
+watch(filterInput, (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+        debouncedApplyFilter();
+    }
+});
 
 // Initialize URL parameters from current page URL
 const initializeFromURL = () => {
@@ -395,7 +408,6 @@ watch(() => window.location.search, () => {
                                 class="w-[380px] pr-8"
                                 placeholder="Search by lib id, card #, first name, or last name ..."
                                 v-model="filterInput"
-                                @keyup.enter="applyFilter"
                                 :disabled="isLoading"
                             />
                             <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
