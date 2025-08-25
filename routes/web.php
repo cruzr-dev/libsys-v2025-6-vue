@@ -29,7 +29,8 @@ if (app()->environment(['production', 'staging'])) {
 Route::middleware($middleware)->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::prefix('users')->group(function () {
-        Route::get('/all', [UserController::class, 'index'])->name('users.index');
+        Route::get('/', [UserController::class, 'index'])->name('users.index');
+        Route::get('/all', [UserController::class, 'all'])->name('users.all');
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
 //            Route::get('/import', [UserController::class, 'import'])->name('users.import');
 //            Route::post('/import', [UserController::class, 'importStore'])->name('users.import.store');

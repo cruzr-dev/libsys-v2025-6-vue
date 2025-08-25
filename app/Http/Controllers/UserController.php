@@ -14,6 +14,11 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        return to_route('users.all');
+    }
+
+    public function all(Request $request)
+    {
         return Inertia::render('users/Index');
     }
 
