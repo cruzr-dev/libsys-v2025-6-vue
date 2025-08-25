@@ -97,7 +97,7 @@ const columns: ColumnDef<any>[] = [
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Sex', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const sex = row.getValue('sex');
-            const displayValue = sex === 'm' ? 'Male' : sex === 'f' ? 'Female' : sex;
+            const displayValue = sex === 'M' ? 'Male' : sex === 'F' ? 'Female' : sex;
             return h('div', displayValue);
         },
     },
@@ -105,7 +105,7 @@ const columns: ColumnDef<any>[] = [
         accessorKey: 'email',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Email', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase max-w-48 truncate' }, row.getValue('email')),
+        cell: ({ row }) => h('div', { class: 'lowercase max-w-52 truncate' }, row.getValue('email')),
         enableHiding: false,
     },
     {
@@ -139,7 +139,12 @@ function cycleSort(column: Column<any, any>) {
 // Table state
 const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
-const columnVisibility = ref<VisibilityState>({});
+const columnVisibility = ref<VisibilityState>({
+    school_id: false,
+    sex: false,
+    // middle_initial: false,  // Example: hide middle initial too
+    // card_number: false,     // Example: hide card number too
+});
 const expanded = ref({});
 const pageSizes = [5, 10, 20, 30, 40, 50];
 const pagination = ref({
