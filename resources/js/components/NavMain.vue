@@ -50,7 +50,7 @@ defineProps<{
                             <SidebarMenuButton
                                 :tooltip="item.title"
                                 :class="{
-                                    'bg-accent text-accent-foreground': item.isActive,
+                                    'bg-background text-foreground': item.isActive,
                                     'hover:bg-accent/50': !item.isActive
                                 }"
                             >
@@ -65,7 +65,7 @@ defineProps<{
                                     <SidebarMenuSubButton
                                         as-child
                                         :class="{
-                                            'bg-accent text-accent-foreground': subItem.isActive,
+                                            'bg-background text-foreground': subItem.isActive,
                                             'hover:bg-accent/50': !subItem.isActive
                                         }"
                                     >
@@ -84,7 +84,7 @@ defineProps<{
                     as-child
                     :tooltip="item.title"
                     :class="{
-                        'bg-accent text-accent-foreground': item.isActive,
+                        'bg-background text-foreground': item.isActive,
                         'hover:bg-accent/50': !item.isActive
                     }"
                 >
