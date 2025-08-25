@@ -7,7 +7,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 const sidebarNavItems: NavItem[] = [
     {
         title: 'All users',
-        href: '/users',
+        href: '/users/all',
     },
     {
         title: 'Students',
