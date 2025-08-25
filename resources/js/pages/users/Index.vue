@@ -360,11 +360,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'All', href: '/users/all' },
 ];
 
-// Add new user
-const createNew = () => {
-    router.get(route('users.create'));
-};
-
 // Delete handling
 const showDeleteAlert = ref(false);
 const selectedUserId = ref(null);
@@ -424,10 +419,6 @@ watch(() => window.location.search, () => {
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <Button variant="secondary" @click="createNew" :disabled="isLoading">
-                            <Plus class="h-4 w-4" />
-                            Add New User
-                        </Button>
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
                                 <Button variant="outline" class="ml-auto" :disabled="isLoading">
