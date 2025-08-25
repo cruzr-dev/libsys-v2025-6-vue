@@ -19,7 +19,7 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, X, Loader2, Edit } from 'lucide-vue-next';
+import { ArrowUpDown, ChevronDown, X, Loader2, Edit, Search } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import { route } from 'ziggy-js';
@@ -425,6 +425,9 @@ watch(() => window.location.search, () => {
                             <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
                                 <X class="h-4 w-4" />
                             </Button>
+                            <div v-else class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none">
+                                <Search class="h-4 w-4 text-foreground" />
+                            </div>
                         </div>
                     </div>
                     <div class="flex gap-2">
