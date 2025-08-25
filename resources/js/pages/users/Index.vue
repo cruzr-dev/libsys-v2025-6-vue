@@ -105,7 +105,7 @@ const columns: ColumnDef<any>[] = [
         accessorKey: 'email',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Email', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('email')),
+        cell: ({ row }) => h('div', { class: 'lowercase max-w-48 truncate' }, row.getValue('email')),
         enableHiding: false,
     },
     {

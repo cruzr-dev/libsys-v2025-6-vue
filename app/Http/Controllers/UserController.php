@@ -37,6 +37,8 @@ class UserController extends Controller
             $sortField = $request->get('sort_field');
             $sortDirection = $request->get('sort_direction', 'asc');
             $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->latest(); // This orders by created_at DESC by default
         }
 
         // Handle pagination
