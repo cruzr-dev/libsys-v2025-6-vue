@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/users/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { Head, } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
 import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
 import {
@@ -442,9 +442,11 @@ watch(() => window.location.search, () => {
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <Button variant="secondary">
-                            <Plus class="w-4 h-4" /> Add Student
-                        </Button>
+                        <Link :href="route('students.create')">
+                            <Button variant="secondary">
+                                <Plus class="w-4 h-4" /> Add Student
+                            </Button>
+                        </Link>
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
                                 <Button variant="outline" class="ml-auto" :disabled="isLoading">
