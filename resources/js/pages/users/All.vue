@@ -400,11 +400,6 @@ watch(() => window.location.search, () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
             <div class="w-full">
-                <!-- Loading indicator -->
-                <div v-if="isLoading" class="flex justify-center items-center py-8">
-                    <Loader2 class="h-6 w-6 animate-spin" />
-                    <span class="ml-2">Loading...</span>
-                </div>
 
                 <!-- Error message -->
                 <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
