@@ -20,9 +20,8 @@ return new class extends Migration
             $table->string('middle_initial', 1)->nullable();
             $table->string('last_name', 50);
             $table->string('sex', 1)->nullable();
-            $table->string('contact_number', 10)->nullable();
-            $table->string('email')->unique()->nullable();
             $table->string('profile_image')->nullable();
+            $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->foreignId('user_type_id')->nullable()
