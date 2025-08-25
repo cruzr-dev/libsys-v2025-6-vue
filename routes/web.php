@@ -12,6 +12,7 @@ use App\Http\Controllers\PeriodicalController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TestController;
 use App\Http\Controllers\ThesisController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WelcomeController;
@@ -75,6 +76,8 @@ Route::middleware($middleware)->group(function () {
     Route::prefix('logger')->group(function () {
         Route::get('/', [LibraryVisitController::class, 'index'])->name('logger.index');
     });
+
+    Route::get('/test', [TestController::class, 'index'])->name('test.index');
 
 });
 

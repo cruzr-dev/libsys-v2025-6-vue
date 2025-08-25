@@ -12,27 +12,27 @@ import { FileClock  } from 'lucide-vue-next';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        url: '/dashboard',
         icon: LayoutGrid,
     },
     {
         title: 'Users',
-        href: '/users',
+        url: '/users',
         icon: Users,
     },
     {
         title: 'Records',
-        href: '/records',
+        url: '/records',
         icon: Library,
     },
     {
         title: 'Borrowings',
-        href: '/borrowings',
+        url: '/borrowings',
         icon: BookOpenCheck,
     },
     {
         title: 'Library Visits',
-        href: '/logger',
+        url: '/logger',
         icon: FileClock ,
     },
     {
@@ -42,7 +42,7 @@ const mainNavItems: NavItem[] = [
         items: [
             {
                 title: "Genesis",
-                url: "#",
+                url: "/test",
             },
             {
                 title: "Explorer",
