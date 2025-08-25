@@ -26,6 +26,34 @@ class UserController extends Controller
         return Inertia::render('users/All', []);
     }
 
+    public function fetchAll(Request $request)
+    {
+        $query = User::query();
+
+        // Handle search
+        if ($request->has('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('library_id', 'like', "%{$searchTerm}%")
+                    ->orWhere('card_number', 'like', "%{$searchTerm}%")
+                    ->orWhere('first_name', 'like', "%{$searchTerm}%")
+                    ->orWhere('last_name', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // Handle sorting
+        if ($request->has('sort_field')) {
+            $sortField = $request->get('sort_field');
+            $sortDirection = $request->get('sort_direction', 'asc');
+            $query->orderBy($sortField, $sortDirection);
+        }
+
+        // Handle pagination
+        $perPage = $request->get('per_page', 10);
+
+        return $query->paginate($perPage);
+    }
+
     public function import()
     {
         return Inertia::render('users/Import');
