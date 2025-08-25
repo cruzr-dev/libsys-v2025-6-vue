@@ -23,6 +23,15 @@ import { ArrowUpDown, ChevronDown, X, Loader2, Eye, Search } from 'lucide-vue-ne
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import { route } from 'ziggy-js';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 // API Data Interface
 interface ApiResponse {
@@ -46,8 +55,12 @@ const error = ref<string | null>(null);
 const searchInputRef = ref(null);
 
 // show handler function
+const isDialogOpen = ref(false);
+const selectedUser = ref<any | null>(null);
+
 const handleShow = (user: any) => {
-    router.visit(route('users.show', user.id));
+    selectedUser.value = user;
+    isDialogOpen.value = true;
 };
 
 // Table columns definition
@@ -125,7 +138,7 @@ const columns: ColumnDef<any>[] = [
                     'Show'
                 ]
             )
-    },
+    }
 ];
 
 // Sorting helper
@@ -560,6 +573,33 @@ watch(() => window.location.search, () => {
                     </div>
                 </div>
             </div>
+            <Dialog v-model:open="isDialogOpen">
+                <DialogContent class="sm:max-w-[425px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+                    <DialogHeader class="p-6 pb-0">
+                        <DialogTitle>User Details</DialogTitle>
+                        <DialogDescription>
+                            Viewing profile information.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div class="grid gap-4 py-4 overflow-y-auto px-6">
+                        <div v-if="selectedUser" class="space-y-2">
+                            <p><strong>Library ID:</strong> {{ selectedUser.library_id }}</p>
+                            <p><strong>Card #:</strong> {{ selectedUser.card_number }}</p>
+                            <p><strong>School ID:</strong> {{ selectedUser.school_id }}</p>
+                            <p><strong>Name:</strong> {{ selectedUser.first_name }} {{ selectedUser.middle_initial }} {{ selectedUser.last_name }}</p>
+                            <p><strong>Email:</strong> {{ selectedUser.email }}</p>
+                            <p><strong>Sex:</strong> {{ selectedUser.sex === 'M' ? 'Male' : selectedUser.sex === 'F' ? 'Female' : selectedUser.sex }}</p>
+                        </div>
+                        <div v-else>
+                            <p>No user selected.</p>
+                        </div>
+                    </div>
+                    <DialogFooter class="p-6 pt-0">
+                        <Button @click="isDialogOpen = false">Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </Layout>
     </AppLayout>
 </template>
