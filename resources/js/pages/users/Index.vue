@@ -575,7 +575,7 @@ watch(() => window.location.search, () => {
             </div>
 
             <Dialog v-model:open="isDialogOpen">
-                <DialogContent class="sm:max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+                <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                     <DialogHeader class="p-6 pb-0">
                         <DialogTitle>User Details</DialogTitle>
                         <DialogDescription>
