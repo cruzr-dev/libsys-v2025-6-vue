@@ -509,7 +509,7 @@ watch(() => window.location.search, () => {
                             @update:model-value="(value) => table.setPageSize(Number(value))"
                             :disabled="isLoading"
                         >
-                            <SelectTrigger class="h-8 w-[70px]">
+                            <SelectTrigger class="h-8 w-[80px]">
                                 <SelectValue :placeholder="table.getState().pagination.pageSize.toString()" />
                             </SelectTrigger>
                             <SelectContent side="top">

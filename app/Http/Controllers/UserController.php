@@ -14,16 +14,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        if (Gate::denies('viewAny', User::class)) {
-            return to_route('faculties.index');
-        }
-
-        return to_route('admins.index');
-    }
-
-    public function all()
-    {
-        return Inertia::render('users/All', []);
+        return Inertia::render('users/Index');
     }
 
     public function fetchAll(Request $request)
