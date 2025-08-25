@@ -52,20 +52,20 @@ const columns: ColumnDef<any>[] = [
     {
         accessorKey: 'library_id',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Library ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Lib ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('library_id')),
         enableHiding: false,
     },
     {
         accessorKey: 'card_number',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Card Number', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Card #', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('card_number')),
     },
     {
         accessorKey: 'school_id',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['School ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Scl ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('school_id')),
     },
     {
