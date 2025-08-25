@@ -119,7 +119,7 @@ const displayValue = (user: any) => {
                 <ComboboxEmpty>
                     <div class="flex flex-col items-center p-4 text-center">
                         <User class="size-8 text-muted-foreground mb-2" />
-                        <p class="text-sm">
+                        <p class="text-sm text-muted-foreground">
                             {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No users found' }}
                         </p>
                     </div>

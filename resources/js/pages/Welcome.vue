@@ -145,7 +145,7 @@ onMounted(() => {
                     </div>
 
                     <!-- Search Box -->
-                    <div class="w-full max-w-md p-1 rounded-lg bg-background">
+                    <div class="w-full max-w-md p-1 rounded-xl bg-background">
                         <CollectionSearchComboBox
                             v-model:selectedUser="selectedCollection"
                             @user-selected="handleCollectionSelected"
