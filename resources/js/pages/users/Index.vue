@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Imports
-import DeleteDialog from '@/components/DeleteDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,11 +19,10 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, Plus, X, Loader2 } from 'lucide-vue-next';
+import { ArrowUpDown, ChevronDown, X, Loader2, Edit } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import { route } from 'ziggy-js';
-import DropdownAction from '../users/DataTableDemoColumn.vue';
 
 // API Data Interface
 interface ApiResponse {
@@ -46,6 +44,11 @@ const error = ref<string | null>(null);
 
 // Search input ref for focus preservation
 const searchInputRef = ref(null);
+
+// Edit handler function
+const handleEdit = (user: any) => {
+    router.visit(route('users.edit', user.id));
+};
 
 // Table columns definition
 const columns: ColumnDef<any>[] = [
@@ -105,7 +108,24 @@ const columns: ColumnDef<any>[] = [
         cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('email')),
         enableHiding: false,
     },
-    { id: 'actions', enableHiding: false, cell: ({ row }) => h(DropdownAction, { user: row.original }) },
+    {
+        id: 'actions',
+        header: 'Action',
+        enableHiding: false,
+        cell: ({ row }) =>
+            h(Button,
+                {
+                    variant: 'outline',
+                    size: 'sm',
+                    onClick: () => handleEdit(row.original),
+                    class: 'flex items-center gap-2'
+                },
+                () => [
+                    h(Edit, { class: 'h-4 w-4' }),
+                    'Edit'
+                ]
+            )
+    },
 ];
 
 // Sorting helper
@@ -360,22 +380,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'All', href: '/users/all' },
 ];
 
-// Delete handling
-const showDeleteAlert = ref(false);
-const selectedUserId = ref(null);
-const handleDelete = (id) => {
-    router.delete(route('users.destroy', id), {
-        preserveState: false,
-        preserveScroll: true,
-        onSuccess: () => {
-            // Refresh data after successful delete
-            fetchData();
-        }
-    });
-    showDeleteAlert.value = false;
-    selectedUserId.value = null;
-};
-
 // Lifecycle
 onMounted(() => {
     initializeFromURL();
@@ -548,7 +552,6 @@ watch(() => window.location.search, () => {
                     </div>
                 </div>
             </div>
-            <DeleteDialog v-model:open="showDeleteAlert" :userId="selectedUserId" @confirm-delete="handleDelete" />
         </Layout>
     </AppLayout>
 </template>
