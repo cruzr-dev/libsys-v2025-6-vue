@@ -44,6 +44,9 @@ const lastPage = ref(1);
 const total = ref(0);
 const error = ref<string | null>(null);
 
+// Search input ref for focus preservation
+const searchInputRef = ref(null);
+
 // Table columns definition
 const columns: ColumnDef<any>[] = [
     {
@@ -298,10 +301,20 @@ const debouncedApplyFilter = debounce(() => {
     applyFilter();
 }, 300);
 
-// Watch for search input changes
+// Watch for search input changes with focus preservation
 watch(filterInput, (newValue, oldValue) => {
     if (newValue !== oldValue) {
+        // Store focus state before applying filter
+        const hadFocus = document.activeElement === searchInputRef.value;
+
         debouncedApplyFilter();
+
+        // Restore focus after next DOM update
+        if (hadFocus) {
+            nextTick(() => {
+                searchInputRef.value?.focus();
+            });
+        }
     }
 });
 
@@ -405,10 +418,10 @@ watch(() => window.location.search, () => {
                     <div class="flex gap-2">
                         <div class="relative">
                             <Input
+                                ref="searchInputRef"
                                 class="w-[380px] pr-8"
                                 placeholder="Search by lib id, card #, first name, or last name ..."
                                 v-model="filterInput"
-                                :disabled="isLoading"
                             />
                             <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
                                 <X class="h-4 w-4" />
