@@ -19,7 +19,7 @@ class UserController extends Controller
 
     public function fetchAll(Request $request)
     {
-        $query = User::query();
+        $query = User::with('userType'); // 👈 load the relation
 
         // Exclude super admin users
         $query->whereHas('userType', function ($q) {
@@ -43,7 +43,7 @@ class UserController extends Controller
             $sortDirection = $request->get('sort_direction', 'asc');
             $query->orderBy($sortField, $sortDirection);
         } else {
-            $query->latest(); // This orders by created_at DESC by default
+            $query->latest();
         }
 
         // Handle pagination
