@@ -21,6 +21,11 @@ class UserController extends Controller
         return to_route('admins.index');
     }
 
+    public function all()
+    {
+        return Inertia::render('users/All', []);
+    }
+
     public function import()
     {
         return Inertia::render('users/Import');

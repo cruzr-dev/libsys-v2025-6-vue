@@ -42,6 +42,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/students', [StudentController::class, 'index'])->name('students.index');
         Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
         Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+        Route::post('/all', [UserController::class, 'all'])->name('students.all');
     });
     Route::prefix('records')->group(function () {
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
