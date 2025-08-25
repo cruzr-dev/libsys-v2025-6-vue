@@ -4,70 +4,91 @@ import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { BookOpenCheck, LayoutGrid, Library, Users, Bot } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
-import { FileClock  } from 'lucide-vue-next';
+import { FileClock } from 'lucide-vue-next';
+import { computed } from 'vue';
 
-const mainNavItems: NavItem[] = [
+// Get current page URL from Inertia
+const page = usePage();
+const currentUrl = computed(() => page.url);
+
+// Helper function to check if a route is active
+const isRouteActive = (url: string): boolean => {
+    if (url === '/dashboard') {
+        return currentUrl.value === '/dashboard' || currentUrl.value === '/';
+    }
+    return currentUrl.value.startsWith(url);
+};
+
+// Helper function to check if any sub-item is active
+const hasActiveSubItem = (items: { url: string }[] = []): boolean => {
+    return items.some(item => currentUrl.value.startsWith(item.url));
+};
+
+const mainNavItems = computed((): NavItem[] => [
     {
         title: 'Dashboard',
         url: '/dashboard',
         icon: LayoutGrid,
+        isActive: isRouteActive('/dashboard'),
     },
     {
         title: 'Users',
         url: '/users',
         icon: Users,
+        isActive: isRouteActive('/users'),
     },
     {
         title: 'Records',
         url: '/records',
         icon: Library,
+        isActive: isRouteActive('/records'),
     },
     {
         title: 'Borrowings',
         url: '/borrowings',
         icon: BookOpenCheck,
+        isActive: isRouteActive('/borrowings'),
     },
     {
         title: 'Library Visits',
         url: '/logger',
-        icon: FileClock ,
+        icon: FileClock,
+        isActive: isRouteActive('/logger'),
     },
     {
         title: "Models",
         url: "#",
         icon: Bot,
+        isActive: hasActiveSubItem([
+            { url: "/test" },
+            { url: "/explorer" },
+            { url: "/quantum" }
+        ]),
         items: [
             {
                 title: "Genesis",
                 url: "/test",
+                isActive: isRouteActive('/test'),
             },
             {
                 title: "Explorer",
-                url: "#",
+                url: "/explorer",
+                isActive: isRouteActive('/explorer'),
             },
             {
                 title: "Quantum",
-                url: "#",
+                url: "/quantum",
+                isActive: isRouteActive('/quantum'),
             },
         ],
     },
-
-];
+]);
 
 const footerNavItems: NavItem[] = [
-    // {
-    //     title: 'Github Repo',
-    //     href: route('home'),
-    //     icon: Folder,
-    // },
-    // {
-    //     title: 'Documentation',
-    //     href: 'https://laravel.com/docs/starter-kits#vue',
-    //     icon: BookOpen,
-    // },
+    // Your footer items here
 ];
 </script>
 
