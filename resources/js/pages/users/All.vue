@@ -208,19 +208,19 @@ let searchTimeout: ReturnType<typeof setTimeout>;
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
-    { title: 'Students', href: '/users/students' },
+    { title: 'All', href: '/users/all' },
 ];
 
 // Add Handling
 const createNew = () => {
-    router.get(route('students.create'));
+    router.get(route('users.create'));
 };
 
 // Delete handling
 const showDeleteAlert = ref(false);
 const selectedUserId = ref(null);
 const handleDelete = (id) => {
-    router.delete(route('students.destroy', id), {
+    router.delete(route('users.destroy', id), {
         preserveState: false,
         preserveScroll: true,
     });
@@ -235,7 +235,7 @@ function handlePaginationChange(updater) {
     const visibilityParams = buildColumnVisibility(columnVisibility.value);
 
     router.get(
-        route('students.index'),
+        route('users.index'),
         {
             page: pagination.value.pageIndex + 1,
             per_page: pagination.value.pageSize,
@@ -252,7 +252,7 @@ function handleSortingChange(updaterOrValue) {
     const visibilityParams = buildColumnVisibility(columnVisibility.value);
 
     router.get(
-        route('students.index'),
+        route('users.index'),
         {
             page: 1,
             per_page: pagination.value.pageSize,
@@ -271,7 +271,7 @@ function handleFilterChange(updaterOrValue) {
     const visibilityParams = buildColumnVisibility(columnVisibility.value);
 
     router.get(
-        route('students.index'),
+        route('users.index'),
         {
             page: 1,
             per_page: pagination.value.pageSize,
@@ -289,7 +289,7 @@ function handleColumnVisibilityChange(updaterOrValue) {
     const visibilityParams = buildColumnVisibility(columnVisibility.value);
 
     router.get(
-        route('students.index'),
+        route('users.index'),
         {
             page: pagination.value.pageIndex + 1,
             per_page: pagination.value.pageSize,
@@ -315,7 +315,7 @@ function buildFilters(filtersArr: ColumnFiltersState) {
 </script>
 
 <template>
-    <Head title="Students" />
+    <Head title="Users" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
@@ -337,7 +337,7 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                     <div class="flex gap-2">
                         <Button variant="secondary" @click="createNew">
                             <Plus class="h-4"></Plus>
-                            Add New Student
+                            Add New User
                         </Button>
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
@@ -398,7 +398,7 @@ function buildFilters(filtersArr: ColumnFiltersState) {
                 </div>
                 <div class="flex items-center justify-end space-x-2 py-4">
                     <div class="flex-1 text-sm text-muted-foreground">
-                        Showing {{ table.getFilteredRowModel().rows.length }} items of {{ props.data.total }} {{ props.data.total === 1 || props.data.total === 0 ? 'student' : 'students' }}.
+                        Showing {{ table.getFilteredRowModel().rows.length }} items of {{ props.data.total }} {{ props.data.total === 1 || props.data.total === 0 ? 'users' : 'users' }}.
                     </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
