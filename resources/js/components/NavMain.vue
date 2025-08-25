@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { LucideIcon } from "lucide-vue-next"
 import { ChevronRight } from "lucide-vue-next"
-import { Link } from "@inertiajs/vue3"
+import { Link, usePage } from '@inertiajs/vue3';
 import {
     Collapsible,
     CollapsibleContent,
@@ -17,6 +17,7 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
+import { User } from '@/types';
 
 defineProps<{
     items: {
@@ -31,11 +32,15 @@ defineProps<{
         }[]
     }[]
 }>()
+
+const page = usePage();
+const user = page.props.auth.user as User;
+
 </script>
 
 <template>
     <SidebarGroup>
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+        <SidebarGroupLabel> {{ user.user_type.name }} Menu</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <!-- If item has sub-items, render collapsible -->
@@ -51,7 +56,7 @@ defineProps<{
                                 :tooltip="item.title"
                                 :class="{
                                     'bg-background text-foreground': item.isActive,
-                                    'hover:bg-accent/50': !item.isActive
+                                    'hover:bg-accent': !item.isActive
                                 }"
                             >
                                 <component :is="item.icon" v-if="item.icon" />
@@ -66,7 +71,7 @@ defineProps<{
                                         as-child
                                         :class="{
                                             'bg-background text-foreground': subItem.isActive,
-                                            'hover:bg-accent/50': !subItem.isActive
+                                            'hover:bg-accent': !subItem.isActive
                                         }"
                                     >
                                         <Link :href="subItem.url">
@@ -85,7 +90,7 @@ defineProps<{
                     :tooltip="item.title"
                     :class="{
                         'bg-background text-foreground': item.isActive,
-                        'hover:bg-accent/50': !item.isActive
+                        'hover:bg-accent': !item.isActive
                     }"
                 >
                     <Link :href="item.url">
