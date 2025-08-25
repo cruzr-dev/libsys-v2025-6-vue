@@ -19,7 +19,7 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, X, Loader2, Edit, Search } from 'lucide-vue-next';
+import { ArrowUpDown, ChevronDown, X, Loader2, Eye, Search } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import { route } from 'ziggy-js';
@@ -45,9 +45,9 @@ const error = ref<string | null>(null);
 // Search input ref for focus preservation
 const searchInputRef = ref(null);
 
-// Edit handler function
-const handleEdit = (user: any) => {
-    router.visit(route('users.edit', user.id));
+// show handler function
+const handleShow = (user: any) => {
+    router.visit(route('users.show', user.id));
 };
 
 // Table columns definition
@@ -109,7 +109,7 @@ const columns: ColumnDef<any>[] = [
         enableHiding: false,
     },
     {
-        id: 'actions',
+        id: 'action',
         header: 'Action',
         enableHiding: false,
         cell: ({ row }) =>
@@ -117,12 +117,12 @@ const columns: ColumnDef<any>[] = [
                 {
                     variant: 'outline',
                     size: 'sm',
-                    onClick: () => handleEdit(row.original),
+                    onClick: () => handleShow(row.original),
                     class: 'flex items-center gap-2'
                 },
                 () => [
-                    h(Edit, { class: 'h-4 w-4' }),
-                    'Edit'
+                    h(Eye, { class: 'h-4 w-4 text-muted-foreground' }),
+                    'Show'
                 ]
             )
     },
