@@ -573,27 +573,51 @@ watch(() => window.location.search, () => {
                     </div>
                 </div>
             </div>
+
             <Dialog v-model:open="isDialogOpen">
-                <DialogContent class="sm:max-w-[425px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+                <DialogContent class="sm:max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                     <DialogHeader class="p-6 pb-0">
                         <DialogTitle>User Details</DialogTitle>
                         <DialogDescription>
                             Viewing profile information.
                         </DialogDescription>
                     </DialogHeader>
-                    <div class="grid gap-4 py-4 overflow-y-auto px-6">
-                        <div v-if="selectedUser" class="space-y-2">
-                            <p><strong>Library ID:</strong> {{ selectedUser.library_id }}</p>
-                            <p><strong>Card #:</strong> {{ selectedUser.card_number }}</p>
-                            <p><strong>School ID:</strong> {{ selectedUser.school_id }}</p>
-                            <p><strong>Name:</strong> {{ selectedUser.first_name }} {{ selectedUser.middle_initial }} {{ selectedUser.last_name }}</p>
-                            <p><strong>Email:</strong> {{ selectedUser.email }}</p>
-                            <p><strong>Sex:</strong> {{ selectedUser.sex === 'M' ? 'Male' : selectedUser.sex === 'F' ? 'Female' : selectedUser.sex }}</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
+                        <!-- Profile Image -->
+                        <div class="flex justify-center md:justify-start">
+                            <img
+                                v-if="selectedUser?.profile_image"
+                                :src="selectedUser.profile_image"
+                                alt="Profile Image"
+                                class="h-32 w-32 rounded-full object-cover border shadow-md"
+                            />
+                            <div
+                                v-else
+                                class="h-32 w-32 rounded-full flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
+                            >
+                                <span class="text-sm">No Image</span>
+                            </div>
                         </div>
-                        <div v-else>
-                            <p>No user selected.</p>
+
+                        <!-- User Details -->
+                        <div class="md:col-span-2">
+                            <div v-if="selectedUser" class="grid gap-2 text-sm">
+                                <p><strong>Library ID:</strong> {{ selectedUser.library_id }}</p>
+                                <p><strong>Card #:</strong> {{ selectedUser.card_number }}</p>
+                                <p><strong>School ID:</strong> {{ selectedUser.school_id }}</p>
+                                <p><strong>Name:</strong> {{ selectedUser.first_name }} {{ selectedUser.middle_initial }} {{ selectedUser.last_name }}</p>
+                                <p><strong>Email:</strong> {{ selectedUser.email }}</p>
+                                <p><strong>Contact:</strong> {{ selectedUser.contact_number }}</p>
+                                <p><strong>Sex:</strong> {{ selectedUser.sex === 'M' ? 'Male' : selectedUser.sex === 'F' ? 'Female' : selectedUser.sex }}</p>
+                            </div>
+
+                            <div v-else class="text-muted-foreground">
+                                <p>No user selected.</p>
+                            </div>
                         </div>
                     </div>
+
                     <DialogFooter class="p-6 pt-0">
                         <Button @click="isDialogOpen = false">Close</Button>
                     </DialogFooter>
