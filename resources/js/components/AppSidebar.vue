@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpenCheck, LayoutGrid, Library, Users, ChartColumnIncreasing  } from 'lucide-vue-next';
+import { BookOpenCheck, LayoutGrid, Library, Users, ChartColumnIncreasing, ChartPie  } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import { FileClock } from 'lucide-vue-next';
 import { computed } from 'vue';
@@ -72,6 +72,33 @@ const mainNavItems = computed((): NavItem[] => [
                 title: "Genesis",
                 url: "/test",
                 isActive: isRouteActive('/test'),
+            },
+            {
+                title: "Explorer",
+                url: "/explorer",
+                isActive: isRouteActive('/explorer'),
+            },
+            {
+                title: "Quantum",
+                url: "/quantum",
+                isActive: isRouteActive('/quantum'),
+            },
+        ],
+    },
+    {
+        title: "Statistical data",
+        url: "#",
+        icon: ChartPie ,
+        isActive: hasActiveSubItem([
+            { url: "#" },
+            { url: "#" },
+            { url: "#" }
+        ]),
+        items: [
+            {
+                title: "Genesis",
+                url: "/sample",
+                isActive: isRouteActive('/sample'),
             },
             {
                 title: "Explorer",
