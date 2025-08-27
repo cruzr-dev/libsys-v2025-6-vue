@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\College;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,12 @@ class AcademicSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed Colleges
+        $coe = College::create([
+            'code' => 'COE',
+            'name' => 'College of Engineering',
+        ]);
+
         // Seed Programs
         DB::table('programs')->insert([
             ['code' => 'BSCS', 'name' => 'Bachelor of Science in Computer Science'],
@@ -30,16 +37,6 @@ class AcademicSeeder extends Seeder
             ['name' => 'Information Security'],
             ['name' => 'Marketing'],
             ['name' => 'Biology'],
-        ]);
-
-        // Seed Colleges
-        DB::table('colleges')->insert([
-            ['code' => 'COE', 'name' => 'College of Engineering'],
-            ['code' => 'CAS', 'name' => 'College of Arts and Sciences'],
-            ['code' => 'CBA', 'name' => 'College of Business Administration'],
-            ['code' => 'CTE', 'name' => 'College of Teacher Education'],
-            ['code' => 'CHS', 'name' => 'College of Health Sciences'],
-            ['code' => 'NA', 'name' => 'Not Applicable'],
         ]);
     }
 }
