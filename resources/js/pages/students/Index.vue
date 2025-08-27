@@ -580,15 +580,16 @@ watch(() => window.location.search, () => {
             <Dialog v-model:open="isDialogOpen">
                 <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                     <DialogHeader class="p-6 pb-0">
-                        <DialogTitle>Student Details</DialogTitle>
+                        <DialogTitle>User Details</DialogTitle>
                         <DialogDescription>
                             Viewing profile information.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
-                        <!-- Profile Image -->
-                        <div class="flex justify-center md:justify-start">
+                        <!-- Profile Image and Barcode -->
+                        <div class="flex flex-col items-center md:items-start gap-4">
+                            <!-- Profile Image -->
                             <img
                                 v-if="selectedUser?.profile_image"
                                 :src="selectedUser.profile_image"
@@ -600,6 +601,22 @@ watch(() => window.location.search, () => {
                                 class="h-32 w-32 rounded-full flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
                             >
                                 <span class="text-sm">No Image</span>
+                            </div>
+
+                            <!-- Barcode Image -->
+                            <div v-if="selectedUser?.barcode_path" class="flex flex-col items-center">
+                                <img
+                                    :src="'/storage/' + selectedUser.barcode_path"
+                                    alt="User Barcode"
+                                    class="h-16 w-auto border shadow-md"
+                                />
+                                <span class="text-xs text-muted-foreground mt-2">Barcode: {{ selectedUser.card_number }}</span>
+                            </div>
+                            <div
+                                v-else
+                                class="h-16 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
+                            >
+                                <span class="text-xs">No Barcode</span>
                             </div>
                         </div>
 
@@ -615,7 +632,6 @@ watch(() => window.location.search, () => {
                                 <p><strong>Sex:</strong> {{ selectedUser.sex === 'M' ? 'Male' : selectedUser.sex === 'F' ? 'Female' : selectedUser.sex }}</p>
                                 <p><strong>User Type:</strong> {{ selectedUser.user_type?.name }}</p>
                             </div>
-
                             <div v-else class="text-muted-foreground">
                                 <p>No user selected.</p>
                             </div>

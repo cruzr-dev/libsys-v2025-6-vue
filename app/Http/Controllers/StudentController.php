@@ -159,7 +159,7 @@ class StudentController extends Controller
                 $barcodeData = $generator->getBarcode($validated['card_number'], $generator::TYPE_CODE_128);
 
                 $filename = 'barcodes/' . $validated['card_number'] . '.png';
-                Storage::put('public/' . $filename, $barcodeData);
+                Storage::put('/' . $filename, $barcodeData);
 
                 $user->update(['barcode_path' => $filename]);
             });
