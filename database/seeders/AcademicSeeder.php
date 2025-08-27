@@ -109,5 +109,36 @@ class AcademicSeeder extends Seeder
                 'name' => 'Animal Production',
             ],
         ]);
+
+        /**
+         * CARS
+         */
+
+        $cars = College::create([
+            'code' => 'CARS',
+            'name' => 'College of Agricultural and Related Sciences',
+        ]);
+
+        $cars->courses()->createMany([
+            [
+                'code' => 'BSA',
+                'name' => 'Bachelor of Science in Agriculture',
+            ],
+            [
+                'code' => 'BSF',
+                'name' => 'Bachelor of Science in Forestry',
+            ],
+        ]);
+
+        Course::where('code', 'BSA')->first()->majors()->createMany([
+            ['name' => 'Animal Science'],
+            ['name' => 'Soil Science'],
+            ['name' => 'Crop Science'],
+            ['name' => 'Entomology'],
+            ['name' => 'Agronomy'],
+            ['name' => 'Horticulture'],
+            ['name' => 'Enterprise Management'],
+            ['name' => 'Plant Pathology'],
+        ]);
     }
 }
