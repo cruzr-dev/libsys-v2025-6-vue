@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('library_id')->nullable();
-            $table->string('card_number')->nullable();
-            $table->string('school_id')->nullable();
+            $table->unsignedInteger('library_id')->nullable();
+            $table->unsignedInteger('card_number')->nullable();
+            $table->unsignedInteger('school_id')->nullable();
             $table->string('first_name', 50);
             $table->string('middle_initial', 1)->nullable();
             $table->string('last_name', 50);
