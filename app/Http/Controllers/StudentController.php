@@ -31,9 +31,8 @@ class StudentController extends Controller
     {
         $query = User::with('userType');
 
-        // ✅ Only include grad_student and undergraduate_student
         $query->whereHas('userType', function ($q) {
-            $q->whereIn('key', 'student');
+            $q->where('key', 'student');
         });
 
         // Handle search
