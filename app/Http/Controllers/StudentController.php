@@ -73,8 +73,14 @@ class StudentController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Get the highest library_id and card_number from the students table
+        $maxLibraryId = User::max('library_id') ?? 0;
+        $maxCardNumber = User::max('card_number') ?? 0;
+
         return Inertia::render('students/Create', [
             'colleges' => $colleges,
+            'nextLibraryId' => $maxLibraryId + 1,
+            'nextCardNumber' => $maxCardNumber + 1,
         ]);
     }
 

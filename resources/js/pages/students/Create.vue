@@ -36,6 +36,8 @@ interface Major {
 // Define the props passed from the controller
 const props = defineProps<{
     colleges: College[];
+    nextLibraryId: number;
+    nextCardNumber: number;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -44,9 +46,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Create Student', href: '/users/students/create' },
 ];
 
-// Initialize the form with all necessary fields
+// Initialize the form with all necessary fields (pre-filled with incremented values)
 const form = useForm({
-    library_id: '',
+    library_id: props.nextLibraryId.toString(), // Pre-filled with incremented value
     first_name: '',
     middle_initial: '',
     last_name: '',
@@ -54,7 +56,7 @@ const form = useForm({
     contact_number: '',
     email: '',
     student_type: '',
-    card_number: '', // Changed from school_id to card_number
+    card_number: props.nextCardNumber.toString(), // Pre-filled with incremented value
     college_id: null,
     course_id: null,
     major_id: null,
@@ -104,7 +106,6 @@ const submit = () => {
 const goBack = () => {
     window.history.back();
 };
-
 </script>
 
 <template>
