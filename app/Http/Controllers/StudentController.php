@@ -66,17 +66,18 @@ class StudentController extends Controller
      */
     public function create(): \Inertia\Response
     {
-        $courses = Course::select('id', 'code', 'name')->orderBy('name')->get();
-        $majors = Major::select('id', 'name')->orderBy('name')->get();
-        $colleges = College::select('id', 'code', 'name')->orderBy('name')->get();
+        $colleges = College::with([
+            'courses:id,college_id,code,name',
+            'courses.majors:id,course_id,name'
+        ])
+            ->select('id', 'code', 'name')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('students/Create', [
-            'courses' => $courses,
-            'majors' => $majors,
             'colleges' => $colleges,
         ]);
     }
-
 
     /**
      * Store a newly created resource in storage.

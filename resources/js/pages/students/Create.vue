@@ -9,12 +9,33 @@ import Layout from '@/layouts/users/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle, ArrowLeft } from 'lucide-vue-next';
+import { computed, watch } from 'vue';
+
+// Updated interface to match your Laravel controller structure
+interface College {
+    id: number;
+    code: string;
+    name: string;
+    courses: Course[];
+}
+
+interface Course {
+    id: number;
+    college_id: number;
+    code: string;
+    name: string;
+    majors: Major[];
+}
+
+interface Major {
+    id: number;
+    course_id: number;
+    name: string;
+}
 
 // Define the props passed from the controller
-defineProps<{
-    programs: { id: number; code: string; name: string }[];
-    majors: { id: number; name: string }[];
-    colleges: { id: number; code: string; name: string }[];
+const props = defineProps<{
+    colleges: College[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -35,8 +56,44 @@ const form = useForm({
     student_type: '',
     school_id: '',
     college_id: null,
-    program_id: null,
+    course_id: null, // Changed from program_id to course_id to match your structure
     major_id: null,
+});
+
+// Computed property to get courses based on selected college
+const availableCourses = computed(() => {
+    if (!form.college_id) return [];
+
+    const selectedCollege = props.colleges.find(college => college.id === form.college_id);
+    return selectedCollege?.courses || [];
+});
+
+// Computed property to get majors based on selected course
+const availableMajors = computed(() => {
+    if (!form.course_id) return [];
+
+    const selectedCourse = availableCourses.value.find(course => course.id === form.course_id);
+    return selectedCourse?.majors || [];
+});
+
+// Watch for college changes to reset dependent fields
+watch(() => form.college_id, (newCollegeId) => {
+    if (newCollegeId !== null) {
+        // Reset course and major when college changes
+        form.course_id = null;
+        form.major_id = null;
+        form.clearErrors('course_id');
+        form.clearErrors('major_id');
+    }
+});
+
+// Watch for course changes to reset major field
+watch(() => form.course_id, (newCourseId) => {
+    if (newCourseId !== null) {
+        // Reset major when course changes
+        form.major_id = null;
+        form.clearErrors('major_id');
+    }
 });
 
 // Handle form submission
@@ -220,32 +277,45 @@ const goBack = () => {
                                 <InputError :message="form.errors.college_id" />
                             </div>
 
-                            <!-- Program Select Input -->
+                            <!-- Course Select Input (Dynamic based on college) -->
                             <div class="grid gap-2">
-                                <Label for="program_id" class="text-sm font-medium"> Program <span class="text-red-500">*</span> </Label>
-                                <Select v-model="form.program_id" @update:model-value="form.clearErrors('program_id')" required>
-                                    <SelectTrigger id="program_id" :tabindex="10" class="h-10">
-                                        <SelectValue placeholder="Select program" />
+                                <Label for="course_id" class="text-sm font-medium"> Course <span class="text-red-500">*</span> </Label>
+                                <Select
+                                    v-model="form.course_id"
+                                    @update:model-value="form.clearErrors('course_id')"
+                                    required
+                                    :disabled="!form.college_id || availableCourses.length === 0"
+                                >
+                                    <SelectTrigger id="course_id" :tabindex="10" class="h-10">
+                                        <SelectValue
+                                            :placeholder="!form.college_id ? 'Select college first' : availableCourses.length === 0 ? 'No courses available' : 'Select course'"
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem v-for="program in programs" :key="program.id" :value="program.id">
-                                            {{ program.code }} - {{ program.name }}
+                                        <SelectItem v-for="course in availableCourses" :key="course.id" :value="course.id">
+                                            {{ course.code }} - {{ course.name }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <InputError :message="form.errors.program_id" />
+                                <InputError :message="form.errors.course_id" />
                             </div>
                         </div>
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                            <!-- Major Select Input -->
+                            <!-- Major Select Input (Dynamic based on course) -->
                             <div class="grid gap-2">
                                 <Label for="major_id" class="text-sm font-medium">Major (if applicable)</Label>
-                                <Select v-model="form.major_id" @update:model-value="form.clearErrors('major_id')">
+                                <Select
+                                    v-model="form.major_id"
+                                    @update:model-value="form.clearErrors('major_id')"
+                                    :disabled="!form.course_id || availableMajors.length === 0"
+                                >
                                     <SelectTrigger id="major_id" :tabindex="11" class="h-10">
-                                        <SelectValue placeholder="Select major" />
+                                        <SelectValue
+                                            :placeholder="!form.course_id ? 'Select course first' : availableMajors.length === 0 ? 'No majors available' : 'Select major'"
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem v-for="major in majors" :key="major.id" :value="major.id">
+                                        <SelectItem v-for="major in availableMajors" :key="major.id" :value="major.id">
                                             {{ major.name }}
                                         </SelectItem>
                                     </SelectContent>
