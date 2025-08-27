@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('contact_number', 10)->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('college_id')->constrained()->onDelete('restrict');
-            $table->foreignId('program_id')->constrained()->onDelete('restrict');
+            $table->foreignId('course_id')->constrained()->onDelete('restrict');
             $table->foreignId('major_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });

@@ -237,18 +237,44 @@ class UserImportSeeder extends Seeder
     private function createStudentRecord(User $user, array $row): void
     {
         try {
-            $collegeId = College::where('code', 'NA')->firstOrFail()->id;
-            $courseId = Course::where('code', 'NA')->firstOrFail()->id;
-        } catch (ModelNotFoundException $e) {
-            Log::error('No college or course found with code NA');
+            // Get a random college
+            $college = College::inRandomOrder()->first();
+
+            if (!$college) {
+                Log::error('No colleges found in database');
+                $collegeId = null;
+                $courseId = null;
+                $majorId = null;
+            } else {
+                $collegeId = $college->id;
+
+                // Get a random course from the selected college
+                $course = $college->courses()->inRandomOrder()->first();
+
+                if (!$course) {
+                    Log::error("No courses found for college: {$college->code}");
+                    $courseId = null;
+                    $majorId = null;
+                } else {
+                    $courseId = $course->id;
+
+                    // Get a random major from the selected course (if any exist)
+                    $major = $course->majors()->inRandomOrder()->first();
+                    $majorId = $major ? $major->id : null;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error selecting random college/course: ' . $e->getMessage());
             $collegeId = null;
             $courseId = null;
+            $majorId = null;
         }
 
         $contactNumber = $this->parseContactNumber($row[7] ?? null);
         $studentData = [
             'college_id' => $collegeId,
             'course_id' => $courseId,
+            'major_id' => $majorId,
             'contact_number' => $contactNumber,
         ];
 
