@@ -98,7 +98,6 @@ class StudentController extends Controller
             'sex'            => 'required|in:m,f',
             'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
             'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
-            'student_type'   => 'required|in:undergraduate,graduate',
             'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
             'college_id'     => 'required|exists:colleges,id',
             'course_id'      => 'required|exists:courses,id',
@@ -137,6 +136,7 @@ class StudentController extends Controller
                     'course_id'      => $validated['course_id'],
                     'major_id'       => $validated['major_id'],
                 ]);
+
             });
 
             return to_route('students.index')
