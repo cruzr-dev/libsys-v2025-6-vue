@@ -37,12 +37,21 @@ const form = useForm({
     purpose_id: null,
 });
 
+const errorMessage = ref('')
+
 const search = () => {
+    if (form.search.length !== 5) {
+        errorMessage.value = 'Library ID must be exactly 5 characters.'
+        return
+    }
+
+    errorMessage.value = ''
     router.get(route('logger.create'), { search: form.search, search_button: true }, { preserveState: true });
 };
 
 const clearSearch = () => {
     form.search = '';
+    errorMessage.value = ''
 };
 
 const open = ref(false)
@@ -80,12 +89,13 @@ const submitForm = () => {
 <template>
     <div class="relative w-full max-w-sm items-center dark:text-card-foreground">
         <form @submit.prevent="search">
-            <Input required v-model="form.search" id="search" type="number"
+            <Input v-model="form.search" id="search" type="number"
                    placeholder="Enter Library ID" class="pl-10" autocomplete="off"/>
         </form>
         <span class="absolute start-0 inset-y-0 flex items-center justify-center px-2">
           <UserRoundSearch class="size-6 text-muted-foreground" />
         </span>
+        <p v-if="errorMessage" class="text-red-500 text-sm mt-1">{{ errorMessage }}</p>
     </div>
     <div class="flex gap-2 dark:text-card-foreground">
         <Button variant="outline" v-if="form.search" @click="clearSearch">Clear</Button>
