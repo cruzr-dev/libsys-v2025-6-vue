@@ -17,6 +17,11 @@ class UserBarcodeSeeder extends Seeder
     {
         // Get all users without a barcode_path
         $users = User::whereNull('barcode_path')->get();
+        $totalUsers = $users->count();
+
+        // Initialize the progress bar
+        $progressBar = $this->command->getOutput()->createProgressBar($totalUsers);
+        $progressBar->start();
 
         $generator = new BarcodeGeneratorPNG();
 
@@ -32,6 +37,12 @@ class UserBarcodeSeeder extends Seeder
                 // Update the user's barcode_path
                 $user->update(['barcode_path' => $filename]);
             }
+
+            // Advance the progress bar
+            $progressBar->advance();
         }
+
+        // Finish the progress bar
+        $progressBar->finish();
     }
 }
