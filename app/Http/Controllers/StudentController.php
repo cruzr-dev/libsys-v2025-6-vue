@@ -157,10 +157,10 @@ class StudentController extends Controller
                 // Generate and save barcode for the card_number
                 $generator = new BarcodeGeneratorPNG();
                 $barcodeData = $generator->getBarcode($validated['card_number'], $generator::TYPE_CODE_128);
+
                 $filename = 'barcodes/' . $validated['card_number'] . '.png';
                 Storage::put('public/' . $filename, $barcodeData);
 
-                // Optionally, store the barcode path in the user record
                 $user->update(['barcode_path' => $filename]);
             });
 
