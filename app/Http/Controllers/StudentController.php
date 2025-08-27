@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\College;
+use App\Models\Course;
 use App\Models\Major;
 use App\Models\Program;
 use App\Models\Student;
@@ -65,12 +66,12 @@ class StudentController extends Controller
      */
     public function create(): \Inertia\Response
     {
-        $programs = Program::select('id', 'code', 'name')->orderBy('name')->get();
+        $courses = Course::select('id', 'code', 'name')->orderBy('name')->get();
         $majors = Major::select('id', 'name')->orderBy('name')->get();
         $colleges = College::select('id', 'code', 'name')->orderBy('name')->get();
 
         return Inertia::render('students/Create', [
-            'programs' => $programs,
+            'courses' => $courses,
             'majors' => $majors,
             'colleges' => $colleges,
         ]);
@@ -94,7 +95,7 @@ class StudentController extends Controller
                 'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
                 'student_type'   => 'required|in:undergraduate,graduate',
                 'college_id'     => 'required|exists:colleges,id',
-                'program_id'     => 'required|exists:programs,id',
+                'course_id'     => 'required|exists:courses,id',
                 'major_id'       => 'nullable|exists:majors,id',
                 'school_id'     => 'required|integer|digits_between:1,10|unique:users,school_id', // <-- added
             ]);
@@ -128,7 +129,7 @@ class StudentController extends Controller
             $user->student()->create([
                 'student_type' => $request->student_type,
                 'college_id'   => $request->college_id,
-                'program_id'   => $request->program_id,
+                'course_id'   => $request->course_id,
                 'major_id'     => $request->major_id,
             ]);
 
