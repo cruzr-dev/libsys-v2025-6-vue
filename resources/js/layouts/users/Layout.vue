@@ -6,7 +6,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'All users',
+        title: 'All user',
         href: '/users/all',
     },
     {
@@ -14,11 +14,11 @@ const sidebarNavItems: NavItem[] = [
         href: '/users/students',
     },
     {
-        title: 'Faculties',
+        title: 'Faculty',
         href: '/users/faculties',
     },
     {
-        title: 'Staffs',
+        title: 'Staff',
         href: '/users/faculties',
     },
 ];
@@ -36,7 +36,7 @@ const page = usePage();
 if (page.props.auth.permissions.can_view_any_users)
 {
     sidebarNavItems.push({
-        title: 'Library Staffs',
+        title: 'Library Staff',
         href: '/users/admins',
     });
     // rightNavItems.unshift( {
