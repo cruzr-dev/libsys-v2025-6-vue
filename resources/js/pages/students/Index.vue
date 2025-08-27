@@ -519,7 +519,7 @@ watch(() => window.location.search, () => {
 
                 <div class="flex items-center justify-end space-x-2 py-4">
                     <div class="flex-1 text-sm text-muted-foreground">
-                        Showing {{ table.getFilteredRowModel().rows.length }} items of {{ total }} {{ total === 1 || total === 0 ? 'user' : 'users' }}.
+                        Showing page {{ currentPage }} of {{ lastPage }} in {{ total }} {{ total === 1 || total === 0 ? 'item' : 'items' }}.
                     </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
