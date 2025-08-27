@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\College;
 use App\Models\Course;
 use App\Models\Major;
-use App\Models\Program;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\UserType;
@@ -15,6 +14,8 @@ use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class StudentController extends Controller
 {
@@ -73,7 +74,7 @@ class StudentController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Get the highest library_id and card_number from the students table
+        // Get the highest library_id and card_number from the users table
         $maxLibraryId = User::max('library_id') ?? 0;
         $maxCardNumber = User::max('card_number') ?? 0;
 
@@ -132,7 +133,7 @@ class StudentController extends Controller
                 ->with('error', 'Student user type not found. Please contact the system administrator.');
         }
 
-        // 3. Database operations inside transaction
+        // 3. Database operations and barcode generation inside transaction
         try {
             DB::transaction(function () use ($validated, $studentType) {
                 $user = User::create([
@@ -153,18 +154,26 @@ class StudentController extends Controller
                     'major_id'       => $validated['major_id'],
                 ]);
 
+                // Generate and save barcode for the card_number
+                $generator = new BarcodeGeneratorPNG();
+                $barcodeData = $generator->getBarcode($validated['card_number'], $generator::TYPE_CODE_128);
+                $filename = 'barcodes/' . $validated['card_number'] . '.png';
+                Storage::put('public/' . $filename, $barcodeData);
+
+                // Optionally, store the barcode path in the user record
+                $user->update(['barcode_path' => $filename]);
             });
 
             return to_route('students.index')
-                ->with('success', 'You successfully created a new Student');
+                ->with('success', 'You successfully created a new Student with barcode');
 
         } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Database error creating Student: '.$e->getMessage(), [
+            \Log::error('Database error creating Student or barcode: ' . $e->getMessage(), [
                 'library_id' => $validated['library_id'],
                 'email'      => $validated['email'],
             ]);
             return back()->withInput()
-                ->with('error', 'A database error occurred while creating the student. Please try again.');
+                ->with('error', 'A database error occurred while creating the student or barcode. Please try again.');
 
         } catch (\Throwable $e) {
             // Let Laravel handle framework-related exceptions (e.g. HttpException)
@@ -172,7 +181,7 @@ class StudentController extends Controller
                 throw $e;
             }
 
-            \Log::error('Unexpected error creating Student: '.$e->getMessage(), [
+            \Log::error('Unexpected error creating Student or barcode: ' . $e->getMessage(), [
                 'library_id' => $validated['library_id'],
                 'email'      => $validated['email'],
             ]);
