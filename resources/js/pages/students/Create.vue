@@ -54,9 +54,9 @@ const form = useForm({
     contact_number: '',
     email: '',
     student_type: '',
-    school_id: '',
+    card_number: '', // Changed from school_id to card_number
     college_id: null,
-    course_id: null, // Changed from program_id to course_id to match your structure
+    course_id: null,
     major_id: null,
 });
 
@@ -245,20 +245,20 @@ const goBack = () => {
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Academic Information</h2>
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <!-- Student ID Input -->
+                            <!-- Card Number Input -->
                             <div class="grid gap-2">
-                                <Label for="school_id" class="text-sm font-medium"> School ID <span class="text-red-500">*</span> </Label>
+                                <Label for="card_number" class="text-sm font-medium"> Card Number <span class="text-red-500">*</span> </Label>
                                 <Input
-                                    id="school_id"
+                                    id="card_number"
                                     type="number"
                                     required
                                     :tabindex="8"
-                                    v-model="form.school_id"
-                                    @input="form.clearErrors('school_id')"
-                                    placeholder="e.g., 2025-12345"
+                                    v-model="form.card_number"
+                                    @input="form.clearErrors('card_number')"
+                                    placeholder="e.g., 202512345"
                                     class="h-10"
                                 />
-                                <InputError :message="form.errors.school_id" />
+                                <InputError :message="form.errors.card_number" />
                             </div>
 
                             <!-- College Select Input -->
