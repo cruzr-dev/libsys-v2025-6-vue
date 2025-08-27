@@ -15,7 +15,42 @@ class AcademicSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed Colleges
+        /**
+         * COE
+         */
+        $coe = College::create([
+            'code' => 'COE',
+            'name' => 'College of Engineering',
+        ]);
+
+        $coe->courses()->saveMany([
+            new Course(['code' => 'BSCE', 'name' => 'Bachelor of Science in Civil Engineering']),
+            new Course(['code' => 'BSEE', 'name' => 'Bachelor of Science in Electrical Engineering']),
+            new Course(['code' => 'BSECE', 'name' => 'Bachelor of Science in Electronics Engineering']),
+            new Course(['code' => 'BSGE', 'name' => 'Bachelor of Science in Geodetic Engineering']),
+            new Course(['code' => 'BSGeo', 'name' => 'Bachelor of Science in Geology']),
+            new Course(['code' => 'BSME', 'name' => 'Bachelor of Science in Mechanical Engineering']),
+            new Course(['code' => 'BSMinE', 'name' => 'Bachelor of Science in Mining Engineering']),
+            new Course(['code' => 'BSSE', 'name' => 'Bachelor of Science in Sanitary Engineering']),
+            new Course(['code' => 'BSABE', 'name' => 'Bachelor of Science in Agricultural and Biosystems Engineering']),
+        ]);
+
+        Course::where('code', 'BSCE')->first()->majors()->createMany([
+            ['name' => 'Geotechnical Engineering'],
+            ['name' => 'Structural Engineering'],
+            ['name' => 'Transportation Engineering'],
+        ]);
+
+        Course::where('code', 'BSABE')->first()->majors()->createMany([
+            ['name' => 'Land and Water Resources Engineering'],
+            ['name' => 'AB Machinery & Power Engineering'],
+            ['name' => 'AB Process Engineering'],
+            ['name' => 'AB Structures and Environment Engineering'],
+        ]);
+
+        /**
+         * CTET
+         */
         $ctet = College::create([
             'code' => 'CTET',
             'name' => 'College of Teacher Education and Technology',
