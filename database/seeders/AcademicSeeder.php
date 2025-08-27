@@ -140,5 +140,93 @@ class AcademicSeeder extends Seeder
             ['name' => 'Enterprise Management'],
             ['name' => 'Plant Pathology'],
         ]);
+
+        /**
+         * GRADUATE SCHOOL OF AGRICULTURE AND RELATED SCIENCES (GSARS)
+         */
+
+        $gsars = College::create([
+            'code' => 'GSARS',
+            'name' => 'Graduate School of Agriculture and Related Sciences',
+        ]);
+
+        $gsars->courses()->createMany([
+            [
+                'code' => 'PhD Hort',
+                'name' => 'Doctor of Philosophy in Horticulture',
+            ],
+            [
+                'code' => 'MSF',
+                'name' => 'Master of Science in Forestry',
+            ],
+            [
+                'code' => 'MSERM',
+                'name' => 'Master of Science in Environmental Resource Management',
+            ],
+            [
+                'code' => 'MSAGEXT',
+                'name' => 'Master of Science in Agricultural Extension',
+            ],
+            [
+                'code' => 'MSA',
+                'name' => 'Master of Science in Agriculture',
+            ],
+        ]);
+
+        Course::where('code', 'MSF')->first()->majors()->createMany([
+            ['name' => 'Forest Resource Management'],
+        ]);
+
+        Course::where('code', 'MSA')->first()->majors()->createMany([
+            ['name' => 'Agronomy'],
+            ['name' => 'Animal Science'],
+            ['name' => 'Horticulture'],
+            ['name' => 'Crop Protection'],
+            ['name' => 'Soil Science'],
+        ]);
+
+        /**
+         * GRADUATE SCHOOL OF ENGINEERING (GSOE)
+         */
+
+        $gsoe = College::create([
+            'code' => 'GSOE',
+            'name' => 'Graduate School of Engineering',
+        ]);
+
+        $gsoe->courses()->createMany([
+            [
+                'code' => 'MSE',
+                'name' => 'Master of Science in Engineering',
+            ],
+        ]);
+
+        Course::where('code', 'MSE')->first()->majors()->createMany([
+            ['name' => 'Land and Water Resources Engineering and Technology'],
+        ]);
+
+        /**
+         * GRADUATE SCHOOL OF TEACHER EDUCATION AND TECHNOLOGY (GSTET)
+         */
+
+        $gstet = College::create([
+            'code' => 'GSTET',
+            'name' => 'Graduate School of Teacher Education and Technology',
+        ]);
+
+        $gstet->courses()->createMany([
+            [
+                'code' => 'EdD',
+                'name' => 'Doctor of Education major in Educational Management',
+            ],
+            [
+                'code' => 'MEEM',
+                'name' => 'Master of Education in Educational Management',
+            ],
+            [
+                'code' => 'MEd-LT',
+                'name' => 'Master of Education in Language Teaching',
+            ],
+        ]);
     }
 }
