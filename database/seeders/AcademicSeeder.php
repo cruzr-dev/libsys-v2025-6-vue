@@ -21,6 +21,7 @@ class AcademicSeeder extends Seeder
         $coe = College::create([
             'code' => 'COE',
             'name' => 'College of Engineering',
+            'college_type' => 'undergraduate',
         ]);
 
         $coe->courses()->saveMany([
@@ -54,6 +55,7 @@ class AcademicSeeder extends Seeder
         $ctet = College::create([
             'code' => 'CTET',
             'name' => 'College of Teacher Education and Technology',
+            'college_type' => 'undergraduate',
         ]);
 
         $ctet->courses()->createMany([
@@ -117,6 +119,7 @@ class AcademicSeeder extends Seeder
         $cars = College::create([
             'code' => 'CARS',
             'name' => 'College of Agricultural and Related Sciences',
+            'college_type' => 'undergraduate',
         ]);
 
         $cars->courses()->createMany([
@@ -148,6 +151,7 @@ class AcademicSeeder extends Seeder
         $gsars = College::create([
             'code' => 'GSARS',
             'name' => 'Graduate School of Agriculture and Related Sciences',
+            'college_type' => 'graduate',
         ]);
 
         $gsars->courses()->createMany([
@@ -192,6 +196,7 @@ class AcademicSeeder extends Seeder
         $gsoe = College::create([
             'code' => 'GSOE',
             'name' => 'Graduate School of Engineering',
+            'college_type' => 'graduate',
         ]);
 
         $gsoe->courses()->createMany([
@@ -212,6 +217,7 @@ class AcademicSeeder extends Seeder
         $gstet = College::create([
             'code' => 'GSTET',
             'name' => 'Graduate School of Teacher Education and Technology',
+            'college_type' => 'graduate',
         ]);
 
         $gstet->courses()->createMany([

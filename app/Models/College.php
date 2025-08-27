@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class College extends Model
 {
-    protected $fillable = [];
+    protected $fillable = [
+        'code',
+        'name',
+        'college_type',
+    ];
 
     public function courses(): HasMany
     {
