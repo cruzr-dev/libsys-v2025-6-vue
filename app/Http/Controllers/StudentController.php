@@ -89,82 +89,76 @@ class StudentController extends Controller
      */
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
-        // 1. Validation
-        try {
-            $request->validate([
-                'library_id'     => 'required|integer|digits_between:1,10|unique:users,library_id',
-                'first_name'     => 'required|string|max:50',
-                'middle_initial' => 'nullable|string|max:1',
-                'last_name'      => 'required|string|max:50',
-                'sex'            => 'required|in:m,f',
-                'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
-                'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-                'student_type'   => 'required|in:undergraduate,graduate',
-                'college_id'     => 'required|exists:colleges,id',
-                'course_id'     => 'required|exists:courses,id',
-                'major_id'       => 'nullable|exists:majors,id',
-                'school_id'     => 'required|integer|digits_between:1,10|unique:users,school_id', // <-- added
+        // 1. Validation (let Laravel handle exceptions + redirect with errors)
+        $validated = $request->validate([
+            'library_id'     => 'required|integer|min:1|max:9999999999|unique:users,library_id',
+            'first_name'     => 'required|string|max:50',
+            'middle_initial' => 'nullable|string|max:1',
+            'last_name'      => 'required|string|max:50',
+            'sex'            => 'required|in:m,f',
+            'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
+            'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
+            'student_type'   => 'required|in:undergraduate,graduate',
+            'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
+            'college_id'     => 'required|exists:colleges,id',
+            'course_id'      => 'required|exists:courses,id',
+            'major_id'       => 'nullable|exists:majors,id',
+        ]);
+
+        // 2. Ensure the UserType exists before starting transaction
+        $studentType = UserType::where('key', 'student')->first();
+        if (! $studentType) {
+            \Log::warning('Student user type not found.', [
+                'library_id' => $validated['library_id'],
+                'email'      => $validated['email'],
             ]);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            session()->flash('error', 'Please fix the validation errors below.');
-            throw $e; // Let Laravel handle redirect back
+            return back()->withInput()
+                ->with('error', 'Student user type not found. Please contact the system administrator.');
         }
 
-        // 2. Database operations inside a transaction
+        // 3. Database operations inside transaction
         try {
-            DB::beginTransaction();
+            DB::transaction(function () use ($validated, $studentType) {
+                $user = User::create([
+                    'library_id'     => $validated['library_id'],
+                    'card_number'    => $validated['card_number'],
+                    'first_name'     => $validated['first_name'],
+                    'middle_initial' => $validated['middle_initial'],
+                    'last_name'      => $validated['last_name'],
+                    'sex'            => $validated['sex'],
+                    'email'          => $validated['email'],
+                    'user_type_id'   => $studentType->id,
+                ]);
 
-            // Get the "student" user type dynamically
-            $studentType = UserType::where('key', 'undergrad_student')->firstOrFail();
-
-            // Create the User record
-            $user = User::create([
-                'library_id'     => $request->library_id,
-                'school_id'   => $request->school_id,
-                'first_name'     => $request->first_name,
-                'middle_initial' => $request->middle_initial,
-                'last_name'      => $request->last_name,
-                'sex'            => $request->sex,
-                'contact_number' => $request->contact_number,
-                'email'          => $request->email,
-                'user_type_id'   => $studentType->id,
-            ]);
-
-            // Create the Student profile linked to the user
-            $user->student()->create([
-                'student_type' => $request->student_type,
-                'college_id'   => $request->college_id,
-                'course_id'   => $request->course_id,
-                'major_id'     => $request->major_id,
-            ]);
-
-            DB::commit();
+                $user->student()->create([
+                    'contact_number' => $validated['contact_number'],
+                    'college_id'     => $validated['college_id'],
+                    'course_id'      => $validated['course_id'],
+                    'major_id'       => $validated['major_id'],
+                ]);
+            });
 
             return to_route('students.index')
                 ->with('success', 'You successfully created a new Student');
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            DB::rollBack();
-            \Log::error('Student user type not found: ' . $e->getMessage(), [
-                'request_data' => $request->except([]),
-                'exception'    => $e
-            ]);
-            return back()->withInput()
-                ->with('error', 'Student user type not found. Please contact the system administrator.');
         } catch (\Illuminate\Database\QueryException $e) {
-            DB::rollBack();
-            \Log::error('Database error creating Student: ' . $e->getMessage(), [
-                'request_data' => $request->except([]),
-                'exception'    => $e
+            \Log::error('Database error creating Student: '.$e->getMessage(), [
+                'library_id' => $validated['library_id'],
+                'email'      => $validated['email'],
             ]);
             return back()->withInput()
                 ->with('error', 'A database error occurred while creating the student. Please try again.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Unexpected error creating Student: ' . $e->getMessage(), [
-                'request_data' => $request->except([]),
-                'exception'    => $e
+
+        } catch (\Throwable $e) {
+            // Let Laravel handle framework-related exceptions (e.g. HttpException)
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                throw $e;
+            }
+
+            \Log::error('Unexpected error creating Student: '.$e->getMessage(), [
+                'library_id' => $validated['library_id'],
+                'email'      => $validated['email'],
             ]);
             return back()->withInput()
                 ->with('error', 'An unexpected error occurred. Please try again or contact support.');
