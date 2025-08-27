@@ -115,7 +115,7 @@ const goBack = () => {
             <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm relative">
 
                 <!-- Back Button -->
-                <div class="absolute right-4 top-2">
+                <div class="absolute right-4 top-4">
                     <Button variant="outline" @click="goBack">
                         <ArrowLeft class="w-4 h-4" /> Back
                     </Button>
