@@ -3,11 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\College;
-use App\Models\Course;
 use App\Models\User;
 use App\Models\UserType;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Log;
 
@@ -58,8 +55,7 @@ class UserImportSeeder extends Seeder
     private function getUserTypeIds(): array
     {
         return [
-            'undergrad' => UserType::where('key', 'undergrad_student')->firstOrFail()->id,
-            'grad' => UserType::where('key', 'grad_student')->firstOrFail()->id,
+            'student' => UserType::where('key', 'student')->firstOrFail()->id,
             'faculty' => UserType::where('key', 'faculty')->firstOrFail()->id,
             'staff' => UserType::where('key', 'staff')->firstOrFail()->id,
         ];
@@ -90,7 +86,7 @@ class UserImportSeeder extends Seeder
                 $userData = $this->parseUserData($row, $userTypeIds);
                 $user = User::create($userData);
 
-                if (in_array($user->user_type_id, [$userTypeIds['undergrad'], $userTypeIds['grad']])) {
+                if ($user->user_type_id == $userTypeIds['student']) {
                     $this->createStudentRecord($user, $row);
                 }
 
@@ -218,8 +214,8 @@ class UserImportSeeder extends Seeder
         if (!empty($value) && is_string($value)) {
             $userType = ucwords($value);
             return match ($userType) {
-                'Undergraduate' => $userTypeIds['undergrad'],
-                'Graduate', 'Graduate School' => $userTypeIds['grad'],
+                'Undergraduate' => $userTypeIds['student'],
+                'Graduate', 'Graduate School' => $userTypeIds['student'],
                 'Faculty' => $userTypeIds['faculty'],
                 'Staff' => $userTypeIds['staff'],
                 default => null,
