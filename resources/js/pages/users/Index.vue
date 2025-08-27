@@ -51,10 +51,13 @@ const lastPage = ref(1);
 const total = ref(0);
 const error = ref<string | null>(null);
 
+// Scroll position preservation
+const scrollPosition = ref(0);
+
 // Search input ref for focus preservation
 const searchInputRef = ref(null);
 
-// show handler function
+// Show handler function
 const isDialogOpen = ref(false);
 const selectedUser = ref<any | null>(null);
 
@@ -155,8 +158,6 @@ const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({
     school_id: false,
     sex: false,
-    // middle_initial: false,  // Example: hide middle initial too
-    // card_number: false,     // Example: hide card number too
 });
 const expanded = ref({});
 const pageSizes = [5, 10, 20, 30, 40, 50];
@@ -164,6 +165,20 @@ const pagination = ref({
     pageIndex: 0,
     pageSize: 10,
 });
+
+// Scroll position management functions
+const saveScrollPosition = () => {
+    scrollPosition.value = window.pageYOffset || document.documentElement.scrollTop;
+};
+
+const restoreScrollPosition = () => {
+    nextTick(() => {
+        window.scrollTo({
+            top: scrollPosition.value,
+            behavior: 'instant'
+        });
+    });
+};
 
 // Debounce utility
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
@@ -292,16 +307,24 @@ const table = useVueTable({
     },
 });
 
-// Event handlers
+// Enhanced event handlers with scroll preservation
 function handlePaginationChange(updater) {
+    // Save current scroll position before pagination change
+    saveScrollPosition();
+
     pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater;
-    fetchData();
+
+    // Fetch data and restore scroll position after DOM update
+    fetchData().then(() => {
+        restoreScrollPosition();
+    });
 }
 
 function handleSortingChange(updaterOrValue) {
     sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue;
     // Reset to first page when sorting changes
     pagination.value.pageIndex = 0;
+    // Don't preserve scroll position for sorting - user expects to see top
     fetchData();
 }
 
@@ -309,6 +332,7 @@ function handleFilterChange(updaterOrValue) {
     columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue;
     // Reset to first page when filters change
     pagination.value.pageIndex = 0;
+    // Don't preserve scroll position for filtering - user expects to see top
     debouncedFetch(); // Use debounced version for filters
 }
 
@@ -316,6 +340,57 @@ function handleColumnVisibilityChange(updaterOrValue) {
     columnVisibility.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility.value) : updaterOrValue;
     fetchData();
 }
+
+// Enhanced pagination navigation functions with scroll preservation
+const goToFirstPage = () => {
+    if (table.getCanPreviousPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.setPageIndex(0);
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const goToPreviousPage = () => {
+    if (table.getCanPreviousPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.previousPage();
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const goToNextPage = () => {
+    if (table.getCanNextPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.nextPage();
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const goToLastPage = () => {
+    if (table.getCanNextPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.setPageIndex(table.getPageCount() - 1);
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const handlePageSizeChange = (value: string) => {
+    if (!isLoading.value) {
+        saveScrollPosition();
+        table.setPageSize(Number(value));
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
 
 // Search functionality
 const filterInput = ref<string>('');
@@ -522,7 +597,7 @@ watch(() => window.location.search, () => {
                         <p class="text-sm font-medium">Rows per page</p>
                         <Select
                             :model-value="table.getState().pagination.pageSize.toString()"
-                            @update:model-value="(value) => table.setPageSize(Number(value))"
+                            @update:model-value="handlePageSizeChange"
                             :disabled="isLoading"
                         >
                             <SelectTrigger class="h-8 w-[80px]">
@@ -541,7 +616,7 @@ watch(() => window.location.search, () => {
                                 variant="outline"
                                 class="hidden h-8 w-8 p-0 lg:flex"
                                 :disabled="!table.getCanPreviousPage() || isLoading"
-                                @click="table.setPageIndex(0)"
+                                @click="goToFirstPage"
                             >
                                 <DoubleArrowLeftIcon class="h-4 w-4" />
                             </Button>
@@ -549,7 +624,7 @@ watch(() => window.location.search, () => {
                                 variant="outline"
                                 class="h-8 w-8 p-0"
                                 :disabled="!table.getCanPreviousPage() || isLoading"
-                                @click="table.previousPage()"
+                                @click="goToPreviousPage"
                             >
                                 <ChevronLeftIcon class="h-4 w-4" />
                             </Button>
@@ -557,7 +632,7 @@ watch(() => window.location.search, () => {
                                 variant="outline"
                                 class="h-8 w-8 p-0"
                                 :disabled="!table.getCanNextPage() || isLoading"
-                                @click="table.nextPage()"
+                                @click="goToNextPage"
                             >
                                 <ChevronRightIcon class="h-4 w-4" />
                             </Button>
@@ -565,7 +640,7 @@ watch(() => window.location.search, () => {
                                 variant="outline"
                                 class="hidden h-8 w-8 p-0 lg:flex"
                                 :disabled="!table.getCanNextPage() || isLoading"
-                                @click="table.setPageIndex(table.getPageCount() - 1)"
+                                @click="goToLastPage"
                             >
                                 <DoubleArrowRightIcon class="h-4 w-4" />
                             </Button>
