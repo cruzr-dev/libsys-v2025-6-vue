@@ -304,10 +304,14 @@ const goBack = () => {
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <!-- Major Select Input (Dynamic based on course) -->
                             <div class="grid gap-2">
-                                <Label for="major_id" class="text-sm font-medium">Major (if applicable)</Label>
+                                <Label for="major_id" class="text-sm font-medium">
+                                    Major
+                                    <span v-if="availableMajors.length > 0" class="text-red-500">*</span>
+                                </Label>
                                 <Select
                                     v-model="form.major_id"
                                     @update:model-value="form.clearErrors('major_id')"
+                                    :required="availableMajors.length > 0"
                                     :disabled="!form.course_id || availableMajors.length === 0"
                                 >
                                     <SelectTrigger id="major_id" :tabindex="11" class="h-10">

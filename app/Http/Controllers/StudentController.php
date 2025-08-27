@@ -101,7 +101,23 @@ class StudentController extends Controller
             'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
             'college_id'     => 'required|exists:colleges,id',
             'course_id'      => 'required|exists:courses,id',
-            'major_id'       => 'nullable|exists:majors,id',
+            'major_id' => [
+                'nullable',
+                'exists:majors,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $course = Course::find($request->input('course_id'));
+
+                    if (!$course) {
+                        return; // avoid running if no course
+                    }
+
+                    $hasMajors = Major::where('course_id', $course->id)->exists();
+
+                    if ($hasMajors && is_null($value)) {
+                        $fail('The major field is required when the selected course has majors.');
+                    }
+                },
+            ],
         ]);
 
         // 2. Ensure the UserType exists before starting transaction
