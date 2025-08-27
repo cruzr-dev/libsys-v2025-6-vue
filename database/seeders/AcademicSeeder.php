@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\College;
+use App\Models\Course;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +42,37 @@ class AcademicSeeder extends Seeder
                 'code' => 'BSIT',
                 'name' => 'Bachelor Science in Information Technology',
             ],
+            [
+                'code' => 'BTVTED',
+                'name' => 'Bachelor of Technical-Vocational Teacher Education',
+            ],
         ]);
 
+        Course::where('code', 'BSED')->first()->majors()->createMany([
+            [
+                'name' => 'English',
+            ],
+            [
+                'name' => 'Filipino',
+            ],
+            [
+                'name' => 'Mathematics',
+            ],
+        ]);
+
+        Course::where('code', 'BSIT')->first()->majors()->createMany([
+            [
+                'name' => 'Information Security',
+            ],
+        ]);
+
+        Course::where('code', 'BTVTED')->first()->majors()->createMany([
+            [
+                'name' => 'Agricultural Crop Production',
+            ],
+            [
+                'name' => 'Animal Production',
+            ],
+        ]);
     }
 }
