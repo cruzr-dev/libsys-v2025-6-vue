@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\College;
-use App\Models\Program;
+use App\Models\Course;
 use App\Models\User;
 use App\Models\UserType;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -238,17 +238,17 @@ class UserImportSeeder extends Seeder
     {
         try {
             $collegeId = College::where('code', 'NA')->firstOrFail()->id;
-            $programId = Program::where('code', 'NA')->firstOrFail()->id;
+            $courseId = Course::where('code', 'NA')->firstOrFail()->id;
         } catch (ModelNotFoundException $e) {
-            Log::error('No college or program found with code NA');
+            Log::error('No college or course found with code NA');
             $collegeId = null;
-            $programId = null;
+            $courseId = null;
         }
 
         $contactNumber = $this->parseContactNumber($row[7] ?? null);
         $studentData = [
             'college_id' => $collegeId,
-            'program_id' => $programId,
+            'course_id' => $courseId,
             'contact_number' => $contactNumber,
         ];
 
