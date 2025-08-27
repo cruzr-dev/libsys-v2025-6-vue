@@ -322,20 +322,6 @@ const goBack = () => {
                                 </Select>
                                 <InputError :message="form.errors.major_id" />
                             </div>
-
-                            <div class="grid gap-2">
-                                <Label for="student_type" class="text-sm font-medium"> Student Type <span class="text-red-500">*</span> </Label>
-                                <Select v-model="form.student_type" @update:model-value="form.clearErrors('student_type')" required>
-                                    <SelectTrigger id="student_type" :tabindex="12" class="h-10">
-                                        <SelectValue placeholder="Select student type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                                        <SelectItem value="graduate">Graduate</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError :message="form.errors.student_type" />
-                            </div>
                         </div>
                     </div>
 
