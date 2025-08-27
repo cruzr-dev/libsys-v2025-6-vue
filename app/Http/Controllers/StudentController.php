@@ -33,7 +33,7 @@ class StudentController extends Controller
 
         // ✅ Only include grad_student and undergraduate_student
         $query->whereHas('userType', function ($q) {
-            $q->whereIn('key', ['grad_student', 'undergrad_student']);
+            $q->whereIn('key', 'student');
         });
 
         // Handle search
