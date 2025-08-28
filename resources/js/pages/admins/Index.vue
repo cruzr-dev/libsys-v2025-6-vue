@@ -225,7 +225,7 @@ const fetchData = async () => {
         });
 
         // Make API request
-        const response = await fetch(`/api/admin?${params.toString()}`, {
+        const response = await fetch(`/api/admins?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',

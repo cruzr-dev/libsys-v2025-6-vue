@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BorrowingTransactionController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\StaffController;
@@ -26,3 +27,4 @@ Route::get('/users/', [UserController::class, 'fetchAll']);
 Route::get('/students/', [StudentController::class, 'fetchAll']);
 Route::get('/faculties/', [FacultyController::class, 'fetchAll']);
 Route::get('/staff/', [StaffController::class, 'fetchAll']);
+Route::get('/admins/', [AdminController::class, 'fetchAll']);
