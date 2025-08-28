@@ -225,7 +225,7 @@ const fetchData = async () => {
         });
 
         // Make API request
-        const response = await fetch(`/api/students?${params.toString()}`, {
+        const response = await fetch(`/api/staff?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -468,7 +468,7 @@ const initializeFromURL = () => {
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
-    { title: 'Students', href: '/users/students' },
+    { title: 'Staff', href: '/users/staff' },
 ];
 
 // Lifecycle
@@ -485,7 +485,7 @@ watch(() => window.location.search, () => {
 </script>
 
 <template>
-    <Head title="Students" />
+    <Head title="Staff" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
@@ -517,9 +517,9 @@ watch(() => window.location.search, () => {
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <Link href="/users/students/create">
+                        <Link :href="route('staff.create')">
                             <Button variant="secondary">
-                                <Plus class="w-4 h-4" /> Add Student
+                                <Plus class="w-4 h-4" /> Add Staff
                             </Button>
                         </Link>
                         <DropdownMenuRoot>
@@ -655,9 +655,9 @@ watch(() => window.location.search, () => {
             <Dialog v-model:open="isDialogOpen">
                 <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                     <DialogHeader class="p-6 pb-0">
-                        <DialogTitle>Student Details</DialogTitle>
+                        <DialogTitle>Staff Details</DialogTitle>
                         <DialogDescription>
-                            Viewing student profile information.
+                            Viewing staff profile information.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -708,7 +708,7 @@ watch(() => window.location.search, () => {
                                 <p><strong>User Type:</strong> {{ selectedUser.user_type?.name }}</p>
                             </div>
                             <div v-else class="text-muted-foreground">
-                                <p>No student selected.</p>
+                                <p>No staff selected.</p>
                             </div>
                         </div>
                     </div>

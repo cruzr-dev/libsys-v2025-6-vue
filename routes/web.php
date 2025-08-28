@@ -44,6 +44,8 @@ Route::middleware($middleware)->group(function () {
         Route::get('/faculties', [FacultyController::class, 'index'])->name('faculties.index');
         Route::get('/faculties/create', [FacultyController::class, 'create'])->name('faculties.create');
         Route::post('/faculties', [FacultyController::class, 'store'])->name('faculties.store');
+        Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+        Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::get('/students', [StudentController::class, 'index'])->name('students.index');
         Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
         Route::post('/students', [StudentController::class, 'store'])->name('students.store');
