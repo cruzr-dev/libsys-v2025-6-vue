@@ -164,6 +164,21 @@ const goBack = () => {
                             </div>
 
                             <div class="grid gap-2">
+                                <Label for="card_number" class="text-sm font-medium"> Card Number <span class="text-red-500">*</span> </Label>
+                                <Input
+                                    id="card_number"
+                                    type="number"
+                                    required
+                                    :tabindex="8"
+                                    v-model="form.card_number"
+                                    @input="form.clearErrors('card_number')"
+                                    placeholder="e.g., 202512345"
+                                    class="h-10"
+                                />
+                                <InputError :message="form.errors.card_number" />
+                            </div>
+
+                            <div class="grid gap-2">
                                 <Label for="first_name" class="text-sm font-medium"> First Name <span class="text-red-500">*</span> </Label>
                                 <Input
                                     id="first_name"
@@ -286,21 +301,6 @@ const goBack = () => {
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Academic Information</h2>
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <!-- Card Number Input -->
-                            <div class="grid gap-2">
-                                <Label for="card_number" class="text-sm font-medium"> Card Number <span class="text-red-500">*</span> </Label>
-                                <Input
-                                    id="card_number"
-                                    type="number"
-                                    required
-                                    :tabindex="8"
-                                    v-model="form.card_number"
-                                    @input="form.clearErrors('card_number')"
-                                    placeholder="e.g., 202512345"
-                                    class="h-10"
-                                />
-                                <InputError :message="form.errors.card_number" />
-                            </div>
 
                             <!-- College Select Input -->
                             <div class="grid gap-2">

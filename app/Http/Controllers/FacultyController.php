@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\College;
 use App\Models\Faculty;
 use App\Models\User;
 use App\Models\UserType;
@@ -56,10 +57,21 @@ class FacultyController extends Controller
      */
     public function create()
     {
-        $offices = \App\Models\Office::select('id', 'acronym', 'name')->get();
+        $colleges = College::with(
+            'courses:id,college_id,code,name'
+        )
+            ->select('id', 'code', 'name')
+            ->orderBy('name')
+            ->get();
+
+        // Get the highest library_id and card_number from the users table
+        $maxLibraryId = User::max('library_id') ?? 0;
+        $maxCardNumber = User::max('card_number') ?? 0;
 
         return Inertia::render('faculties/Create', [
-            'offices' => $offices
+            'colleges' => $colleges,
+            'nextLibraryId' => $maxLibraryId + 1,
+            'nextCardNumber' => $maxCardNumber + 1,
         ]);
     }
 

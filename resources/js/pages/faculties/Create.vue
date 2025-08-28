@@ -11,8 +11,16 @@ import { LoaderCircle } from 'lucide-vue-next';
 import Layout from '@/layouts/users/Layout.vue';
 import { onBeforeUnmount, ref, watch } from 'vue';
 
-defineProps<{
-    offices: { id: number; acronym: string; name: string }[];
+interface College {
+    id: number;
+    code: string;
+    name: string;
+}
+
+const props = defineProps<{
+    colleges: College[];
+    nextLibraryId: number;
+    nextCardNumber: number;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -22,7 +30,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
-    library_id: '',
+    library_id: props.nextLibraryId.toString(),
+    card_number: props.nextCardNumber.toString(),
     first_name: '',
     middle_initial: '',
     last_name: '',
@@ -85,6 +94,21 @@ const submit = () => {
                                     class="h-10"
                                 />
                                 <InputError :message="form.errors.library_id" />
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="card_number" class="text-sm font-medium"> Card Number <span class="text-red-500">*</span> </Label>
+                                <Input
+                                    id="card_number"
+                                    type="number"
+                                    required
+                                    :tabindex="8"
+                                    v-model="form.card_number"
+                                    @input="form.clearErrors('card_number')"
+                                    placeholder="e.g., 202512345"
+                                    class="h-10"
+                                />
+                                <InputError :message="form.errors.card_number" />
                             </div>
 
                             <div class="grid gap-2">
@@ -184,19 +208,6 @@ const submit = () => {
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Contact Information</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="grid gap-2">
-                                <Label for="contact_number" class="text-sm font-medium">Contact Number</Label>
-                                <Input
-                                    id="contact_number"
-                                    type="text"
-                                    :tabindex="6"
-                                    v-model="form.contact_number"
-                                    @input="form.clearErrors('contact_number')"
-                                    placeholder="10 Digit Contact Number"
-                                    class="h-10"
-                                />
-                                <InputError :message="form.errors.contact_number" />
-                            </div>
 
                             <div class="grid gap-2">
                                 <Label for="email" class="text-sm font-medium">
@@ -224,7 +235,7 @@ const submit = () => {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="grid gap-2">
                                 <Label for="office_id" class="text-sm font-medium">
-                                    Office <span class="text-red-500">*</span>
+                                    College <span class="text-red-500">*</span>
                                 </Label>
                                 <Select
                                     v-model="form.office_id"
@@ -232,35 +243,19 @@ const submit = () => {
                                     required
                                 >
                                     <SelectTrigger id="office_id" :tabindex="8" class="h-10">
-                                        <SelectValue placeholder="Select an office" />
+                                        <SelectValue placeholder="Select a college" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem
-                                            v-for="office in offices"
-                                            :key="office.id"
-                                            :value="office.id"
+                                            v-for="college in colleges"
+                                            :key="college.id"
+                                            :value="college.id"
                                         >
-                                            {{ office.acronym }} - {{ office.name }}
+                                            {{ college.code }} - {{ college.name }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <InputError :message="form.errors.office_id" />
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="role_title" class="text-sm font-medium">
-                                    Role Title <span class="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="role_title"
-                                    type="text"
-                                    required
-                                    :tabindex="9"
-                                    v-model="form.role_title"
-                                    @input="form.clearErrors('role_title')"
-                                    placeholder="Role Title"
-                                    class="h-10"
-                                />
-                                <InputError :message="form.errors.role_title" />
                             </div>
                         </div>
                     </div>
