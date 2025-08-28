@@ -4,19 +4,43 @@ namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\JpegEncoder;
 
 class ProfileImageService
 {
+    protected ImageManager $imageManager;
+
+    public function __construct()
+    {
+        $this->imageManager = new ImageManager(new Driver());
+    }
+
     /**
-     * Handle upload and return filename
+     * Store profile image: crop square, resize, save as JPG.
      */
     public function store(UploadedFile $file, string $libraryId): string
     {
-        $extension = strtolower($file->getClientOriginalExtension());
-        $filename = $libraryId . '.' . $extension;
+        $filename = $libraryId . '.jpg'; // always JPG
 
-        $file->storeAs('profile_images', $filename, 'public');
+        // Load image
+        $image = $this->imageManager->read($file->getRealPath());
 
-        return $filename; // only filename, not path
+        // Crop to square (center)
+        $size = min($image->width(), $image->height());
+        $image = $image->crop($size, $size);
+
+        // Resize to optimal size (300x300)
+        $image = $image->resize(300, 300);
+
+        // Encode as JPG (quality 80) using JpegEncoder
+        $encoded = $image->encode(new JpegEncoder(quality: 80));
+
+        // Save to storage
+        $path = "profile_images/{$filename}";
+        Storage::disk('public')->put($path, (string) $encoded);
+
+        return $filename;
     }
 }
