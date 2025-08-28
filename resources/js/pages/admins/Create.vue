@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, LoaderCircle } from 'lucide-vue-next';
 import Layout from '@/layouts/users/Layout.vue';
 import { onBeforeUnmount, ref, watch } from 'vue';
+import { CardDescription } from '@/components/ui/card';
 
 const props = defineProps<{
     nextLibraryId: number;
@@ -255,14 +256,14 @@ const submit = () => {
                                 <InputError :message="form.errors.office" />
                             </div>
                         </div>
+                        <CardDescription class="mt-8 text-xs">
+                                Passwords must be at least 8 characters, include uppercase, lowercase, number, and symbol.
+                        </CardDescription>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="grid gap-2">
                                 <Label for="password" class="text-sm font-medium">
                                     Password <span class="text-red-500">*</span>
                                 </Label>
-                                <span class="text-xs text-gray-500">
-                                    Must be at least 8 characters, include uppercase, lowercase, number, and symbol.
-                                </span>
                                 <Input
                                     id="password"
                                     type="password"
