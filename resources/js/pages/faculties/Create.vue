@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle } from 'lucide-vue-next';
+import { LoaderCircle, ArrowLeft } from 'lucide-vue-next';
 import Layout from '@/layouts/users/Layout.vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
@@ -79,6 +79,10 @@ const availableCourses = computed(() => {
     return selectedCollege?.courses || [];
 });
 
+const goBack = () => {
+    window.history.back();
+};
+
 const submit = () => {
     form.post(route('faculties.store'));
 };
@@ -89,7 +93,15 @@ const submit = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
-            <div class="flex h-full flex-1 flex-col gap-6 p-6 bg-white rounded-xl shadow-sm overflow-x-auto">
+            <div class="flex h-full flex-1 flex-col gap-6 p-6 bg-white rounded-xl shadow-sm overflow-x-auto relative">
+
+                <!-- Back Button -->
+                <div class="absolute right-4 top-4">
+                    <Button variant="outline" @click="goBack">
+                        <ArrowLeft class="w-4 h-4" /> Back
+                    </Button>
+                </div>
+
                 <form @submit.prevent="submit" class="flex flex-col gap-8 max-w-4xl mx-auto">
                     <!-- Personal Information Section -->
                     <div class="space-y-6">
