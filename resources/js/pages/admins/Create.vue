@@ -238,24 +238,6 @@ const submit = () => {
                     <!-- Account Information Section -->
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Account Information</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="grid gap-2">
-                                <Label for="office" class="text-sm font-medium">
-                                    Office <span class="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="office"
-                                    v-model="form.office"
-                                    type="text"
-                                    placeholder="Enter office name"
-                                    required
-                                    class="h-10 max-w-80"
-                                    :tabindex="8"
-                                    @input="form.clearErrors('office')"
-                                />
-                                <InputError :message="form.errors.office" />
-                            </div>
-                        </div>
                         <CardDescription class="mt-8 text-xs">
                                 Passwords must be at least 8 characters, include uppercase, lowercase, number, and symbol.
                         </CardDescription>

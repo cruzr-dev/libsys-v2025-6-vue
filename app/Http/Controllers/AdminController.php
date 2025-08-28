@@ -70,78 +70,74 @@ class AdminController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
-    {
-        try {
-            $request->validate([
-                'library_id' => 'required|integer|digits_between:1,10|unique:users,library_id',
-                'first_name' => 'required|string|max:50',
-                'middle_initial' => 'nullable|string|max:1',
-                'last_name' => 'required|string|max:50',
-                'sex' => 'required|in:m,f',
-                'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
-                'role_title' => 'required|string|max:100',
-                'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-                'password' => ['required', 'confirmed', Rules\Password::min(8)
+    public function store(
+        Request $request,
+        ProfileImageService $imageService
+    ): \Illuminate\Http\RedirectResponse {
+        // 1. Validation
+        $validated = $request->validate([
+            'library_id'     => 'required|integer|digits_between:1,10|unique:users,library_id',
+            'card_number'    => 'required|integer|digits_between:1,10|unique:users,card_number',
+            'first_name'     => 'required|string|max:50',
+            'middle_initial' => 'nullable|string|max:1',
+            'last_name'      => 'required|string|max:50',
+            'sex'            => 'required|in:m,f',
+            'profile_image'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
+            'password'       => [
+                'required',
+                'confirmed',
+                Rules\Password::min(8)
                     ->letters()
                     ->mixedCase()
                     ->numbers()
                     ->symbols()
-                    ->uncompromised()],
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors($e->validator)
-                ->with('error', 'Please fix the validation errors below.');
+                    ->uncompromised(),
+            ],
+        ]);
+
+        // 2. Ensure user type exists
+        $adminType = UserType::where('key', 'library_staff')->first();
+        if (!$adminType) {
+            return back()->withInput()
+                ->with('error', 'Admin user type not found. Please contact the system administrator.');
         }
 
+        // 3. Transaction
         try {
-            // Database operations that could fail
-            $adminType = UserType::where('key', 'staff_admin')->firstOrFail();
+            DB::transaction(function () use ($validated, $imageService, $request, $adminType) {
+                $filename = null;
 
-            $user = User::create([
-                'library_id' => $request->library_id,
-                'first_name' => $request->first_name,
-                'middle_initial' => $request->middle_initial,
-                'last_name' => $request->last_name,
-                'sex' => $request->sex,
-                'contact_number' => $request->contact_number,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'user_type_id' => $adminType->id,
-            ]);
+                if ($request->hasFile('profile_image')) {
+                    $filename = $imageService->store($request->file('profile_image'), $validated['library_id']);
+                }
 
-            $user->admin()->create([
-                'role_title' => $request->role_title,
-            ]);
+                $user = User::create([
+                    'library_id'     => $validated['library_id'],
+                    'card_number'    => $validated['card_number'],
+                    'first_name'     => $validated['first_name'],
+                    'middle_initial' => $validated['middle_initial'],
+                    'last_name'      => $validated['last_name'],
+                    'sex'            => $validated['sex'],
+                    'email'          => $validated['email'],
+                    'password'       => Hash::make($validated['password']),
+                    'user_type_id'   => $adminType->id,
+                    'office'         => 'library',
+                    'profile_image'  => $filename,
+                ]);
 
-            // event(new Registered($user));
-            // i trigger ana ang mailler
+                $user->admin()->create();
+            });
 
-            return to_route('admins.index')->with('success', 'You successfully created a new Admin');
+            return to_route('admins.index')
+                ->with('success', 'You successfully created a new Admin');
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (\Throwable $e) {
             \Log::error('Error creating admin user: ' . $e->getMessage(), [
-                'request_data' => $request->except(['password', 'password_confirmation']),
-                'exception' => $e
+                'library_id' => $validated['library_id'],
+                'email'      => $validated['email'],
             ]);
-            return back()->withInput()->with('error', 'Admin user type not found. Please contact system administrator.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Error creating admin user: ' . $e->getMessage(), [
-                'request_data' => $request->except(['password', 'password_confirmation']),
-                'exception' => $e
-            ]);
-            // Handle database constraint violations, connection issues, etc.
-            return back()->withInput()->with('error', 'Database error occurred while creating the admin. Please try again.');
-        } catch (\Exception $e) {
-            // Handle any other unexpected errors
-            \Log::error('Error creating admin user: ' . $e->getMessage(), [
-                'request_data' => $request->except(['password', 'password_confirmation']),
-                'exception' => $e
-            ]);
-
-            return back()->withInput()->with('error', 'An unexpected error occurred. Please try again or contact support.');
+            return back()->withInput()->with('error', 'Failed to create admin. Please try again.');
         }
     }
 
