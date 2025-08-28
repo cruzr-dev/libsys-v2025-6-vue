@@ -7,51 +7,78 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle } from 'lucide-vue-next';
+import { ArrowLeft, LoaderCircle } from 'lucide-vue-next';
 import Layout from '@/layouts/users/Layout.vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
+
+const props = defineProps<{
+    nextLibraryId: number;
+    nextCardNumber: number;
+}>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Users',
-        href: '/users',
-    },
-    {
-        title: 'Staff admins',
-        href: '/users/admins',
-    },
-    {
-        title: 'Create Admins',
-        href: '/users/admins/create',
-    },
+    { title: 'Users', href: '/users' },
+    { title: 'Library Staff', href: '/users/admins' },
+    { title: 'Create Library Staff', href: '/users/admins/create' },
 ];
 
 const form = useForm({
-    library_id: '',
+    library_id: props.nextLibraryId.toString(),
+    card_number: props.nextCardNumber.toString(),
     first_name: '',
     middle_initial: '',
     last_name: '',
     sex: '',
     contact_number: '',
-    role_title: '',
     email: '',
+    profile_image: null,
+    office: '',
     password: '',
     password_confirmation: '',
 });
 
-const submit = () => {
-    form.post(route('admins.store'), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
-    });
+// --- Profile Image Preview ---
+const previewUrl = ref<string | null>(null);
+
+watch(() => form.profile_image, (newFile) => {
+    if (previewUrl.value) {
+        URL.revokeObjectURL(previewUrl.value);
+        previewUrl.value = null;
+    }
+    if (newFile instanceof File) {
+        previewUrl.value = URL.createObjectURL(newFile);
+    }
+});
+
+// cleanup object URL on unmount
+onBeforeUnmount(() => {
+    if (previewUrl.value) {
+        URL.revokeObjectURL(previewUrl.value);
+    }
+});
+
+const goBack = () => {
+    window.history.back();
 };
 
+const submit = () => {
+    form.post(route('admins.store'));
+};
 </script>
 
 <template>
-    <Head title="Create Admins" />
+    <Head title="Create Library Staff" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
-            <div class="flex h-full flex-1 flex-col gap-6 p-6 bg-white rounded-xl shadow-sm overflow-x-auto">
+            <div class="flex h-full flex-1 flex-col gap-6 p-6 bg-white rounded-xl shadow-sm overflow-x-auto relative">
+
+                <div class="absolute right-4 top-4">
+                    <Button variant="outline" @click="goBack">
+                        <ArrowLeft class="w-4 h-4" /> Back
+                    </Button>
+                </div>
+
                 <form @submit.prevent="submit" class="flex flex-col gap-8 max-w-4xl mx-auto">
                     <!-- Personal Information Section -->
                     <div class="space-y-6">
@@ -72,6 +99,21 @@ const submit = () => {
                                     class="h-10"
                                 />
                                 <InputError :message="form.errors.library_id" />
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="card_number" class="text-sm font-medium"> Card Number <span class="text-red-500">*</span> </Label>
+                                <Input
+                                    id="card_number"
+                                    type="number"
+                                    required
+                                    :tabindex="8"
+                                    v-model="form.card_number"
+                                    @input="form.clearErrors('card_number')"
+                                    placeholder="e.g., 202512345"
+                                    class="h-10"
+                                />
+                                <InputError :message="form.errors.card_number" />
                             </div>
 
                             <div class="grid gap-2">
@@ -130,7 +172,11 @@ const submit = () => {
                                 <Label for="sex" class="text-sm font-medium">
                                     Sex <span class="text-red-500">*</span>
                                 </Label>
-                                <Select v-model="form.sex" @update:model-value="form.clearErrors('sex')" required>
+                                <Select
+                                    v-model="form.sex"
+                                    @update:model-value="form.clearErrors('sex')"
+                                    required
+                                >
                                     <SelectTrigger id="sex" :tabindex="5" class="h-10">
                                         <SelectValue placeholder="Select sex" />
                                     </SelectTrigger>
@@ -141,6 +187,25 @@ const submit = () => {
                                 </Select>
                                 <InputError :message="form.errors.sex" />
                             </div>
+
+                            <div class="grid gap-2">
+                                <Label for="profile_image" class="text-sm font-medium">
+                                    Profile Image
+                                </Label>
+                                <Input
+                                    id="profile_image"
+                                    type="file"
+                                    accept="image/*"
+                                    :tabindex="6"
+                                    class="h-10"
+                                    @change="form.profile_image = $event.target.files[0]; form.clearErrors('profile_image')"
+                                />
+                                <div v-if="previewUrl" class="mt-2">
+                                    <img :src="previewUrl" alt="Preview" class="h-24 w-24 rounded-full object-cover shadow" />
+                                </div>
+                                <InputError :message="form.errors.profile_image" />
+                            </div>
+
                         </div>
                     </div>
 
@@ -148,19 +213,6 @@ const submit = () => {
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Contact Information</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="grid gap-2">
-                                <Label for="contact_number" class="text-sm font-medium">Contact Number</Label>
-                                <Input
-                                    id="contact_number"
-                                    type="text"
-                                    :tabindex="6"
-                                    v-model="form.contact_number"
-                                    @input="form.clearErrors('contact_number')"
-                                    placeholder="10 Digit Contact Number"
-                                    class="h-10"
-                                />
-                                <InputError :message="form.errors.contact_number" />
-                            </div>
 
                             <div class="grid gap-2">
                                 <Label for="email" class="text-sm font-medium">
@@ -187,20 +239,20 @@ const submit = () => {
                         <h2 class="text-lg font-semibold text-gray-900">Account Information</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="grid gap-2">
-                                <Label for="role_title" class="text-sm font-medium">
-                                    Role Title <span class="text-red-500">*</span>
+                                <Label for="office" class="text-sm font-medium">
+                                    Office <span class="text-red-500">*</span>
                                 </Label>
                                 <Input
-                                    id="role_title"
+                                    id="office"
+                                    v-model="form.office"
                                     type="text"
+                                    placeholder="Enter office name"
                                     required
+                                    class="h-10 max-w-80"
                                     :tabindex="8"
-                                    v-model="form.role_title"
-                                    @input="form.clearErrors('role_title')"
-                                    placeholder="Role Title"
-                                    class="h-10"
+                                    @input="form.clearErrors('office')"
                                 />
-                                <InputError :message="form.errors.role_title" />
+                                <InputError :message="form.errors.office" />
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -247,7 +299,12 @@ const submit = () => {
 
                     <!-- Submit Button -->
                     <div class="flex justify-end">
-                        <Button type="submit" class="w-full md:w-auto px-8 py-2" tabindex="11" :disabled="form.processing">
+                        <Button
+                            type="submit"
+                            class="w-full md:w-auto px-8 py-2"
+                            :tabindex="10"
+                            :disabled="form.processing"
+                        >
                             <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin mr-2" />
                             Create Account
                         </Button>

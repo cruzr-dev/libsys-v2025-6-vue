@@ -58,7 +58,13 @@ class AdminController extends Controller
      */
     public function create()
     {
-        return Inertia::render('admins/Create');
+        $maxLibraryId = User::max('library_id') ?? 0;
+        $maxCardNumber = User::max('card_number') ?? 0;
+
+        return Inertia::render('admins/Create', [
+            'nextLibraryId' => $maxLibraryId + 1,
+            'nextCardNumber' => $maxCardNumber + 1,
+        ]);
     }
 
     /**
