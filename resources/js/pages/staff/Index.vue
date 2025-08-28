@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/users/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
 import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
 import {
@@ -19,10 +19,9 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, X, Loader2, Eye, Search } from 'lucide-vue-next';
+import { ArrowUpDown, ChevronDown, X, Loader2, Eye, Search, Plus } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
-import { route } from 'ziggy-js';
 import {
     Dialog,
     DialogContent,
@@ -30,7 +29,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 
 // API Data Interface
@@ -227,7 +225,7 @@ const fetchData = async () => {
         });
 
         // Make API request
-        const response = await fetch(`/api/users?${params.toString()}`, {
+        const response = await fetch(`/api/students?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -470,7 +468,7 @@ const initializeFromURL = () => {
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
-    { title: 'All', href: '/users/all' },
+    { title: 'Students', href: '/users/students' },
 ];
 
 // Lifecycle
@@ -487,7 +485,7 @@ watch(() => window.location.search, () => {
 </script>
 
 <template>
-    <Head title="Users" />
+    <Head title="Students" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
@@ -519,6 +517,11 @@ watch(() => window.location.search, () => {
                         </div>
                     </div>
                     <div class="flex gap-2">
+                        <Link href="/users/students/create">
+                            <Button variant="secondary">
+                                <Plus class="w-4 h-4" /> Add Student
+                            </Button>
+                        </Link>
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
                                 <Button variant="outline" class="ml-auto" :disabled="isLoading">
@@ -652,9 +655,9 @@ watch(() => window.location.search, () => {
             <Dialog v-model:open="isDialogOpen">
                 <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                     <DialogHeader class="p-6 pb-0">
-                        <DialogTitle>User Details</DialogTitle>
+                        <DialogTitle>Student Details</DialogTitle>
                         <DialogDescription>
-                            Viewing profile information.
+                            Viewing student profile information.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -701,11 +704,11 @@ watch(() => window.location.search, () => {
                                 <p><strong>Name:</strong> {{ selectedUser.first_name }} {{ selectedUser.middle_initial + '.' }} {{ selectedUser.last_name }}</p>
                                 <p><strong>Email:</strong> {{ selectedUser.email }}</p>
                                 <p><strong>Contact:</strong> {{ selectedUser.contact_number }}</p>
-                                <p><strong>Sex:</strong> {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}</p>
+                                <p><strong>Sex:</strong> {{ selectedUser.sex === 'M' ? 'Male' : selectedUser.sex === 'F' ? 'Female' : selectedUser.sex }}</p>
                                 <p><strong>User Type:</strong> {{ selectedUser.user_type?.name }}</p>
                             </div>
                             <div v-else class="text-muted-foreground">
-                                <p>No user selected.</p>
+                                <p>No student selected.</p>
                             </div>
                         </div>
                     </div>

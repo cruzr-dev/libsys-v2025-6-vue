@@ -13,81 +13,42 @@ class FacultyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): \Inertia\Response
+    public function index(): \Inertia\Response
     {
-        $perPage = $request->input('per_page', 10);
-        $sortField = $request->input('sort_field', null);
-        $sortDirection = $request->input('sort_direction', 'asc');
-        $filters = [];
+        return Inertia::render('faculties/Index');
+    }
 
-        $userType = UserType::where('key', 'faculty')->first();
-        $userTypeId = $userType ? $userType->id : null;
+    public function fetchAll(Request $request)
+    {
+        $query = User::with('userType');
 
-        // Capture search parameters
-        $searchTerm = $request->input('search');
-        if (!empty($searchTerm)) {
-            $filters[] = [
-                'id' => 'search',
-                'value' => $searchTerm
-            ];
-        }
+        $query->whereHas('userType', function ($q) {
+            $q->where('key', 'faculty');
+        });
 
-        $toggleableColumns = ['sex', 'middle_initial', 'card_number', 'school_id'];
-        $columnVisibility = [];
-
-        // Check for visibility parameters in the URL
-        $hasVisibilityParams = collect($request->query())
-            ->keys()
-            ->contains(function ($key) {
-                return str_starts_with($key, 'hide_') || str_starts_with($key, 'show_');
+        // Handle search
+        if ($request->has('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('library_id', 'like', "%{$searchTerm}%")
+                    ->orWhere('card_number', 'like', "%{$searchTerm}%")
+                    ->orWhere('first_name', 'like', "%{$searchTerm}%")
+                    ->orWhere('last_name', 'like', "%{$searchTerm}%");
             });
-
-        if ($hasVisibilityParams) {
-            // Process explicit visibility settings from URL
-            foreach ($toggleableColumns as $columnName) {
-                if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
-                    $columnVisibility[$columnName] = true;
-                } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
-                    $columnVisibility[$columnName] = false;
-                } else {
-                    // Default visibility based on column
-                    $columnVisibility[$columnName] = $columnName === 'card_number' ? true : false;
-                }
-            }
-        } else {
-            // First visit - apply default visibility
-            $columnVisibility = [
-                'sex' => false,
-                'middle_initial' => false,
-                'school_id' => false,
-                'card_number' => true,
-            ];
         }
 
-        $users = User::query()
-            ->with('userType')
-            ->when($userTypeId, function ($query, $userTypeId) {
-                $query->where('user_type_id', $userTypeId);
-            })
-            ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where(function ($q) use ($searchTerm) {
-                    $q->where('first_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('library_id', 'like', '%' . $searchTerm . '%');
-                });
-            })
-            ->when($sortField, function ($query, $sortField) use ($sortDirection) {
-                $query->orderBy($sortField, $sortDirection);
-            })
-            ->paginate(perPage: $perPage);
+        // Handle sorting
+        if ($request->has('sort_field')) {
+            $sortField = $request->get('sort_field');
+            $sortDirection = $request->get('sort_direction', 'asc');
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->latest();
+        }
 
-        return Inertia::render('faculties/Index', [
-            'data' => $users,
-            'filter' => $filters,
-            'currentSortField' => $sortField,
-            'currentSortDirection' => $sortDirection,
-            'columnVisibility' => $columnVisibility,
-        ]);
+        // Handle pagination
+        $perPage = $request->get('per_page', 10);
+        return $query->paginate($perPage);
     }
 
     /**

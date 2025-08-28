@@ -19,7 +19,7 @@ const sidebarNavItems: NavItem[] = [
     },
     {
         title: 'Staff',
-        href: '/users/faculties',
+        href: '/users/staff',
     },
 ];
 

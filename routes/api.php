@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BorrowingTransactionController;
+use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -22,3 +23,4 @@ Route::get('/borrowings/users/search', [BorrowingTransactionController::class, '
 
 Route::get('/users/', [UserController::class, 'fetchAll']);
 Route::get('/students/', [StudentController::class, 'fetchAll']);
+Route::get('/faculties/', [FacultyController::class, 'fetchAll']);
