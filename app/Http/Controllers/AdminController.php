@@ -15,80 +15,9 @@ class AdminController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): \Inertia\Response
+    public function index(): \Inertia\Response
     {
-        $perPage = $request->input('per_page', 10);
-        $sortField = $request->input('sort_field', null);
-        $sortDirection = $request->input('sort_direction', 'asc');
-        $filters = [];
-
-        // Get the admin user type ID by key - fixed filter
-        $adminUserType = UserType::where('key', 'library_staff')->first();
-        $adminUserTypeId = $adminUserType ? $adminUserType->id : null;
-
-        // Capture search parameters
-        $searchTerm = $request->input('search');
-        if (!empty($searchTerm)) {
-            $filters[] = [
-                'id' => 'search',
-                'value' => $searchTerm
-            ];
-        }
-
-        // Define all possible columns that can be toggled
-        $toggleableColumns = ['sex', 'middle_initial']; // Add other columns as needed
-        $columnVisibility = [];
-
-        // Check for visibility parameters in the URL
-        $hasVisibilityParams = collect($request->query())
-            ->keys()
-            ->contains(function ($key) {
-                return str_starts_with($key, 'hide_') || str_starts_with($key, 'show_');
-            });
-
-        if ($hasVisibilityParams) {
-            // Process explicit visibility settings from URL
-            foreach ($toggleableColumns as $columnName) {
-                if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
-                    $columnVisibility[$columnName] = true;
-                } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
-                    $columnVisibility[$columnName] = false;
-                } else {
-                    // Default to hidden if no explicit show/hide is provided
-                    $columnVisibility[$columnName] = false;
-                }
-            }
-        } else {
-            // First visit - apply default hidden columns
-            foreach ($toggleableColumns as $columnName) {
-                $columnVisibility[$columnName] = false;
-            }
-        }
-
-        $users = User::query()
-            ->with('userType')
-            ->when($adminUserTypeId, function ($query, $adminUserTypeId) {
-                $query->where('user_type_id', $adminUserTypeId);
-            })
-            ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where(function ($q) use ($searchTerm) {
-                    $q->where('first_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('library_id', 'like', '%' . $searchTerm . '%');
-                });
-            })
-            ->when($sortField, function ($query, $sortField) use ($sortDirection) {
-                $query->orderBy($sortField, $sortDirection);
-            })
-            ->paginate(perPage: $perPage);
-
-        return Inertia::render('admins/Index', [
-            'data' => $users,
-            'filter' => $filters,
-            'currentSortField' => $sortField,
-            'currentSortDirection' => $sortDirection,
-            'columnVisibility' => $columnVisibility,
-        ]);
+        return Inertia::render('admins/Index');
     }
 
     /**

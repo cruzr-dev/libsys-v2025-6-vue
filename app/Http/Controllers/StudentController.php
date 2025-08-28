@@ -26,8 +26,7 @@ class StudentController extends Controller
      */
     public function index(): \Inertia\Response
     {
-        return Inertia::render('students/Index', [
-        ]);
+        return Inertia::render('students/Index');
     }
 
     public function fetchAll(Request $request)
