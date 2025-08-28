@@ -8,6 +8,7 @@ use App\Models\Major;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\UserType;
+use App\Services\BarcodeService;
 use App\Services\ProfileImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -89,8 +90,11 @@ class StudentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, ProfileImageService $imageService): \Illuminate\Http\RedirectResponse
-    {
+    public function store(
+        Request $request,
+        ProfileImageService $imageService,
+        BarcodeService $barcodeService
+    ): \Illuminate\Http\RedirectResponse {
         // 1. Validation
         $validated = $request->validate([
             'library_id'     => 'required|integer|min:1|max:9999999999|unique:users,library_id',
@@ -126,7 +130,7 @@ class StudentController extends Controller
 
         // 3. Transaction
         try {
-            DB::transaction(function () use ($validated, $studentType, $request, $imageService) {
+            DB::transaction(function () use ($validated, $studentType, $request, $imageService, $barcodeService) {
                 $filename = null;
 
                 if ($request->hasFile('profile_image')) {
@@ -152,13 +156,7 @@ class StudentController extends Controller
                     'major_id'       => $validated['major_id'],
                 ]);
 
-                // ✅ Keep barcode handling here or also extract into BarcodeService if needed
-                $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
-                $barcodeData = $generator->getBarcode($validated['card_number'], $generator::TYPE_CODE_128);
-
-                $barcodeFile = $validated['card_number'] . '.png';
-                Storage::put('/barcodes/' . $barcodeFile, $barcodeData);
-
+                $barcodeFile = $barcodeService->store($validated['card_number']);
                 $user->update(['barcode_path' => $barcodeFile]);
             });
 
