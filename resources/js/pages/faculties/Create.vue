@@ -285,7 +285,7 @@ const submit = () => {
                                     <SelectTrigger id="course_id" :tabindex="10" class="h-10">
                                         <SelectValue
                                             class="max-w-80 truncate"
-                                            :placeholder="!form.college_id ? 'Select college first' : availableCourses.length === 0 ? 'No courses available' : 'Select course'"
+                                            :placeholder="!form.college_id ? 'Select college first' : availableCourses.length === 0 ? 'No courses available' : 'Select department'"
                                         />
                                     </SelectTrigger>
                                     <SelectContent>

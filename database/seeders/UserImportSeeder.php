@@ -186,7 +186,7 @@ class UserImportSeeder extends Seeder
     {
         if (!empty($value) && is_string($value)) {
             $value = strtolower($value);
-            return $value === 'female' ? 'F' : ($value === 'male' ? 'M' : null);
+            return $value === 'female' ? 'f' : ($value === 'male' ? 'm' : null);
         }
         return null;
     }
