@@ -6,6 +6,8 @@ use App\Models\College;
 use App\Models\Faculty;
 use App\Models\User;
 use App\Models\UserType;
+use App\Services\BarcodeService;
+use App\Services\ProfileImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -80,19 +82,24 @@ class FacultyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
-    {
+    public function store(
+        Request $request,
+        ProfileImageService $imageService,
+        BarcodeService $barcodeService
+    ): \Illuminate\Http\RedirectResponse {
         // 1. Validation
         $validated = $request->validate([
             'library_id'     => 'required|integer|digits_between:1,10|unique:users,library_id',
+            'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
             'first_name'     => 'required|string|max:50',
             'middle_initial' => 'nullable|string|max:1',
             'last_name'      => 'required|string|max:50',
             'sex'            => 'required|in:m,f',
             'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
             'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
-            'role_title'     => 'required|string|max:50',
-            'office_id'      => 'required|exists:offices,id',
+            'college_id'     => 'required|exists:colleges,id',
+            'course_id'      => 'required|exists:courses,id',
+            'profile_image'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         // 2. Ensure user type exists
@@ -104,9 +111,16 @@ class FacultyController extends Controller
 
         // 3. Transaction
         try {
-            DB::transaction(function () use ($validated, $facultyType) {
+            DB::transaction(function () use ($validated, $facultyType, $request, $imageService, $barcodeService) {
+                $filename = null;
+
+                if ($request->hasFile('profile_image')) {
+                    $filename = $imageService->store($request->file('profile_image'), $validated['library_id']);
+                }
+
                 $user = User::create([
                     'library_id'     => $validated['library_id'],
+                    'card_number'    => $validated['card_number'],
                     'first_name'     => $validated['first_name'],
                     'middle_initial' => $validated['middle_initial'],
                     'last_name'      => $validated['last_name'],
@@ -114,16 +128,20 @@ class FacultyController extends Controller
                     'contact_number' => $validated['contact_number'],
                     'email'          => $validated['email'],
                     'user_type_id'   => $facultyType->id,
+                    'profile_image'  => $filename,
                 ]);
 
                 $user->faculty()->create([
-                    'role_title' => $validated['role_title'],
-                    'office_id'  => $validated['office_id'],
+                    'college_id' => $validated['college_id'],
+                    'course_id'  => $validated['course_id'],
                 ]);
+
+                $barcodeFile = $barcodeService->store($validated['card_number']);
+                $user->update(['barcode_path' => $barcodeFile]);
             });
 
             return to_route('faculties.index')
-                ->with('success', 'You successfully created a new Faculty');
+                ->with('success', 'You successfully created a new Faculty with barcode');
 
         } catch (\Throwable $e) {
             \Log::error('Error creating Faculty: ' . $e->getMessage(), [

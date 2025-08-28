@@ -45,7 +45,6 @@ const form = useForm({
     last_name: '',
     sex: '',
     contact_number: '',
-    role_title: '',
     email: '',
     college_id: null,
     course_id: null,
