@@ -8,6 +8,7 @@ use App\Models\Major;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\UserType;
+use App\Services\ProfileImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -88,9 +89,9 @@ class StudentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request, ProfileImageService $imageService): \Illuminate\Http\RedirectResponse
     {
-        // 1. Validation (let Laravel handle exceptions + redirect with errors)
+        // 1. Validation
         $validated = $request->validate([
             'library_id'     => 'required|integer|min:1|max:9999999999|unique:users,library_id',
             'first_name'     => 'required|string|max:50',
@@ -108,43 +109,28 @@ class StudentController extends Controller
                 function ($attribute, $value, $fail) use ($request) {
                     $course = Course::find($request->input('course_id'));
 
-                    if (!$course) {
-                        return; // avoid running if no course
-                    }
-
-                    $hasMajors = Major::where('course_id', $course->id)->exists();
-
-                    if ($hasMajors && is_null($value)) {
+                    if ($course && Major::where('course_id', $course->id)->exists() && is_null($value)) {
                         $fail('The major field is required when the selected course has majors.');
                     }
                 },
             ],
-            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', // ✅ optional image
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        // 2. Ensure the UserType exists before starting transaction
+        // 2. Ensure user type exists
         $studentType = UserType::where('key', 'student')->first();
         if (! $studentType) {
-            \Log::warning('Student user type not found.', [
-                'library_id' => $validated['library_id'],
-                'email'      => $validated['email'],
-            ]);
-
             return back()->withInput()
                 ->with('error', 'Student user type not found. Please contact the system administrator.');
         }
 
-        // 3. Database operations and barcode generation inside transaction
+        // 3. Transaction
         try {
-            DB::transaction(function () use ($validated, $studentType, $request) {
+            DB::transaction(function () use ($validated, $studentType, $request, $imageService) {
                 $filename = null;
 
                 if ($request->hasFile('profile_image')) {
-                    $extension = $request->file('profile_image')->getClientOriginalExtension();
-                    $filename = $validated['library_id'] . '.' . strtolower($extension);
-
-                    // Always store inside "profile_images" dir, but save only the filename in DB
-                    $request->file('profile_image')->storeAs('profile_images', $filename, 'public');
+                    $filename = $imageService->store($request->file('profile_image'), $validated['library_id']);
                 }
 
                 $user = User::create([
@@ -156,7 +142,7 @@ class StudentController extends Controller
                     'sex'            => $validated['sex'],
                     'email'          => $validated['email'],
                     'user_type_id'   => $studentType->id,
-                    'profile_image'  => $filename, // ✅ only filename stored
+                    'profile_image'  => $filename,
                 ]);
 
                 $user->student()->create([
@@ -166,8 +152,8 @@ class StudentController extends Controller
                     'major_id'       => $validated['major_id'],
                 ]);
 
-                // Generate and save barcode for the card_number
-                $generator = new BarcodeGeneratorPNG();
+                // ✅ Keep barcode handling here or also extract into BarcodeService if needed
+                $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
                 $barcodeData = $generator->getBarcode($validated['card_number'], $generator::TYPE_CODE_128);
 
                 $barcodeFile = $validated['card_number'] . '.png';
@@ -179,25 +165,12 @@ class StudentController extends Controller
             return to_route('students.index')
                 ->with('success', 'You successfully created a new Student with barcode');
 
-        } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('Database error creating Student or barcode: ' . $e->getMessage(), [
-                'library_id' => $validated['library_id'],
-                'email'      => $validated['email'],
-            ]);
-            return back()->withInput()
-                ->with('error', 'A database error occurred while creating the student or barcode. Please try again.');
-
         } catch (\Throwable $e) {
-            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
-                throw $e;
-            }
-
-            \Log::error('Unexpected error creating Student or barcode: ' . $e->getMessage(), [
+            \Log::error('Error creating Student: ' . $e->getMessage(), [
                 'library_id' => $validated['library_id'],
                 'email'      => $validated['email'],
             ]);
-            return back()->withInput()
-                ->with('error', 'An unexpected error occurred. Please try again or contact support.');
+            return back()->withInput()->with('error', 'Failed to create student. Please try again.');
         }
     }
 
