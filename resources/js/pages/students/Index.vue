@@ -704,7 +704,7 @@ watch(() => window.location.search, () => {
                                 <p><strong>Name:</strong> {{ selectedUser.first_name }} {{ selectedUser.middle_initial + '.' }} {{ selectedUser.last_name }}</p>
                                 <p><strong>Email:</strong> {{ selectedUser.email }}</p>
                                 <p><strong>Contact:</strong> {{ selectedUser.contact_number }}</p>
-                                <p><strong>Sex:</strong> {{ selectedUser.sex === 'M' ? 'Male' : selectedUser.sex === 'F' ? 'Female' : selectedUser.sex }}</p>
+                                <p><strong>Sex:</strong> {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}</p>
                                 <p><strong>User Type:</strong> {{ selectedUser.user_type?.name }}</p>
                             </div>
                             <div v-else class="text-muted-foreground">

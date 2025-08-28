@@ -113,7 +113,7 @@ const columns: ColumnDef<any>[] = [
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Sex', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const sex = row.getValue('sex');
-            const displayValue = sex === 'M' ? 'Male' : sex === 'F' ? 'Female' : sex;
+            const displayValue = sex === 'm' ? 'Male' : sex === 'f' ? 'Female' : sex;
             return h('div', displayValue);
         },
     },
