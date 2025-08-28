@@ -144,6 +144,10 @@ watch(() => form.course_id, (newCourseId) => {
     }
 });
 
+const handleDelete = () => {
+    alert(props.student.id)
+};
+
 // Handle form submission
 const submit = () => {
     form.patch(route('students.update', props.student.id));
@@ -398,7 +402,8 @@ const goBack = () => {
                     </div>
 
                     <!-- Submit Button -->
-                    <div class="flex justify-end pt-4">
+                    <div class="flex justify-between pt-4">
+                        <Button variant="link" @click="handleDelete()" type="button">Delete</Button>
                         <Button type="submit" class="w-full px-8 py-2 md:w-auto" :tabindex="13" :disabled="form.processing">
                             <LoaderCircle v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                             Update Student Account
