@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Admin;
 use App\Models\User;
 use App\Models\UserType;
+use App\Services\BarcodeService;
+use App\Services\ProfileImageService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
@@ -72,7 +75,8 @@ class AdminController extends Controller
      */
     public function store(
         Request $request,
-        ProfileImageService $imageService
+        ProfileImageService $imageService,
+        BarcodeService $barcodeService
     ): \Illuminate\Http\RedirectResponse {
         // 1. Validation
         $validated = $request->validate([
@@ -105,7 +109,7 @@ class AdminController extends Controller
 
         // 3. Transaction
         try {
-            DB::transaction(function () use ($validated, $imageService, $request, $adminType) {
+            DB::transaction(function () use ($validated, $imageService, $barcodeService, $request, $adminType) {
                 $filename = null;
 
                 if ($request->hasFile('profile_image')) {
@@ -127,10 +131,13 @@ class AdminController extends Controller
                 ]);
 
                 $user->admin()->create();
+
+                $barcodeFile = $barcodeService->store($validated['card_number']);
+                $user->update(['barcode_path' => $barcodeFile]);
             });
 
             return to_route('admins.index')
-                ->with('success', 'You successfully created a new Admin');
+                ->with('success', 'You successfully created a new Admin with barcode');
 
         } catch (\Throwable $e) {
             \Log::error('Error creating admin user: ' . $e->getMessage(), [
