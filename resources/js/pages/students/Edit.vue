@@ -35,39 +35,53 @@ interface Major {
 
 // Define the props passed from the controller
 const props = defineProps<{
+    student: {
+        id: number;
+        library_id: string;
+        first_name: string;
+        middle_initial: string | null;
+        last_name: string;
+        sex: string;
+        contact_number: string | null;
+        email: string;
+        student_type: string;
+        card_number: string;
+        college_id: number | null;
+        course_id: number | null;
+        major_id: number | null;
+        profile_image: string | null;
+    };
     colleges: College[];
-    nextLibraryId: number;
-    nextCardNumber: number;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
     { title: 'Students', href: '/users/students' },
-    { title: 'Add Student', href: '/users/students/create' },
+    { title: 'Edit Student', href: `/users/students/${props.student.id}/edit` },
 ];
 
-// Initialize the form with all necessary fields (pre-filled with incremented values)
+// Initialize the form with student data
 const form = useForm({
-    library_id: props.nextLibraryId.toString(), // Pre-filled with incremented value
-    first_name: '',
-    middle_initial: '',
-    last_name: '',
-    sex: '',
-    contact_number: '',
-    email: '',
-    student_type: '',
-    card_number: props.nextCardNumber.toString(), // Pre-filled with incremented value
-    college_id: null,
-    course_id: null,
-    major_id: null,
+    library_id: props.student.library_id,
+    first_name: props.student.first_name,
+    middle_initial: props.student.middle_initial || '',
+    last_name: props.student.last_name,
+    sex: props.student.sex,
+    contact_number: props.student.contact_number || '',
+    email: props.student.email,
+    student_type: props.student.student_type,
+    card_number: props.student.card_number,
+    college_id: props.student.college_id,
+    course_id: props.student.course_id,
+    major_id: props.student.major_id,
     profile_image: null,
 });
 
 // --- Profile Image Preview ---
-const previewUrl = ref<string | null>(null);
+const previewUrl = ref<string | null>(props.student.profile_image || null);
 
 watch(() => form.profile_image, (newFile) => {
-    if (previewUrl.value) {
+    if (previewUrl.value && !props.student.profile_image) {
         URL.revokeObjectURL(previewUrl.value);
         previewUrl.value = null;
     }
@@ -78,7 +92,7 @@ watch(() => form.profile_image, (newFile) => {
 
 // cleanup object URL on unmount
 onBeforeUnmount(() => {
-    if (previewUrl.value) {
+    if (previewUrl.value && !props.student.profile_image) {
         URL.revokeObjectURL(previewUrl.value);
     }
 });
@@ -121,7 +135,7 @@ watch(() => form.course_id, (newCourseId) => {
 
 // Handle form submission
 const submit = () => {
-    form.post(route('students.store'));
+    form.patch(route('students.update', props.student.id));
 };
 
 const goBack = () => {
@@ -130,7 +144,7 @@ const goBack = () => {
 </script>
 
 <template>
-    <Head title="Add Student" />
+    <Head title="Edit Student" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
@@ -376,7 +390,7 @@ const goBack = () => {
                     <div class="flex justify-end pt-4">
                         <Button type="submit" class="w-full px-8 py-2 md:w-auto" :tabindex="13" :disabled="form.processing">
                             <LoaderCircle v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
-                            Add Student Account
+                            Update Student Account
                         </Button>
                     </div>
                 </form>

@@ -172,19 +172,13 @@ class StudentController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Student $student)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Student $student)
     {
-        dd($student);
+        Inertia::render('students/Edit', [
+            'student' => $student,
+        ]);
     }
 
     /**
