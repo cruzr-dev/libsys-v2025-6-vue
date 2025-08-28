@@ -174,9 +174,17 @@ class StudentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Student $student)
+    public function edit($id)
     {
-        Inertia::render('students/Edit', [
+        $student = User::find($id);
+
+        $colleges = College::with([
+            'courses:id,college_id,code,name',
+            'courses.majors:id,course_id,name'
+        ]);
+
+        return Inertia::render('students/Edit', [
+            'colleges' => $colleges,
             'student' => $student,
         ]);
     }
