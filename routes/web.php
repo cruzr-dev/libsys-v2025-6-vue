@@ -52,6 +52,7 @@ Route::middleware($middleware)->group(function () {
         Route::post('/students', [StudentController::class, 'store'])->name('students.store');
         Route::get('/students/{id}/edit', [StudentController::class, 'edit'])->name('students.edit');
         Route::patch('/students/{id}', [StudentController::class, 'update'])->name('students.update');
+        Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('students.destroy');
     });
     Route::prefix('records')->group(function () {
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {

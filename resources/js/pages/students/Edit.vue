@@ -7,9 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/users/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { LoaderCircle, ArrowLeft } from 'lucide-vue-next';
 import { computed, watch, ref, onBeforeUnmount } from 'vue';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog';
+import DeleteDialog from '@/components/DeleteDialog.vue';
 
 // Updated interface to match your Laravel controller structure
 interface College {
@@ -144,9 +147,18 @@ watch(() => form.course_id, (newCourseId) => {
     }
 });
 
+// Show handler function
+const isDialogOpen = ref(false);
+
 const handleDelete = () => {
-    alert(props.student.id)
+    isDialogOpen.value = true;
 };
+
+const deleteStudent = (id: number | null) => {
+    if (!id) return
+    // send a delete request via Inertia or Axios
+    router.delete(route('students.destroy', id))
+}
 
 // Handle form submission
 const submit = () => {
@@ -411,6 +423,13 @@ const goBack = () => {
                     </div>
                 </form>
             </div>
+
+            <DeleteDialog
+                v-model:open="isDialogOpen"
+                :user-id="student.id"
+                @confirm-delete="deleteStudent"
+            />
+
         </Layout>
     </AppLayout>
 </template>
