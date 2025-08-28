@@ -24,6 +24,8 @@ class UserImportSeeder extends Seeder
         } catch (\Exception $e) {
             $this->handleException($e);
         }
+
+        $this->call(UserBarcodeSeeder::class);
     }
 
     /**

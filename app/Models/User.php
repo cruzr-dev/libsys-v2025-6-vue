@@ -61,14 +61,19 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Admin::class);
     }
 
+    public function student(): \Illuminate\Database\Eloquent\Relations\HasOne|User
+    {
+        return $this->hasOne(Student::class);
+    }
+
     public function faculty(): \Illuminate\Database\Eloquent\Relations\HasOne|User
     {
         return $this->hasOne(Faculty::class);
     }
 
-    public function student(): \Illuminate\Database\Eloquent\Relations\HasOne|User
+    public function staff(): \Illuminate\Database\Eloquent\Relations\HasOne|User
     {
-        return $this->hasOne(Student::class);
+        return $this->hasOne(Staff::class);
     }
 
     public function libraryVisits()
