@@ -193,9 +193,101 @@ class StudentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Student $student)
-    {
-        //
+    public function update(
+        Request $request,
+        $id,
+        ProfileImageService $imageService,
+        BarcodeService $barcodeService
+    ): \Illuminate\Http\RedirectResponse {
+
+        $user = User::find($id);
+
+        // 1. Validation
+        $validated = $request->validate([
+            'library_id'     => 'required|integer|min:1|max:9999999999|unique:users,library_id,' . $user->id,
+            'first_name'     => 'required|string|max:50',
+            'middle_initial' => 'nullable|string|max:1',
+            'last_name'      => 'required|string|max:50',
+            'sex'            => 'required|in:m,f',
+            'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
+            'email'          => 'required|string|lowercase|email|max:255|unique:users,email,' . $user->id,
+            'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number,' . $user->id,
+            'college_id'     => 'required|exists:colleges,id',
+            'course_id'      => 'required|exists:courses,id',
+            'major_id' => [
+                'nullable',
+                'exists:majors,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $course = Course::find($request->input('course_id'));
+
+                    if ($course && Major::where('course_id', $course->id)->exists() && is_null($value)) {
+                        $fail('The major field is required when the selected course has majors.');
+                    }
+                },
+            ],
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // 2. Transaction
+        try {
+            DB::transaction(function () use ($validated, $user, $request, $imageService, $barcodeService) {
+                // Handle profile image update
+                if ($request->hasFile('profile_image')) {
+                    // Delete old profile image if it exists
+                    if ($user->profile_image) {
+                        $imageService->delete($user->profile_image);
+                    }
+
+                    $filename = $imageService->store($request->file('profile_image'), $validated['library_id']);
+                    $validated['profile_image'] = $filename;
+                } else {
+                    // Keep existing profile image
+                    unset($validated['profile_image']);
+                }
+
+                // Update user data
+                $user->update([
+                    'library_id'     => $validated['library_id'],
+                    'card_number'    => $validated['card_number'],
+                    'first_name'     => $validated['first_name'],
+                    'middle_initial' => $validated['middle_initial'],
+                    'last_name'      => $validated['last_name'],
+                    'sex'            => $validated['sex'],
+                    'email'          => $validated['email'],
+                    'profile_image'  => $validated['profile_image'] ?? $user->profile_image,
+                ]);
+
+                // Update student data
+                $user->student()->update([
+                    'contact_number' => $validated['contact_number'],
+                    'college_id'     => $validated['college_id'],
+                    'course_id'      => $validated['course_id'],
+                    'major_id'       => $validated['major_id'],
+                ]);
+
+                // Regenerate barcode if card number changed
+                if ($user->wasChanged('card_number')) {
+                    // Delete old barcode if it exists
+                    if ($user->barcode_path) {
+                        $barcodeService->delete($user->barcode_path);
+                    }
+
+                    $barcodeFile = $barcodeService->store($validated['card_number']);
+                    $user->update(['barcode_path' => $barcodeFile]);
+                }
+            });
+
+            return to_route('students.index')
+                ->with('success', 'Student updated successfully');
+
+        } catch (\Throwable $e) {
+            \Log::error('Error updating Student: ' . $e->getMessage(), [
+                'user_id'    => $user->id,
+                'library_id' => $validated['library_id'],
+                'email'      => $validated['email'],
+            ]);
+            return back()->withInput()->with('error', 'Failed to update student. Please try again.');
+        }
     }
 
     /**
