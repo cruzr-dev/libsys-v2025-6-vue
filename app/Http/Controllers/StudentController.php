@@ -70,8 +70,7 @@ class StudentController extends Controller
         $colleges = College::with([
             'courses:id,college_id,code,name',
             'courses.majors:id,course_id,name'
-        ])
-            ->select('id', 'code', 'name')
+        ])->select('id', 'code', 'name')
             ->orderBy('name')
             ->get();
 
@@ -181,7 +180,9 @@ class StudentController extends Controller
         $colleges = College::with([
             'courses:id,college_id,code,name',
             'courses.majors:id,course_id,name'
-        ]);
+        ])->select('id', 'code', 'name')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('students/Edit', [
             'colleges' => $colleges,
