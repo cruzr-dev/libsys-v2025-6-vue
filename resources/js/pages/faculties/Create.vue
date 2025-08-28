@@ -9,10 +9,18 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle } from 'lucide-vue-next';
 import Layout from '@/layouts/users/Layout.vue';
-import { onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 interface College {
     id: number;
+    code: string;
+    name: string;
+    courses: Course[];
+}
+
+interface Course {
+    id: number;
+    college_id: number;
     code: string;
     name: string;
 }
@@ -39,7 +47,8 @@ const form = useForm({
     contact_number: '',
     role_title: '',
     email: '',
-    office_id: '',
+    college_id: null,
+    course_id: null,
     profile_image: null,
 });
 
@@ -61,6 +70,14 @@ onBeforeUnmount(() => {
     if (previewUrl.value) {
         URL.revokeObjectURL(previewUrl.value);
     }
+});
+
+// Computed property to get courses based on selected college
+const availableCourses = computed(() => {
+    if (!form.college_id) return [];
+
+    const selectedCollege = props.colleges.find(college => college.id === form.college_id);
+    return selectedCollege?.courses || [];
 });
 
 const submit = () => {
@@ -234,15 +251,15 @@ const submit = () => {
                         <h2 class="text-lg font-semibold text-gray-900">Account Information</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="grid gap-2">
-                                <Label for="office_id" class="text-sm font-medium">
+                                <Label for="college_id" class="text-sm font-medium">
                                     College <span class="text-red-500">*</span>
                                 </Label>
                                 <Select
-                                    v-model="form.office_id"
-                                    @update:model-value="form.clearErrors('office_id')"
+                                    v-model="form.college_id"
+                                    @update:model-value="form.clearErrors('college_id')"
                                     required
                                 >
-                                    <SelectTrigger id="office_id" :tabindex="8" class="h-10">
+                                    <SelectTrigger id="college_id" :tabindex="8" class="h-10">
                                         <SelectValue placeholder="Select a college" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -255,7 +272,29 @@ const submit = () => {
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <InputError :message="form.errors.office_id" />
+                                <InputError :message="form.errors.college_id" />
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="course_id" class="text-sm font-medium"> Department <span class="text-red-500">*</span> </Label>
+                                <Select
+                                    v-model="form.course_id"
+                                    @update:model-value="form.clearErrors('course_id')"
+                                    required
+                                    :disabled="!form.college_id || availableCourses.length === 0"
+                                >
+                                    <SelectTrigger id="course_id" :tabindex="10" class="h-10">
+                                        <SelectValue
+                                            :placeholder="!form.college_id ? 'Select college first' : availableCourses.length === 0 ? 'No courses available' : 'Select course'"
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem v-for="course in availableCourses" :key="course.id" :value="course.id">
+                                            {{ course.code }} - {{ course.name }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError :message="form.errors.course_id" />
                             </div>
                         </div>
                     </div>
