@@ -307,7 +307,7 @@ const goBack = () => {
                                 <Label for="college_id" class="text-sm font-medium"> College <span class="text-red-500">*</span> </Label>
                                 <Select v-model="form.college_id" @update:model-value="form.clearErrors('college_id')" required>
                                     <SelectTrigger id="college_id" :tabindex="9" class="h-10">
-                                        <SelectValue placeholder="Select college" />
+                                        <SelectValue placeholder="Select college" class="max-w-80 truncate"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem v-for="college in colleges" :key="college.id" :value="college.id">
@@ -329,6 +329,7 @@ const goBack = () => {
                                 >
                                     <SelectTrigger id="course_id" :tabindex="10" class="h-10">
                                         <SelectValue
+                                            class="max-w-sm truncate"
                                             :placeholder="!form.college_id ? 'Select college first' : availableCourses.length === 0 ? 'No courses available' : 'Select course'"
                                         />
                                     </SelectTrigger>
@@ -356,6 +357,7 @@ const goBack = () => {
                                 >
                                     <SelectTrigger id="major_id" :tabindex="11" class="h-10">
                                         <SelectValue
+                                            class="max-w-sm truncate"
                                             :placeholder="!form.course_id ? 'Select course first' : availableMajors.length === 0 ? 'No majors available' : 'Select major'"
                                         />
                                     </SelectTrigger>

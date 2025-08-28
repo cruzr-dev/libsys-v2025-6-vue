@@ -260,7 +260,7 @@ const submit = () => {
                                     required
                                 >
                                     <SelectTrigger id="college_id" :tabindex="8" class="h-10">
-                                        <SelectValue placeholder="Select a college" />
+                                        <SelectValue placeholder="Select a college" class="max-w-80 truncate" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem
@@ -285,6 +285,7 @@ const submit = () => {
                                 >
                                     <SelectTrigger id="course_id" :tabindex="10" class="h-10">
                                         <SelectValue
+                                            class="max-w-80 truncate"
                                             :placeholder="!form.college_id ? 'Select college first' : availableCourses.length === 0 ? 'No courses available' : 'Select course'"
                                         />
                                     </SelectTrigger>
