@@ -234,5 +234,22 @@ class AcademicSeeder extends Seeder
                 'name' => 'Master of Education in Language Teaching',
             ],
         ]);
+
+        /**
+         * SOM
+         */
+
+        $som = College::create([
+            'code' => 'SOM',
+            'name' => 'School of Medicine',
+            'college_type' => 'graduate',
+        ]);
+
+        $som->courses()->createMany([
+            [
+                'code' => 'MD',
+                'name' => 'Doctor of Medicine',
+            ],
+        ]);
     }
 }
