@@ -9,24 +9,9 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, LoaderCircle } from 'lucide-vue-next';
 import Layout from '@/layouts/users/Layout.vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
-
-interface College {
-    id: number;
-    code: string;
-    name: string;
-    courses: Course[];
-}
-
-interface Course {
-    id: number;
-    college_id: number;
-    code: string;
-    name: string;
-}
+import { onBeforeUnmount, ref, watch } from 'vue';
 
 const props = defineProps<{
-    colleges: College[];
     nextLibraryId: number;
     nextCardNumber: number;
 }>();
@@ -46,9 +31,8 @@ const form = useForm({
     sex: '',
     contact_number: '',
     email: '',
-    college_id: null,
-    course_id: null,
     profile_image: null,
+    office: '',
 });
 
 // --- Profile Image Preview ---
@@ -69,14 +53,6 @@ onBeforeUnmount(() => {
     if (previewUrl.value) {
         URL.revokeObjectURL(previewUrl.value);
     }
-});
-
-// Computed property to get courses based on selected college
-const availableCourses = computed(() => {
-    if (!form.college_id) return [];
-
-    const selectedCollege = props.colleges.find(college => college.id === form.college_id);
-    return selectedCollege?.courses || [];
 });
 
 const goBack = () => {
@@ -261,51 +237,20 @@ const submit = () => {
                         <h2 class="text-lg font-semibold text-gray-900">Account Information</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="grid gap-2">
-                                <Label for="college_id" class="text-sm font-medium">
-                                    College <span class="text-red-500">*</span>
+                                <Label for="office" class="text-sm font-medium">
+                                    Office <span class="text-red-500">*</span>
                                 </Label>
-                                <Select
-                                    v-model="form.college_id"
-                                    @update:model-value="form.clearErrors('college_id')"
+                                <Input
+                                    id="office"
+                                    v-model="form.office"
+                                    type="text"
+                                    placeholder="Enter office name"
                                     required
-                                >
-                                    <SelectTrigger id="college_id" :tabindex="8" class="h-10">
-                                        <SelectValue placeholder="Select a college" class="max-w-80 truncate" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem
-                                            v-for="college in colleges"
-                                            :key="college.id"
-                                            :value="college.id"
-                                        >
-                                            {{ college.code }} - {{ college.name }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError :message="form.errors.college_id" />
-                            </div>
-
-                            <div class="grid gap-2">
-                                <Label for="course_id" class="text-sm font-medium"> Department <span class="text-red-500">*</span> </Label>
-                                <Select
-                                    v-model="form.course_id"
-                                    @update:model-value="form.clearErrors('course_id')"
-                                    required
-                                    :disabled="!form.college_id || availableCourses.length === 0"
-                                >
-                                    <SelectTrigger id="course_id" :tabindex="10" class="h-10">
-                                        <SelectValue
-                                            class="max-w-80 truncate"
-                                            :placeholder="!form.college_id ? 'Select college first' : availableCourses.length === 0 ? 'No courses available' : 'Select department'"
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem v-for="course in availableCourses" :key="course.id" :value="course.id">
-                                            {{ course.code }} - {{ course.name }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError :message="form.errors.course_id" />
+                                    class="h-10 max-w-80"
+                                    :tabindex="8"
+                                    @input="form.clearErrors('office')"
+                                />
+                                <InputError :message="form.errors.office" />
                             </div>
                         </div>
                     </div>
