@@ -60,7 +60,7 @@ const form = useForm({
     college_id: null,
     course_id: null,
     major_id: null,
-    profile_image: null, // ✅ Added for file upload
+    profile_image: null,
 });
 
 // --- Profile Image Preview ---

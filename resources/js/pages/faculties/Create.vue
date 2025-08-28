@@ -9,6 +9,7 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle } from 'lucide-vue-next';
 import Layout from '@/layouts/users/Layout.vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
 
 defineProps<{
     offices: { id: number; acronym: string; name: string }[];
@@ -30,6 +31,27 @@ const form = useForm({
     role_title: '',
     email: '',
     office_id: '',
+    profile_image: null,
+});
+
+// --- Profile Image Preview ---
+const previewUrl = ref<string | null>(null);
+
+watch(() => form.profile_image, (newFile) => {
+    if (previewUrl.value) {
+        URL.revokeObjectURL(previewUrl.value);
+        previewUrl.value = null;
+    }
+    if (newFile instanceof File) {
+        previewUrl.value = URL.createObjectURL(newFile);
+    }
+});
+
+// cleanup object URL on unmount
+onBeforeUnmount(() => {
+    if (previewUrl.value) {
+        URL.revokeObjectURL(previewUrl.value);
+    }
 });
 
 const submit = () => {
@@ -136,6 +158,25 @@ const submit = () => {
                                 </Select>
                                 <InputError :message="form.errors.sex" />
                             </div>
+
+                            <div class="grid gap-2">
+                                <Label for="profile_image" class="text-sm font-medium">
+                                    Profile Image
+                                </Label>
+                                <Input
+                                    id="profile_image"
+                                    type="file"
+                                    accept="image/*"
+                                    :tabindex="6"
+                                    class="h-10"
+                                    @change="form.profile_image = $event.target.files[0]; form.clearErrors('profile_image')"
+                                />
+                                <div v-if="previewUrl" class="mt-2">
+                                    <img :src="previewUrl" alt="Preview" class="h-24 w-24 rounded-full object-cover shadow" />
+                                </div>
+                                <InputError :message="form.errors.profile_image" />
+                            </div>
+
                         </div>
                     </div>
 
