@@ -664,7 +664,7 @@ watch(() => window.location.search, () => {
                             <!-- Profile Image -->
                             <img
                                 v-if="selectedUser?.profile_image"
-                                :src="selectedUser.profile_image"
+                                :src="'/storage/profile_images/' + selectedUser.profile_image"
                                 alt="Profile Image"
                                 class="h-32 w-32 rounded-full object-cover border shadow-md"
                             />
