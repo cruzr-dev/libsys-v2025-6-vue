@@ -78,21 +78,32 @@ const form = useForm({
 });
 
 // --- Profile Image Preview ---
-const previewUrl = ref<string | null>(props.student.profile_image || null);
+const previewUrl = ref<string | null>(null);
+
+// Initialize preview URL with existing profile image
+if (props.student.profile_image) {
+    previewUrl.value = `/storage/profile_images/${props.student.profile_image}`;
+}
 
 watch(() => form.profile_image, (newFile) => {
-    if (previewUrl.value && !props.student.profile_image) {
+    // Only revoke object URLs (not storage URLs)
+    if (previewUrl.value && previewUrl.value.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrl.value);
-        previewUrl.value = null;
     }
+
     if (newFile instanceof File) {
         previewUrl.value = URL.createObjectURL(newFile);
+    } else if (newFile === null && props.student.profile_image) {
+        // Reset to original image if file input is cleared
+        previewUrl.value = `/storage/profile_images/${props.student.profile_image}`;
+    } else if (newFile === null) {
+        previewUrl.value = null;
     }
 });
 
-// cleanup object URL on unmount
+// cleanup object URL on unmount (only if it's a blob URL)
 onBeforeUnmount(() => {
-    if (previewUrl.value && !props.student.profile_image) {
+    if (previewUrl.value && previewUrl.value.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrl.value);
     }
 });
