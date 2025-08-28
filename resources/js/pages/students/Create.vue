@@ -227,7 +227,7 @@ const goBack = () => {
 
                             <div class="grid gap-2">
                                 <Label for="profile_image" class="text-sm font-medium">
-                                    Profile Image <span class="text-red-500">*</span>
+                                    Profile Image
                                 </Label>
                                 <Input
                                     id="profile_image"
@@ -236,7 +236,6 @@ const goBack = () => {
                                     :tabindex="6"
                                     class="h-10"
                                     @change="form.profile_image = $event.target.files[0]; form.clearErrors('profile_image')"
-                                    required
                                 />
                                 <div v-if="previewUrl" class="mt-2">
                                     <img :src="previewUrl" alt="Preview" class="h-24 w-24 rounded-full object-cover shadow" />

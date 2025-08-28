@@ -119,6 +119,7 @@ class StudentController extends Controller
                     }
                 },
             ],
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', // ✅ optional image
         ]);
 
         // 2. Ensure the UserType exists before starting transaction
@@ -135,7 +136,17 @@ class StudentController extends Controller
 
         // 3. Database operations and barcode generation inside transaction
         try {
-            DB::transaction(function () use ($validated, $studentType) {
+            DB::transaction(function () use ($validated, $studentType, $request) {
+                $filename = null;
+
+                if ($request->hasFile('profile_image')) {
+                    $extension = $request->file('profile_image')->getClientOriginalExtension();
+                    $filename = $validated['library_id'] . '.' . strtolower($extension);
+
+                    // Always store inside "profile_images" dir, but save only the filename in DB
+                    $request->file('profile_image')->storeAs('profile_images', $filename, 'public');
+                }
+
                 $user = User::create([
                     'library_id'     => $validated['library_id'],
                     'card_number'    => $validated['card_number'],
@@ -145,6 +156,7 @@ class StudentController extends Controller
                     'sex'            => $validated['sex'],
                     'email'          => $validated['email'],
                     'user_type_id'   => $studentType->id,
+                    'profile_image'  => $filename, // ✅ only filename stored
                 ]);
 
                 $user->student()->create([
@@ -158,10 +170,10 @@ class StudentController extends Controller
                 $generator = new BarcodeGeneratorPNG();
                 $barcodeData = $generator->getBarcode($validated['card_number'], $generator::TYPE_CODE_128);
 
-                $filename = 'barcodes/' . $validated['card_number'] . '.png';
-                Storage::put('/' . $filename, $barcodeData);
+                $barcodeFile = $validated['card_number'] . '.png';
+                Storage::put('/barcodes/' . $barcodeFile, $barcodeData);
 
-                $user->update(['barcode_path' => $filename]);
+                $user->update(['barcode_path' => $barcodeFile]);
             });
 
             return to_route('students.index')
@@ -176,7 +188,6 @@ class StudentController extends Controller
                 ->with('error', 'A database error occurred while creating the student or barcode. Please try again.');
 
         } catch (\Throwable $e) {
-            // Let Laravel handle framework-related exceptions (e.g. HttpException)
             if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
                 throw $e;
             }
