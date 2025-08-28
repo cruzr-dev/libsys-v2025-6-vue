@@ -49,16 +49,6 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // Check if the authenticated user is super_admin or staff_admin
-        $user = Auth::user();
-        if (! in_array($user->userType->key, ['super_admin', 'staff_admin'])) {
-            Auth::logout();
-
-            throw ValidationException::withMessages([
-                'email' => 'You do not have permission to log in.',
-            ]);
-        }
-
         RateLimiter::clear($this->throttleKey());
     }
 

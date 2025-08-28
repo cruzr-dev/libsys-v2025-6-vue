@@ -126,11 +126,12 @@ class AdminController extends Controller
                     'email'          => $validated['email'],
                     'password'       => Hash::make($validated['password']),
                     'user_type_id'   => $adminType->id,
-                    'office'         => 'library',
                     'profile_image'  => $filename,
                 ]);
 
-                $user->admin()->create();
+                $user->admin()->create([
+                    'office'         => 'library',
+                ]);
 
                 $barcodeFile = $barcodeService->store($validated['card_number']);
                 $user->update(['barcode_path' => $barcodeFile]);
