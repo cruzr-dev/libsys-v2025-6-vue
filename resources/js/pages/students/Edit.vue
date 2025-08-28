@@ -10,8 +10,6 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { LoaderCircle, ArrowLeft } from 'lucide-vue-next';
 import { computed, watch, ref, onBeforeUnmount } from 'vue';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog';
 import DeleteDialog from '@/components/DeleteDialog.vue';
 
 // Updated interface to match your Laravel controller structure
@@ -184,7 +182,7 @@ const goBack = () => {
                     </Button>
                 </div>
 
-                <form @submit.prevent="submit" class="mx-auto flex max-w-4xl flex-col gap-8">
+                <form @submit.prevent="submit" enctype="multipart/form-data" class="mx-auto flex max-w-4xl flex-col gap-8">
                     <!-- Personal Information Section -->
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Personal Information</h2>
