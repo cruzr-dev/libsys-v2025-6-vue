@@ -9,7 +9,7 @@ import Layout from '@/layouts/users/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle, ArrowLeft } from 'lucide-vue-next';
-import { computed, watch } from 'vue';
+import { computed, watch, ref, onBeforeUnmount } from 'vue';
 
 // Updated interface to match your Laravel controller structure
 interface College {
@@ -60,6 +60,27 @@ const form = useForm({
     college_id: null,
     course_id: null,
     major_id: null,
+    profile_image: null, // ✅ Added for file upload
+});
+
+// --- Profile Image Preview ---
+const previewUrl = ref<string | null>(null);
+
+watch(() => form.profile_image, (newFile) => {
+    if (previewUrl.value) {
+        URL.revokeObjectURL(previewUrl.value);
+        previewUrl.value = null;
+    }
+    if (newFile instanceof File) {
+        previewUrl.value = URL.createObjectURL(newFile);
+    }
+});
+
+// cleanup object URL on unmount
+onBeforeUnmount(() => {
+    if (previewUrl.value) {
+        URL.revokeObjectURL(previewUrl.value);
+    }
 });
 
 // Computed property to get courses based on selected college
@@ -203,6 +224,26 @@ const goBack = () => {
                                 </Select>
                                 <InputError :message="form.errors.sex" />
                             </div>
+
+                            <div class="grid gap-2">
+                                <Label for="profile_image" class="text-sm font-medium">
+                                    Profile Image <span class="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="profile_image"
+                                    type="file"
+                                    accept="image/*"
+                                    :tabindex="6"
+                                    class="h-10"
+                                    @change="form.profile_image = $event.target.files[0]; form.clearErrors('profile_image')"
+                                    required
+                                />
+                                <div v-if="previewUrl" class="mt-2">
+                                    <img :src="previewUrl" alt="Preview" class="h-24 w-24 rounded-full object-cover shadow" />
+                                </div>
+                                <InputError :message="form.errors.profile_image" />
+                            </div>
+
                         </div>
                     </div>
 
