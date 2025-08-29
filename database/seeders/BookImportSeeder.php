@@ -92,7 +92,8 @@ class BookImportSeeder extends Seeder
 
                 $recordData = $this->parseRecordData($row, $lookupIds);
                 $bookData = $this->parseBookData($row);
-                $remarkData = $this->parseRemarkData($row);
+                // turn off for now
+//                $remarkData = $this->parseRemarkData($row);
 
                 // Check for duplicate accession number
                 if (!empty($recordData['accession_number']) && Record::where('accession_number', $recordData['accession_number'])->exists()) {
@@ -107,9 +108,10 @@ class BookImportSeeder extends Seeder
                 $record = Record::create($recordData);
                 $record->book()->create($bookData);
 
-                foreach ($remarkData as $remark) {
-                    $record->remarks()->create($remark);
-                }
+                // turn off for now
+//                foreach ($remarkData as $remark) {
+//                    $record->remarks()->create($remark);
+//                }
 
                 $importedCount++;
             } catch (\Exception $e) {
@@ -328,23 +330,15 @@ class BookImportSeeder extends Seeder
     {
         if (!empty($value) && is_string($value)) {
             $name = ucwords(strtolower(trim($value)));
-            $ddcClass = DdcClassification::where('name', $name)->first();
+
+            $ddcClass = DdcClassification::where('title', $name)->first();
             if ($ddcClass) {
                 return $ddcClass->id;
             }
 
-            $baseCode = strlen($name) >= 3 ? substr($name, 0, 3) : $name;
-            $code = $baseCode;
-            $counter = 1;
-            while (DdcClassification::where('code', $code)->exists()) {
-                $code = $baseCode . $counter++;
-            }
-
-            return DdcClassification::create([
-                'name' => $name,
-                'code' => $code,
-            ])->id;
+            return null;
         }
+
         return null;
     }
 

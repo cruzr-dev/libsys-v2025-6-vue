@@ -14,16 +14,18 @@ class DdcClassificationSeeder extends Seeder
     public function run()
     {
         $classifications = [
-            ['name' => 'Computer Science, Information & General Works', 'code' => '000'],
-            ['name' => 'Philosophy & Psychology', 'code' => '100'],
-            ['name' => 'Religion', 'code' => '200'],
-            ['name' => 'Social Sciences', 'code' => '300'],
-            ['name' => 'Language', 'code' => '400'],
-            ['name' => 'Pure Science', 'code' => '500'],
-            ['name' => 'Applied Science & Technology', 'code' => '600'],
-            ['name' => 'Arts & Recreation', 'code' => '700'],
-            ['name' => 'Literature', 'code' => '800'],
-            ['name' => 'History & Geography', 'code' => '900'],
+            ['title' => 'APPLIED SCIENCE', 'number' => '600'],
+            ['title' => 'ARTS', 'number' => '700'],
+            ['title' => 'FICTION', 'number' => '800'], // usually under Literature
+            ['title' => 'GENERAL WORKS', 'number' => '000'],
+            ['title' => 'GENERAL WORKS/INFORMATION', 'number' => '000'], // optional, if library splits this
+            ['title' => 'HISTORY', 'number' => '900'],
+            ['title' => 'LANGUAGE', 'number' => '400'],
+            ['title' => 'LITERATURE', 'number' => '800'],
+            ['title' => 'PHILOSOPHY', 'number' => '100'],
+            ['title' => 'PURE SCIENCE', 'number' => '500'],
+            ['title' => 'RELIGION', 'number' => '200'],
+            ['title' => 'SOCIAL SCIENCE', 'number' => '300'],
         ];
 
         foreach ($classifications as $classification) {
