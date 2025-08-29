@@ -43,4 +43,19 @@ class ProfileImageService
 
         return $filename;
     }
+
+    /**
+     * Delete profile image from storage.
+     */
+    public function delete(string $libraryId): bool
+    {
+        $filename = $libraryId . '.jpg';
+        $path = "profile_images/{$filename}";
+
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->delete($path);
+        }
+
+        return false;
+    }
 }

@@ -185,9 +185,24 @@ const submit = () => {
         formData.append('profile_image', profileImageFile.value);
     }
 
-    // Use post method with _method override for PATCH
-    form.patch(route('students.update', props.student.id));
+    // Add _method field for PATCH request
+    formData.append('_method', 'PATCH');
 
+    // Send the FormData using Inertia's router
+    router.post(route('students.update', props.student.id), formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+        onBefore: () => {
+            form.processing = true; // Set processing state manually
+        },
+        onFinish: () => {
+            form.processing = false; // Reset processing state
+        },
+        onError: (errors) => {
+            form.errors = errors; // Set form errors if any
+        },
+    });
 };
 
 const goBack = () => {

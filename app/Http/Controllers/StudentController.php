@@ -261,10 +261,10 @@ class StudentController extends Controller
 
                 // Update student data
                 $user->student()->update([
-                    'contact_number' => $validated['contact_number'],
+                    'contact_number' => $validated['contact_number'] ?? null,
                     'college_id'     => $validated['college_id'],
                     'course_id'      => $validated['course_id'],
-                    'major_id'       => $validated['major_id'],
+                    'major_id'       => $validated['major_id'] ?? null,
                 ]);
 
                 // Regenerate barcode if card number changed
