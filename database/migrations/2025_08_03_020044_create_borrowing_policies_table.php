@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name'); // e.g., 'Student Policy', 'Faculty Policy'
             $table->foreignId('user_type_id')->nullable()
                 ->constrained('user_types')->nullOnDelete();
+            $table->enum('college_type', ['undergraduate', 'graduate'])->nullable();
             $table->integer('max_items')->default(5); // Maximum items that can be borrowed
             $table->integer('loan_period_days')->default(14); // Loan period in days
             $table->integer('renewal_limit')->default(2); // Maximum renewals allowed
