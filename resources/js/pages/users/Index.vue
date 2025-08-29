@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/users/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
 import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
 import {
@@ -63,6 +63,10 @@ const selectedUser = ref<any | null>(null);
 const handleShow = (user: any) => {
     selectedUser.value = user;
     isDialogOpen.value = true;
+};
+
+const handleEdit = (id) => {
+    router.get(route('users.edit', id));
 };
 
 // Table columns definition
@@ -715,7 +719,10 @@ watch(() => window.location.search, () => {
                     </div>
 
                     <DialogFooter class="p-6 pt-0">
-                        <Button @click="isDialogOpen = false">Close</Button>
+                        <div class="flex justify-between w-full">
+                            <Button variant="outline" @click="isDialogOpen = false">Close</Button>
+                            <Button @click="handleEdit(selectedUser.id)">Edit User Details</Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

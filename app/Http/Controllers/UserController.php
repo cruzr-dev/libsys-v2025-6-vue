@@ -17,6 +17,24 @@ class UserController extends Controller
         return to_route('users.all');
     }
 
+    public function edit($id)
+    {
+        $user = User::find($id);
+
+        // Check if user exists
+        if (!$user) {
+            return redirect()->route('users.index')->with('error', 'User not found');
+        }
+
+        // Check if user has a UserType and is a student
+        if ($user->UserType && $user->UserType->key === 'student') {
+            return to_route('students.edit', ['id' => $id]);
+        }
+
+        // Fallback for non-student users
+        return redirect()->route('users.index')->with('error', 'User type not found');
+    }
+
     public function all(Request $request)
     {
         return Inertia::render('users/Index');

@@ -33,6 +33,7 @@ Route::middleware($middleware)->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('users.index');
         Route::get('/all', [UserController::class, 'all'])->name('users.all');
+        Route::get('/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
 //            Route::get('/import', [UserController::class, 'import'])->name('users.import');
 //            Route::post('/import', [UserController::class, 'importStore'])->name('users.import.store');
