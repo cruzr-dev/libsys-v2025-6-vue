@@ -20,374 +20,466 @@ class BookImportSeeder extends Seeder
      */
     public function run(): void
     {
-        $filename = config('app.book_import.csv_file');
-        $csv_directory = config('app.book_import.csv_directory');
+        $csvPath = public_path(config('app.book_import.csv_directory') . '/' . config('app.book_import.csv_file'));
 
-        $csv_path = public_path("{$csv_directory}/{$filename}");
+        try {
+            $csvData = $this->loadCsvData($csvPath);
+            $lookupIds = $this->getLookupIds();
+            $this->processCsvRows($csvData, $lookupIds);
+        } catch (\Exception $e) {
+            $this->handleException($e);
+        }
+    }
 
-        if (!file_exists($csv_path)) {
-            $this->command->error("CSV file not found at: {$csv_path}");
-            return;
+    /**
+     * Load and parse CSV data.
+     *
+     * @param string $csvPath
+     * @return array
+     * @throws \Exception
+     */
+    private function loadCsvData(string $csvPath): array
+    {
+        if (!file_exists($csvPath)) {
+            $this->command->error("CSV file not found at: {$csvPath}");
+            throw new \Exception("CSV file not found");
         }
 
-        $csv_content = file_get_contents($csv_path);
-        $csv_data = array_map('str_getcsv', explode("\n", $csv_content));
+        $csvContent = file_get_contents($csvPath);
+        $csvData = array_map('str_getcsv', explode("\n", $csvContent));
+        array_shift($csvData); // Remove header row
 
-        // Remove header row if it exists
-        $headers = array_shift($csv_data);
+        return $csvData;
+    }
 
-        $failed_count = 0;
+    /**
+     * Retrieve lookup IDs for status, cover types, sources, etc.
+     *
+     * @return array
+     */
+    private function getLookupIds(): array
+    {
+        $defaultStatus = Status::where('key', 'available')->firstOrFail();
+
+        return [
+            'default_status_id' => $defaultStatus->id,
+            'default_status_name' => $defaultStatus->name,
+            'default_imported_by' => 1, // Adjust as needed
+        ];
+    }
+
+    /**
+     * Process CSV rows and import books.
+     *
+     * @param array $csvData
+     * @param array $lookupIds
+     */
+    private function processCsvRows(array $csvData, array $lookupIds): void
+    {
+        $importedCount = 0;
+        $failedCount = 0;
         $errors = [];
-        $imported_count = 0;
+        $progressBar = $this->command->getOutput()->createProgressBar(count($csvData));
+        $progressBar->start();
 
-        $this->command->info('Starting book import from CSV...');
-        $this->command->getOutput()->progressStart(count($csv_data));
-
-        foreach ($csv_data as $row_index => $row) {
+        foreach ($csvData as $rowIndex => $row) {
             try {
-                // Trim all values in the row and check for emptiness
                 $row = array_map('trim', $row);
-                if (empty(array_filter($row, fn($value) => $value !== '' && $value !== null))) {
-                    Log::warning('Skipping empty row ' . ($row_index + 1) . ':', $row);
-                    $this->command->getOutput()->progressAdvance();
+                if ($this->isRowEmpty($row)) {
+                    Log::warning('Skipping empty row ' . ($rowIndex + 1) . ':', $row);
+                    $progressBar->advance();
                     continue;
                 }
 
-                $date_received = null;
-                if (!empty($row[2]) && is_string($row[2])) {
-                    try {
-                        $date_received = Carbon::createFromFormat('m/d/Y', $row[2])->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        $failed_count++;
-                        $error = "Row " . ($row_index + 1) . ": Invalid date format in date_received: " . $row[2];
-                        $errors[] = $error;
-                        Log::error($error, ['row_index' => $row_index + 1, 'data' => $row]);
-                        $this->command->getOutput()->progressAdvance();
-                        continue;
-                    }
-                }
+                $recordData = $this->parseRecordData($row, $lookupIds);
+                $bookData = $this->parseBookData($row);
+                $remarkData = $this->parseRemarkData($row);
 
-                $subject_headings = null;
-                if (!empty($row[13])) {
-                    $subject_headings = $row[13];
-                }
-
-                // Get the default status (assuming you have a default user or use system user)
-                $defaultStatus = Status::where('key', 'available')->first();
-                if (!$defaultStatus) {
-                    $this->command->error('Default status "available" not found. Please seed statuses first.');
-                    return;
-                }
-
-                $record_data = [
-                    'accession_number' => $row[1] ?? null,
-                    'date_received' => $date_received,
-                    'title' => $row[5] ?? null,
-                    'status' => $defaultStatus->name,
-                    'imported_by' => 1, // Using user ID 1 or adjust as needed
-                    'subject_headings' => $subject_headings,
-                ];
-
-                $volume = null;
-                if (!empty($row[0])) {
-                    $volume = $row[0];
-                }
-
-                $authors = [];
-                if (!empty($row[4])) {
-                    $authors = $row[4];
-                }
-
-                $edition = null;
-                if (!empty($row[6])) {
-                    $edition = $row[6];
-                }
-
-                $publication_year = $row[11] ?? null;
-                if ($publication_year === '' || $publication_year === '-') {
-                    $publication_year = null;
-                }
-
-                $publisher = null;
-                if (!empty($row[10])) {
-                    $publisher = $row[10];
-                }
-
-                $publication_place = null;
-                if (!empty($row[9])) {
-                    $publication_place = $row[9];
-                }
-
-                $isbn = null;
-                if (!empty($row[12])) {
-                    $isbn = $row[12];
-                    if ($isbn === '-') {
-                        $isbn = null;
-                    }
-                }
-
-                $call_number = null;
-                if (!empty($row[3])) {
-                    $call_number = $row[3];
-                }
-
-                $ddc_class_id = null;
-                if (!empty($row[7])) {
-                    $ddc_class_name = ucwords(strtolower($row[7]));
-                    $ddc_class = DdcClassification::where('name', $ddc_class_name)->first();
-                    if ($ddc_class) {
-                        $ddc_class_id = $ddc_class->id;
-                    } else {
-                        // Generate base code
-                        $base_code = strlen($ddc_class_name) >= 3 ? substr($ddc_class_name, 0, 3) : $ddc_class_name;
-
-                        // Check for duplicates and append number if needed
-                        $code = $base_code;
-                        $counter = 1;
-                        while (DdcClassification::where('code', $code)->exists()) {
-                            $code = $base_code . $counter;
-                            $counter++;
-                        }
-
-                        $ddc_class_id = DdcClassification::create([
-                            'name' => $ddc_class_name,
-                            'code' => $code
-                        ])->id;
-                    }
-                }
-
-                $physical_location_id = null;
-                if (!empty($row[8])) {
-                    $physical_location_name = ucwords(strtolower($row[8]));
-                    $physical_location = PhysicalLocation::where('name', $physical_location_name)->first();
-                    if ($physical_location) {
-                        $physical_location_id = $physical_location->id;
-                    } else {
-                        // Generate base symbol
-                        $base_symbol = strlen($physical_location_name) >= 3 ? substr($physical_location_name, 0, 3) : $physical_location_name;
-
-                        // Check for duplicates and append number if needed
-                        $symbol = $base_symbol;
-                        $counter = 1;
-                        while (PhysicalLocation::where('symbol', $symbol)->exists()) {
-                            $symbol = $base_symbol . $counter;
-                            $counter++;
-                        }
-
-                        $physical_location_id = PhysicalLocation::create([
-                            'name' => $physical_location_name,
-                            'symbol' => $symbol
-                        ])->id;
-                    }
-                }
-
-                $cover_type_id = null;
-                if (!empty($row[16])) {
-                    $cover_type_name = $row[16];
-                    $cover_type = CoverType::where('name', ucwords(strtolower($cover_type_name)))->first();
-                    if ($cover_type) {
-                        $cover_type_id = $cover_type->id;
-                    } else {
-                        $cover_type_id = CoverType::create([
-                            'key' => strtolower($cover_type_name),
-                            'name' => $cover_type_name
-                        ])->id;
-                    }
-                }
-
-                $cover_image = null;
-                if (!empty($row[19])) {
-                    $cover_image = $row[19];
-                    if ($cover_image === '-') {
-                        $cover_image = null;
-                    }
-                }
-
-                $source = null;
-                $donated_by = null;
-                $purchaseAmount = $row[17] ?? null;
-                if (!is_numeric($purchaseAmount) || $purchaseAmount < 0) {
-                    $donated_by = $purchaseAmount;
-                    $source = 'Donation';
-                    $purchaseAmount = null;
-                }
-
-                $source_id = null;
-                if ($source) {
-                    $source_name = ucwords(strtolower($source));
-                    $source_from_db = Source::where('name', $source_name)->first();
-                    if ($source_from_db) {
-                        $source_id = $source_from_db->id;
-                    } else {
-                        $source_id = Source::create([
-                            'key' => strtolower($source_name),
-                            'name' => $source_name
-                        ])->id;
-                    }
-                } else {
-                    if (!empty($row[15])) {
-                        $source_name = ucwords(strtolower($row[15]));
-                        $source_from_db = Source::where('name', $source_name)->first();
-                        if ($source_from_db) {
-                            $source_id = $source_from_db->id;
-                        } else {
-                            $source_id = Source::create([
-                                'key' => strtolower($source_name),
-                                'name' => $source_name
-                            ])->id;
-                        }
-                    }
-                }
-
-                $supplier = null;
-                if (!empty($row[18])) {
-                    $supplier = $row[18];
-                }
-
-                $table_of_contents = null;
-                if (isset($row[14]) && !empty($row[14])) {
-                    $raw_content = $row[14];
-
-                    // Step 1: Clean the content
-                    // Replace double dashes with a single space or dash
-                    $cleaned_content = str_replace('--', ' - ', $raw_content);
-
-                    // Step 2: Remove excessive whitespace and normalize
-                    $cleaned_content = preg_replace('/\s+/', ' ', $cleaned_content);
-
-                    // Step 3: Optional - Split into array for structured storage (e.g., JSON)
-                    $toc_array = explode(' - ', $cleaned_content);
-                    $table_of_contents = json_encode($toc_array);
-                }
-
-                $book_data = [
-                    'volume' => $volume,
-                    'authors' => $authors,
-                    'edition' => $edition,
-                    'publication_year' => $publication_year,
-                    'publisher' => $publisher,
-                    'publication_place' => $publication_place,
-                    'isbn' => $isbn,
-
-                    'call_number' => $call_number,
-                    'ddc_class_id' => $ddc_class_id,
-                    'physical_location_id' => $physical_location_id,
-
-                    'cover_type_id' => $cover_type_id,
-                    'cover_image' => $cover_image,
-
-                    'source_id' => $source_id,
-                    'purchase_amount' => $purchaseAmount,
-                    'supplier' => $supplier,
-                    'donated_by' => $donated_by,
-
-                    'table_of_contents' => $table_of_contents,
-                ];
-
-                // Reset after use
-                $purchaseAmount = null;
-                $donated_by = null;
-                $source = null;
-
-                // Initialize remark data
-                $remark_data = [];
-
-                // Academic period remarks (rows 20-33)
-                $academic_periods = [
-                    20 => ['year' => '2007-2008', 'semester' => 'Whole Year'],
-                    21 => ['year' => '2008-2009', 'semester' => 'Whole Year'],
-                    22 => ['year' => '2009-2010', 'semester' => 'Whole Year'],
-                    23 => ['year' => '2010-2011', 'semester' => 'Whole Year'],
-                    24 => ['year' => '2011-2012', 'semester' => 'Whole Year'],
-                    25 => ['year' => '2017-2018', 'semester' => 'Whole Year'],
-                    26 => ['year' => '2018-2019', 'semester' => 'Whole Year'],
-                    27 => ['year' => '2019-2020', 'semester' => 'Whole Year'],
-                    28 => ['year' => '2020-2021', 'semester' => 'Whole Year'],
-                    29 => ['year' => '2021-2022', 'semester' => 'Whole Year'],
-                    30 => ['year' => '2022-2023', 'semester' => 'Whole Year'],
-                    31 => ['year' => '2023-2024', 'semester' => '1st Semester'],
-                    32 => ['year' => '2023-2024', 'semester' => '2nd Semester'],
-                    33 => ['year' => '2023-2024', 'semester' => 'Whole Year'],
-                ];
-
-                foreach ($academic_periods as $row_num => $period_info) {
-                    if (!empty($row[$row_num])) {
-                        $academic_period = AcademicPeriod::where('academic_year', $period_info['year'])
-                            ->where('semester', $period_info['semester'])
-                            ->first();
-
-                        if ($academic_period) {
-                            $remark_data[] = [
-                                'academic_period_id' => $academic_period->id,
-                                'content' => $row[$row_num],
-                            ];
-                        }
-                    }
-                }
-
-                // Clean and validate data
-                $record_data['title'] = trim($record_data['title']);
-
-                // Check for duplicate accession number if provided
-                if (!empty($record_data['accession_number'])) {
-                    $existing_book = Record::where('accession_number', $record_data['accession_number'])->first();
-                    if ($existing_book) {
-                        $failed_count++;
-                        $error = "Row " . ($row_index + 1) . ": Book with Accession Number {$record_data['accession_number']} already exists";
-                        $errors[] = $error;
-                        Log::warning($error);
-                        $this->command->getOutput()->progressAdvance();
-                        continue;
-                    }
+                // Check for duplicate accession number
+                if (!empty($recordData['accession_number']) && Record::where('accession_number', $recordData['accession_number'])->exists()) {
+                    throw new \Exception("Book with Accession Number {$recordData['accession_number']} already exists");
                 }
 
                 // Validate required fields
-                if (!empty($record_data['title']) || !empty($record_data['accession_number'])) {
-                    // Create the book record
-                    $record = Record::create($record_data);
-                    $record->book()->create($book_data);
-
-                    foreach ($remark_data as $remark) {
-                        $record->remarks()->create($remark);
-                    }
-
-                    $imported_count++;
-                } else {
-                    $failed_count++;
-                    $error = "Row " . ($row_index + 1) . ": Missing required fields (title or accession_number)";
-                    $errors[] = $error;
-                    Log::warning($error);
+                if (empty($recordData['title']) && empty($recordData['accession_number'])) {
+                    throw new \Exception("Missing required fields (title or accession_number)");
                 }
 
+                $record = Record::create($recordData);
+                $record->book()->create($bookData);
+
+                foreach ($remarkData as $remark) {
+                    $record->remarks()->create($remark);
+                }
+
+                $importedCount++;
             } catch (\Exception $e) {
-                $failed_count++;
-                $error = "Row " . ($row_index + 1) . ": " . $e->getMessage();
-                $errors[] = $error;
-                Log::error($error, ['row_index' => $row_index + 1, 'data' => $row]);
-            }
-
-            $this->command->getOutput()->progressAdvance();
-        }
-
-        $this->command->getOutput()->progressFinish();
-
-        // Output results
-        $this->command->info("Import completed!");
-        $this->command->info("{$imported_count} book(s) imported successfully.");
-
-        if ($failed_count > 0) {
-            $this->command->warn("{$failed_count} row(s) failed.");
-
-            if (!empty($errors)) {
-                $this->command->error("Errors encountered:");
-                foreach (array_slice($errors, 0, 10) as $error) { // Show first 10 errors
-                    $this->command->error("  - {$error}");
-                }
-
-                if (count($errors) > 10) {
-                    $this->command->warn("  ... and " . (count($errors) - 10) . " more errors. Check logs for details.");
+                $failedCount++;
+                $errors[] = "Row " . ($rowIndex + 1) . ": " . $e->getMessage();
+                Log::error("Processing row " . ($rowIndex + 1) . ": " . $e->getMessage(), ['data' => $row]);
+                if ($failedCount > 5) {
+                    throw new \Exception("Too many errors occurred during processing");
                 }
             }
+            $progressBar->advance();
         }
+
+        $this->displayResults($progressBar, $importedCount, $failedCount, $errors);
+    }
+
+    /**
+     * Check if a row is empty.
+     *
+     * @param array $row
+     * @return bool
+     */
+    private function isRowEmpty(array $row): bool
+    {
+        return empty(array_filter($row, fn($value) => $value !== '' && $value !== null));
+    }
+
+    /**
+     * Parse record data from a CSV row.
+     *
+     * @param array $row
+     * @param array $lookupIds
+     * @return array
+     */
+    private function parseRecordData(array $row, array $lookupIds): array
+    {
+        return [
+            'accession_number' => $this->parseString($row[1] ?? null),
+            'date_received' => $this->parseDate($row[2] ?? null),
+            'title' => $this->parseString($row[5] ?? null),
+            'status' => $lookupIds['default_status_name'],
+            'imported_by' => $lookupIds['default_imported_by'],
+            'subject_headings' => $this->parseString($row[13] ?? null),
+        ];
+    }
+
+    /**
+     * Parse book data from a CSV row.
+     *
+     * @param array $row
+     * @return array
+     */
+    private function parseBookData(array $row): array
+    {
+        $sourceData = $this->parseSourceData($row);
+        return [
+            'volume' => $this->parseString($row[0] ?? null),
+            'authors' => $this->parseString($row[4] ?? null),
+            'edition' => $this->parseString($row[6] ?? null),
+            'publication_year' => $this->parseNumeric($row[11] ?? null),
+            'publisher' => $this->parseString($row[10] ?? null),
+            'publication_place' => $this->parseString($row[9] ?? null),
+            'isbn' => $this->parseIsbn($row[12] ?? null),
+            'call_number' => $this->parseString($row[3] ?? null),
+            'ddc_class_id' => $this->parseDdcClassification($row[7] ?? null),
+            'physical_location_id' => $this->parsePhysicalLocation($row[8] ?? null),
+            'cover_type_id' => $this->parseCoverType($row[16] ?? null),
+            'cover_image' => $this->parseString($row[19] ?? null, ['-']),
+            'source_id' => $sourceData['source_id'],
+            'purchase_amount' => $sourceData['purchase_amount'],
+            'supplier' => $this->parseString($row[18] ?? null),
+            'donated_by' => $sourceData['donated_by'],
+            'table_of_contents' => $this->parseTableOfContents($row[14] ?? null),
+        ];
+    }
+
+    /**
+     * Parse source-related data (source, purchase amount, donated by).
+     *
+     * @param array $row
+     * @return array
+     */
+    private function parseSourceData(array $row): array
+    {
+        $purchaseAmount = $this->parseNumeric($row[17] ?? null);
+        $donatedBy = null;
+        $source = null;
+
+        if (!is_null($purchaseAmount) && $purchaseAmount < 0) {
+            $donatedBy = $this->parseString($row[17] ?? null);
+            $source = 'Donation';
+            $purchaseAmount = null;
+        }
+
+        $sourceId = null;
+        if ($source) {
+            $sourceId = $this->getOrCreateSource($source);
+        } elseif (!empty($row[15])) {
+            $sourceId = $this->getOrCreateSource($row[15]);
+        }
+
+        return [
+            'source_id' => $sourceId,
+            'purchase_amount' => $purchaseAmount,
+            'donated_by' => $donatedBy,
+        ];
+    }
+
+    /**
+     * Parse remark data for academic periods.
+     *
+     * @param array $row
+     * @return array
+     */
+    private function parseRemarkData(array $row): array
+    {
+        $academicPeriods = [
+            20 => ['year' => '2007-2008', 'semester' => 'Whole Year'],
+            21 => ['year' => '2008-2009', 'semester' => 'Whole Year'],
+            22 => ['year' => '2009-2010', 'semester' => 'Whole Year'],
+            23 => ['year' => '2010-2011', 'semester' => 'Whole Year'],
+            24 => ['year' => '2011-2012', 'semester' => 'Whole Year'],
+            25 => ['year' => '2017-2018', 'semester' => 'Whole Year'],
+            26 => ['year' => '2018-2019', 'semester' => 'Whole Year'],
+            27 => ['year' => '2019-2020', 'semester' => 'Whole Year'],
+            28 => ['year' => '2020-2021', 'semester' => 'Whole Year'],
+            29 => ['year' => '2021-2022', 'semester' => 'Whole Year'],
+            30 => ['year' => '2022-2023', 'semester' => 'Whole Year'],
+            31 => ['year' => '2023-2024', 'semester' => '1st Semester'],
+            32 => ['year' => '2023-2024', 'semester' => '2nd Semester'],
+            33 => ['year' => '2023-2024', 'semester' => 'Whole Year'],
+        ];
+
+        $remarkData = [];
+        foreach ($academicPeriods as $index => $periodInfo) {
+            if (!empty($row[$index])) {
+                $academicPeriod = AcademicPeriod::where('academic_year', $periodInfo['year'])
+                    ->where('semester', $periodInfo['semester'])
+                    ->first();
+                if ($academicPeriod) {
+                    $remarkData[] = [
+                        'academic_period_id' => $academicPeriod->id,
+                        'content' => $this->parseString($row[$index]),
+                    ];
+                }
+            }
+        }
+
+        return $remarkData;
+    }
+
+    /**
+     * Parse string values, optionally excluding specific values.
+     *
+     * @param mixed $value
+     * @param array $excludeValues
+     * @return string|null
+     */
+    private function parseString($value, array $excludeValues = []): ?string
+    {
+        if (!empty($value) && is_string($value) && !in_array($value, $excludeValues, true)) {
+            return trim($value);
+        }
+        return null;
+    }
+
+    /**
+     * Parse numeric values.
+     *
+     * @param mixed $value
+     * @return int|float|null
+     */
+    private function parseNumeric($value): int|float|null
+    {
+        if (!empty($value) && is_numeric($value) && $value !== 0) {
+            return is_float($value) ? (float)$value : (int)$value;
+        }
+        return null;
+    }
+
+    /**
+     * Parse date values in m/d/Y format.
+     *
+     * @param mixed $value
+     * @return string|null
+     */
+    private function parseDate($value): ?string
+    {
+        if (!empty($value) && is_string($value)) {
+            try {
+                return Carbon::createFromFormat('m/d/Y', $value)->format('Y-m-d');
+            } catch (\Exception $e) {
+                throw new \Exception("Invalid date format: {$value}");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Parse ISBN, excluding invalid values.
+     *
+     * @param mixed $value
+     * @return string|null
+     */
+    private function parseIsbn($value): ?string
+    {
+        return $this->parseString($value, ['-']);
+    }
+
+    /**
+     * Parse DDC classification, creating new records if needed.
+     *
+     * @param mixed $value
+     * @return int|null
+     */
+    private function parseDdcClassification($value): ?int
+    {
+        if (!empty($value) && is_string($value)) {
+            $name = ucwords(strtolower(trim($value)));
+            $ddcClass = DdcClassification::where('name', $name)->first();
+            if ($ddcClass) {
+                return $ddcClass->id;
+            }
+
+            $baseCode = strlen($name) >= 3 ? substr($name, 0, 3) : $name;
+            $code = $baseCode;
+            $counter = 1;
+            while (DdcClassification::where('code', $code)->exists()) {
+                $code = $baseCode . $counter++;
+            }
+
+            return DdcClassification::create([
+                'name' => $name,
+                'code' => $code,
+            ])->id;
+        }
+        return null;
+    }
+
+    /**
+     * Parse physical location, creating new records if needed.
+     *
+     * @param mixed $value
+     * @return int|null
+     */
+    private function parsePhysicalLocation($value): ?int
+    {
+        if (!empty($value) && is_string($value)) {
+            $name = ucwords(strtolower(trim($value)));
+            $location = PhysicalLocation::where('name', $name)->first();
+            if ($location) {
+                return $location->id;
+            }
+
+            $baseSymbol = strlen($name) >= 3 ? substr($name, 0, 3) : $name;
+            $symbol = $baseSymbol;
+            $counter = 1;
+            while (PhysicalLocation::where('symbol', $symbol)->exists()) {
+                $symbol = $baseSymbol . $counter++;
+            }
+
+            return PhysicalLocation::create([
+                'name' => $name,
+                'symbol' => $symbol,
+            ])->id;
+        }
+        return null;
+    }
+
+    /**
+     * Parse cover type, creating new records if needed.
+     *
+     * @param mixed $value
+     * @return int|null
+     */
+    private function parseCoverType($value): ?int
+    {
+        if (!empty($value) && is_string($value)) {
+            $name = ucwords(strtolower(trim($value)));
+            $coverType = CoverType::where('name', $name)->first();
+            if ($coverType) {
+                return $coverType->id;
+            }
+
+            return CoverType::create([
+                'key' => strtolower($name),
+                'name' => $name,
+            ])->id;
+        }
+        return null;
+    }
+
+    /**
+     * Parse source, creating new records if needed.
+     *
+     * @param mixed $value
+     * @return int|null
+     */
+    private function getOrCreateSource($value): ?int
+    {
+        if (!empty($value) && is_string($value)) {
+            $name = ucwords(strtolower(trim($value)));
+            $source = Source::where('name', $name)->first();
+            if ($source) {
+                return $source->id;
+            }
+
+            return Source::create([
+                'key' => strtolower($name),
+                'name' => $name,
+            ])->id;
+        }
+        return null;
+    }
+
+    /**
+     * Parse table of contents into JSON format.
+     *
+     * @param mixed $value
+     * @return string|null
+     */
+    private function parseTableOfContents($value): ?string
+    {
+        if (!empty($value) && is_string($value)) {
+            $cleanedContent = str_replace('--', ' - ', trim($value));
+            $cleanedContent = preg_replace('/\s+/', ' ', $cleanedContent);
+            $tocArray = explode(' - ', $cleanedContent);
+            return json_encode($tocArray);
+        }
+        return null;
+    }
+
+    /**
+     * Display import results.
+     *
+     * @param mixed $progressBar
+     * @param int $importedCount
+     * @param int $failedCount
+     * @param array $errors
+     */
+    private function displayResults($progressBar, int $importedCount, int $failedCount, array $errors): void
+    {
+        $progressBar->finish();
+        $this->command->newLine();
+        $this->command->info("Import completed! {$importedCount} book(s) imported successfully.");
+
+        if ($failedCount > 0) {
+            $this->command->warn("{$failedCount} row(s) failed.");
+            foreach (array_slice($errors, 0, 10) as $error) {
+                $this->command->error($error);
+            }
+            if (count($errors) > 10) {
+                $this->command->warn("... and " . (count($errors) - 10) . " more errors. Check logs for details.");
+            }
+        }
+    }
+
+    /**
+     * Handle exceptions during seeding.
+     *
+     * @param \Exception $e
+     */
+    private function handleException(\Exception $e): void
+    {
+        $message = app()->environment('production')
+            ? 'An unexpected error occurred during seeding.'
+            : 'Seeding error: ' . $e->getMessage();
+
+        $this->command->error($message);
+        Log::error($message, ['exception' => $e]);
     }
 }

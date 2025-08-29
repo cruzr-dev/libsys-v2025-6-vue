@@ -16,20 +16,20 @@ class DatabaseSeeder extends Seeder
     {
         // users related
         $this->call(UserTypeSeeder::class);
-        $this->call(OfficeSeeder::class);
-        $this->call(AcademicSeeder::class);
-        $this->call(UserImportSeeder::class);
+//        $this->call(OfficeSeeder::class);
+//        $this->call(AcademicSeeder::class);
+//        $this->call(UserImportSeeder::class);
 
         // records related seeders
-//        $this->call(CoverTypeSeeder::class);
-//        $this->call(SourceSeeder::class);
-//        $this->call(DdcClassificationSeeder::class);
-//        $this->call(PhysicalLocationSeeder::class);
-//        $this->call(BorrowingPolicySeeder::class);
-//        $this->call(BookImportSeeder::class);
-//        $this->call(StatusSeeder::class);
+        $this->call(CoverTypeSeeder::class);
+        $this->call(SourceSeeder::class);
+        $this->call(DdcClassificationSeeder::class);
+        $this->call(PhysicalLocationSeeder::class);
+        $this->call(BorrowingPolicySeeder::class);
+        $this->call(BookImportSeeder::class);
+        $this->call(StatusSeeder::class);
 
         // other seeders
-//        $this->call(AcademicPeriodSeeder::class);
+        $this->call(AcademicPeriodSeeder::class);
     }
 }
