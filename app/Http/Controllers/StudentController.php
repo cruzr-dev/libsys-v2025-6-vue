@@ -175,7 +175,7 @@ class StudentController extends Controller
      */
     public function edit($id)
     {
-        $student = User::find($id);
+        $student = User::with('student')->find($id);
 
         $colleges = College::with([
             'courses:id,college_id,code,name',

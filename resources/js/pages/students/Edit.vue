@@ -47,10 +47,13 @@ const props = defineProps<{
         email: string;
         student_type: string;
         card_number: string;
-        college_id: number | null;
-        course_id: number | null;
-        major_id: number | null;
         profile_image: string | null;
+        // Add the student relationship
+        student?: {
+            college_id: number | null;
+            course_id: number | null;
+            major_id: number | null;
+        };
     };
     colleges: College[];
 }>();
@@ -72,9 +75,10 @@ const form = useForm({
     email: props.student.email,
     student_type: props.student.student_type,
     card_number: props.student.card_number,
-    college_id: props.student.college_id,
-    course_id: props.student.course_id,
-    major_id: props.student.major_id,
+    // Access the academic info from the student relationship
+    college_id: props.student.student?.college_id || null,
+    course_id: props.student.student?.course_id || null,
+    major_id: props.student.student?.major_id || null,
 });
 
 // Separate ref for handling the profile image file
