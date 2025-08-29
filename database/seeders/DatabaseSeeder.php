@@ -26,8 +26,8 @@ class DatabaseSeeder extends Seeder
         $this->call(DdcClassificationSeeder::class);
         $this->call(PhysicalLocationSeeder::class);
         $this->call(BorrowingPolicySeeder::class);
-        $this->call(BookImportSeeder::class);
         $this->call(StatusSeeder::class);
+        $this->call(BookImportSeeder::class);
 
         // other seeders
         $this->call(AcademicPeriodSeeder::class);

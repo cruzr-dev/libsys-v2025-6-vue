@@ -64,7 +64,6 @@ class BookImportSeeder extends Seeder
         return [
             'default_status_id' => $defaultStatus->id,
             'default_status_name' => $defaultStatus->name,
-            'default_imported_by' => 1, // Adjust as needed
         ];
     }
 
@@ -152,7 +151,6 @@ class BookImportSeeder extends Seeder
             'date_received' => $this->parseDate($row[2] ?? null),
             'title' => $this->parseString($row[5] ?? null),
             'status' => $lookupIds['default_status_name'],
-            'imported_by' => $lookupIds['default_imported_by'],
             'subject_headings' => $this->parseString($row[13] ?? null),
         ];
     }
