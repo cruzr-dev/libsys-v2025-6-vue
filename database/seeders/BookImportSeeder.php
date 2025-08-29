@@ -352,25 +352,18 @@ class BookImportSeeder extends Seeder
     {
         if (!empty($value) && is_string($value)) {
             $name = ucwords(strtolower(trim($value)));
+
             $location = PhysicalLocation::where('name', $name)->first();
             if ($location) {
                 return $location->id;
             }
 
-            $baseSymbol = strlen($name) >= 3 ? substr($name, 0, 3) : $name;
-            $symbol = $baseSymbol;
-            $counter = 1;
-            while (PhysicalLocation::where('symbol', $symbol)->exists()) {
-                $symbol = $baseSymbol . $counter++;
-            }
-
-            return PhysicalLocation::create([
-                'name' => $name,
-                'symbol' => $symbol,
-            ])->id;
+                return null;
         }
+
         return null;
     }
+
 
     /**
      * Parse cover type, creating new records if needed.
