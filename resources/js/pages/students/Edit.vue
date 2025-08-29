@@ -61,7 +61,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Edit Student', href: `/users/students/${props.student.id}/edit` },
 ];
 
-// Initialize the form with student data
+// Initialize the form with student data - DON'T include profile_image in the initial form data
 const form = useForm({
     library_id: props.student.library_id,
     first_name: props.student.first_name,
@@ -75,8 +75,10 @@ const form = useForm({
     college_id: props.student.college_id,
     course_id: props.student.course_id,
     major_id: props.student.major_id,
-    profile_image: null,
 });
+
+// Separate ref for handling the profile image file
+const profileImageFile = ref<File | null>(null);
 
 // --- Profile Image Preview ---
 const previewUrl = ref<string | null>(null);
@@ -86,21 +88,28 @@ if (props.student.profile_image) {
     previewUrl.value = `/storage/profile_images/${props.student.profile_image}`;
 }
 
-watch(() => form.profile_image, (newFile) => {
-    // Only revoke object URLs (not storage URLs)
+// Handle file input change
+const handleProfileImageChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0] || null;
+
+    profileImageFile.value = file;
+    form.clearErrors('profile_image');
+
+    // Update preview
     if (previewUrl.value && previewUrl.value.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrl.value);
     }
 
-    if (newFile instanceof File) {
-        previewUrl.value = URL.createObjectURL(newFile);
-    } else if (newFile === null && props.student.profile_image) {
+    if (file) {
+        previewUrl.value = URL.createObjectURL(file);
+    } else if (props.student.profile_image) {
         // Reset to original image if file input is cleared
         previewUrl.value = `/storage/profile_images/${props.student.profile_image}`;
-    } else if (newFile === null) {
+    } else {
         previewUrl.value = null;
     }
-});
+};
 
 // cleanup object URL on unmount (only if it's a blob URL)
 onBeforeUnmount(() => {
@@ -160,7 +169,25 @@ const deleteStudent = (id: number | null) => {
 
 // Handle form submission
 const submit = () => {
+    // Create FormData to handle file upload
+    const formData = new FormData();
+
+    // Add all form fields
+    Object.keys(form.data()).forEach(key => {
+        const value = form.data()[key];
+        if (value !== null && value !== undefined && value !== '') {
+            formData.append(key, value);
+        }
+    });
+
+    // Add profile image if selected
+    if (profileImageFile.value) {
+        formData.append('profile_image', profileImageFile.value);
+    }
+
+    // Use post method with _method override for PATCH
     form.patch(route('students.update', props.student.id));
+
 };
 
 const goBack = () => {
@@ -289,7 +316,7 @@ const goBack = () => {
                                     accept="image/*"
                                     :tabindex="6"
                                     class="h-10"
-                                    @change="form.profile_image = $event.target.files[0]; form.clearErrors('profile_image')"
+                                    @change="handleProfileImageChange"
                                 />
                                 <div v-if="previewUrl" class="mt-2">
                                     <img :src="previewUrl" alt="Preview" class="h-24 w-24 rounded-full object-cover shadow" />

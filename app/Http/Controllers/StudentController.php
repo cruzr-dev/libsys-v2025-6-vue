@@ -195,7 +195,7 @@ class StudentController extends Controller
      */
     public function update(
         Request $request,
-        $id,
+                $id,
         ProfileImageService $imageService,
         BarcodeService $barcodeService
     ): \Illuminate\Http\RedirectResponse {
@@ -231,22 +231,9 @@ class StudentController extends Controller
         // 2. Transaction
         try {
             DB::transaction(function () use ($validated, $user, $request, $imageService, $barcodeService) {
-                // Handle profile image update
-                if ($request->hasFile('profile_image')) {
-                    // Delete old profile image if it exists
-                    if ($user->profile_image) {
-                        $imageService->delete($user->profile_image);
-                    }
 
-                    $filename = $imageService->store($request->file('profile_image'), $validated['library_id']);
-                    $validated['profile_image'] = $filename;
-                } else {
-                    // Keep existing profile image
-                    unset($validated['profile_image']);
-                }
-
-                // Update user data
-                $user->update([
+                // Prepare user update data (excluding profile_image initially)
+                $userUpdateData = [
                     'library_id'     => $validated['library_id'],
                     'card_number'    => $validated['card_number'],
                     'first_name'     => $validated['first_name'],
@@ -254,8 +241,23 @@ class StudentController extends Controller
                     'last_name'      => $validated['last_name'],
                     'sex'            => $validated['sex'],
                     'email'          => $validated['email'],
-                    'profile_image'  => $validated['profile_image'] ?? $user->profile_image,
-                ]);
+                ];
+
+                // Handle profile image update
+                if ($request->hasFile('profile_image') && $request->file('profile_image')->isValid()) {
+                    // Delete old profile image if it exists
+                    if ($user->profile_image) {
+                        $imageService->delete($user->profile_image);
+                    }
+
+                    // Store new image
+                    $filename = $imageService->store($request->file('profile_image'), $validated['library_id']);
+                    $userUpdateData['profile_image'] = $filename;
+                }
+                // If no new file is uploaded, keep the existing image (don't modify profile_image field)
+
+                // Update user data
+                $user->update($userUpdateData);
 
                 // Update student data
                 $user->student()->update([
