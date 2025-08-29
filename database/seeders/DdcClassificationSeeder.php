@@ -30,8 +30,8 @@ class DdcClassificationSeeder extends Seeder
 
         foreach ($classifications as $classification) {
             DB::table('ddc_classifications')->insert([
-                'name' => $classification['name'],
-                'code' => $classification['code'],
+                'title' => $classification['title'],
+                'number' => $classification['number'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
