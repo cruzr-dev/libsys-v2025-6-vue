@@ -27,14 +27,17 @@ class ProfileImageService
         // Load image
         $image = $this->imageManager->read($file->getRealPath());
 
-        // Crop to square (center)
+        // Crop to square (centered)
         $size = min($image->width(), $image->height());
-        $image = $image->crop($size, $size);
+        $x = (int)(($image->width() - $size) / 2);
+        $y = (int)(($image->height() - $size) / 2);
+
+        $image = $image->crop($size, $size, $x, $y);
 
         // Resize to optimal size (300x300)
         $image = $image->resize(300, 300);
 
-        // Encode as JPG (quality 80) using JpegEncoder
+        // Encode as JPG (quality 80)
         $encoded = $image->encode(new JpegEncoder(quality: 80));
 
         // Save to storage
