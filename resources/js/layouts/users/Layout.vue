@@ -10,8 +10,12 @@ const sidebarNavItems: NavItem[] = [
         href: '/users/all',
     },
     {
-        title: 'Student',
+        title: 'Undergraduate',
         href: '/users/students',
+    },
+    {
+        title: 'Graduate',
+        href: '/users/graduate',
     },
     {
         title: 'Faculty',
