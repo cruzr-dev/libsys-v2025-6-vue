@@ -657,7 +657,7 @@ watch(() => window.location.search, () => {
             </div>
 
             <Dialog v-model:open="isDialogOpen">
-                <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+                <DialogContent class="sm:max-w-4xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                     <DialogHeader class="p-6 pb-0">
                         <DialogTitle>Student Details</DialogTitle>
                         <DialogDescription>
@@ -701,15 +701,46 @@ watch(() => window.location.search, () => {
 
                         <!-- User Details -->
                         <div class="md:col-span-2">
-                            <div v-if="selectedUser" class="grid gap-2 text-sm">
-                                <p><strong>Library ID:</strong> {{ selectedUser.library_id }}</p>
-                                <p><strong>Card #:</strong> {{ selectedUser.card_number }}</p>
-                                <p><strong>School ID:</strong> {{ selectedUser.school_id }}</p>
-                                <p><strong>Name:</strong> {{ selectedUser.first_name }} {{ selectedUser.middle_initial + '.' }} {{ selectedUser.last_name }}</p>
-                                <p><strong>Email:</strong> {{ selectedUser.email }}</p>
-                                <p><strong>Contact:</strong> {{ selectedUser.contact_number }}</p>
-                                <p><strong>Sex:</strong> {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}</p>
-                                <p><strong>User Type:</strong> {{ selectedUser.user_type?.name }}</p>
+                            <div v-if="selectedUser" class="space-y-6">
+                                <!-- Personal Information -->
+                                <div>
+                                    <h3 class="font-semibold text-base mb-3 text-gray-900">Personal Information</h3>
+                                    <div class="grid gap-2 text-sm">
+                                        <p><strong>Library ID:</strong> {{ selectedUser.library_id }}</p>
+                                        <p><strong>Card #:</strong> {{ selectedUser.card_number }}</p>
+                                        <p><strong>School ID:</strong> {{ selectedUser.school_id }}</p>
+                                        <p><strong>Name:</strong> {{ selectedUser.first_name }} {{ selectedUser.middle_initial ? selectedUser.middle_initial + '.' : '' }} {{ selectedUser.last_name }}</p>
+                                        <p><strong>Email:</strong> {{ selectedUser.email }}</p>
+                                        <p><strong>Contact:</strong> {{ selectedUser.contact_number || 'Not provided' }}</p>
+                                        <p><strong>Sex:</strong> {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}</p>
+                                        <p><strong>User Type:</strong> {{ selectedUser.user_type?.name }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Academic Information -->
+                                <div>
+                                    <h3 class="font-semibold text-base mb-3 text-gray-900">Academic Information</h3>
+                                    <div class="grid gap-2 text-sm">
+                                        <p><strong>College:</strong>
+                                            <span v-if="selectedUser.student?.college">
+                                    {{ selectedUser.student.college.code }} - {{ selectedUser.student.college.name }}
+                                </span>
+                                            <span v-else class="text-muted-foreground">Not assigned</span>
+                                        </p>
+                                        <p><strong>Course:</strong>
+                                            <span v-if="selectedUser.student?.course">
+                                    {{ selectedUser.student.course.code }} - {{ selectedUser.student.course.name }}
+                                </span>
+                                            <span v-else class="text-muted-foreground">Not assigned</span>
+                                        </p>
+                                        <p><strong>Major:</strong>
+                                            <span v-if="selectedUser.student?.major">
+                                    {{ selectedUser.student.major.name }}
+                                </span>
+                                            <span v-else class="text-muted-foreground">Not assigned</span>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             <div v-else class="text-muted-foreground">
                                 <p>No student selected.</p>

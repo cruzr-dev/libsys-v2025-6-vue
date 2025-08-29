@@ -31,7 +31,7 @@ class StudentController extends Controller
 
     public function fetchAll(Request $request)
     {
-        $query = User::with('userType');
+        $query = User::with(['userType', 'student.college', 'student.course', 'student.major']);
 
         $query->whereHas('userType', function ($q) {
             $q->where('key', 'student');
