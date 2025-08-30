@@ -1,42 +1,22 @@
-
 <script setup lang="ts">
-import DeleteDialog from '@/components/DeleteDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
-import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
+import { Head } from '@inertiajs/vue3';
+import { ArrowUpDown, Search, X, Loader2 } from 'lucide-vue-next';
+import { h, ref, onMounted, watch, nextTick } from 'vue';
 import {
     FlexRender,
     getCoreRowModel,
-    getExpandedRowModel,
-    getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, Plus, X, Loader2, Eye, Search } from 'lucide-vue-next';
-import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
-import { h, ref, onMounted, watch, nextTick } from 'vue';
-import { route } from 'ziggy-js';
-import DropdownAction from '../records/DataTableDemoColumn.vue';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
 
-// API Data Interface
+// API Response type
 interface ApiResponse {
     data: any[];
     current_page: number;
@@ -45,473 +25,110 @@ interface ApiResponse {
     total: number;
 }
 
-// Reactive data state
+// reactive state
 const data = ref<any[]>([]);
 const isLoading = ref(false);
 const currentPage = ref(1);
-const perPage = ref(10);
 const lastPage = ref(1);
 const total = ref(0);
 const error = ref<string | null>(null);
 
-// Scroll position preservation
-const scrollPosition = ref(0);
+const sorting = ref([]);
+const filterInput = ref<string>('');
 
-// Search input ref for focus preservation
-const searchInputRef = ref(null);
-
-// Show handler function
-const isDialogOpen = ref(false);
-const selectedBook = ref<any | null>(null);
-
-const handleShow = (book: any) => {
-    selectedBook.value = book;
-    isDialogOpen.value = true;
-};
-
-const handleEdit = (id) => {
-    router.get(route('books.edit', id));
-};
-
-// Table columns definition
-const columns: ColumnDef<any>[] = [
+// Columns (only accession no + title)
+const columns = [
     {
         accessorKey: 'accession_number',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('accession_number')),
-        enableHiding: false,
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => h('div', row.getValue('accession_number')),
     },
     {
         accessorKey: 'title',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'max-w-sm truncate' }, row.getValue('title')),
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'isbn',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', row.original.book?.isbn || '-'),
-    },
-    {
-        accessorKey: 'pubYear',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Pub. Year', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', row.original.book?.publication_year || '-'),
-    },
-    {
-        accessorKey: 'status',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Status', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => {
-            const status = row.getValue('status');
-            const statusConfig = {
-                available: { label: 'Available', class: 'bg-chart-1/10 text-chart-1 border-chart-1/20 hover:bg-chart-1/20' },
-                damaged: { label: 'Damaged', class: 'bg-chart-2/10 text-chart-2 border-chart-2/20 hover:bg-chart-2/20' },
-                missing: { label: 'Missing', class: 'bg-chart-3/10 text-chart-3 border-chart-3/20 hover:bg-chart-3/20' },
-                borrowed: { label: 'Borrowed', class: 'bg-chart-4/10 text-chart-4 border-chart-4/20 hover:bg-chart-4/20' },
-                discarded: { label: 'Discarded', class: 'bg-chart-5/10 text-chart-5 border-chart-5/20 hover:bg-chart-5/20' },
-            };
-            const config = statusConfig[status] || statusConfig.available;
-            return h(Badge, { variant: 'outline', class: config.class }, config.label);
-        },
-        enableHiding: false,
-    },
-    {
-        id: 'action',
-        header: 'Action',
-        enableHiding: false,
-        cell: ({ row }) => [
-            h(DropdownAction, { user: row.original }),
-            h(Button, {
-                variant: 'outline',
-                size: 'sm',
-                onClick: () => handleShow(row.original),
-                class: 'flex items-center gap-2 ml-2',
-            }, () => [h(Eye, { class: 'h-4 w-4 text-muted-foreground' }), 'Show']),
-        ],
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
     },
 ];
 
-// Sorting helper
-function cycleSort(column: Column<any, any>) {
+// sort helper
+function cycleSort(column) {
     const currentSort = column.getIsSorted();
     if (currentSort === false) column.toggleSorting(false);
     else if (currentSort === 'asc') column.toggleSorting(true);
     else column.clearSorting();
 }
 
-// Table state
-const sorting = ref<SortingState>([]);
-const columnFilters = ref<ColumnFiltersState>([]);
-const columnVisibility = ref<VisibilityState>({ isbn: false, pubYear: false });
-const expanded = ref({});
-const pageSizes = [5, 10, 20, 30, 40, 50];
-const pagination = ref({
-    pageIndex: 0,
-    pageSize: 10,
-});
-
-// Scroll position management
-const saveScrollPosition = () => {
-    scrollPosition.value = window.pageYOffset || document.documentElement.scrollTop;
-};
-
-const restoreScrollPosition = () => {
-    nextTick(() => {
-        window.scrollTo({ top: scrollPosition.value, behavior: 'instant' });
-    });
-};
-
-// Debounce utility
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
-    let timeout: ReturnType<typeof setTimeout>;
-    return ((...args: any[]) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(null, args), wait);
-    }) as T;
-}
-
-// API fetch function
+// fetch data
 const fetchData = async () => {
     isLoading.value = true;
     error.value = null;
-
     try {
-        const params = new URLSearchParams();
-        params.append('page', (pagination.value.pageIndex + 1).toString());
-        params.append('per_page', pagination.value.pageSize.toString());
-
-        if (sorting.value.length > 0) {
-            params.append('sort_field', sorting.value[0].id);
-            params.append('sort_direction', sorting.value[0].desc ? 'desc' : 'asc');
-        }
-
-        columnFilters.value.forEach(filter => {
-            if (Array.isArray(filter.value) && filter.value.length > 0) {
-                params.append(filter.id, filter.value.join(','));
-            } else if (filter.value !== '' && filter.value !== null && filter.value !== undefined) {
-                params.append(filter.id, filter.value.toString());
-            }
-        });
-
-        Object.entries(columnVisibility.value).forEach(([key, value]) => {
-            if (value === true) {
-                params.append(`show_${key}`, '1');
-            } else {
-                params.append(`hide_${key}`, '1');
-            }
-        });
-
-        const response = await fetch(`/api/records?${params.toString()}`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        const response = await fetch(`/api/records?page=${currentPage.value}`);
         const result: ApiResponse = await response.json();
-        data.value = result.data || [];
-        currentPage.value = result.current_page || 1;
-        perPage.value = result.per_page || 10;
-        lastPage.value = result.last_page || 1;
-        total.value = result.total || 0;
-        pagination.value.pageIndex = (result.current_page || 1) - 1;
-        pagination.value.pageSize = result.per_page || 10;
+        data.value = result.data;
+        currentPage.value = result.current_page;
+        lastPage.value = result.last_page;
+        total.value = result.total;
     } catch (err) {
-        console.error('API fetch error:', err);
-        error.value = err instanceof Error ? err.message : 'An error occurred while fetching data';
-        data.value = [];
+        error.value = 'Failed to load data.';
     } finally {
         isLoading.value = false;
     }
 };
 
-// Debounced fetch
-const debouncedFetch = debounce(fetchData, 300);
-
-// Table instance
+// table instance
 const table = useVueTable({
-    get data() {
-        return data.value;
-    },
+    get data() { return data.value; },
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    get pageCount() {
-        return lastPage.value;
-    },
+    getPaginationRowModel: getPaginationRowModel(),
     manualPagination: true,
-    manualSorting: true,
-    manualFiltering: true,
-    onPaginationChange: handlePaginationChange,
-    onSortingChange: handleSortingChange,
-    onColumnFiltersChange: handleFilterChange,
-    onColumnVisibilityChange: handleColumnVisibilityChange,
-    onExpandedChange: (updater) => {
-        expanded.value = typeof updater === 'function' ? updater(expanded.value) : updater;
-    },
-    state: {
-        get sorting() {
-            return sorting.value;
-        },
-        get columnFilters() {
-            return columnFilters.value;
-        },
-        get columnVisibility() {
-            return columnVisibility.value;
-        },
-        get expanded() {
-            return expanded.value;
-        },
-        get pagination() {
-            return pagination.value;
-        },
-    },
+    pageCount: lastPage.value,
+    state: { sorting: sorting.value },
 });
 
-// Event handlers with scroll preservation
-function handlePaginationChange(updater) {
-    saveScrollPosition();
-    pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater;
-    fetchData().then(() => {
-        restoreScrollPosition();
-    });
-}
-
-function handleSortingChange(updaterOrValue) {
-    sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue;
-    pagination.value.pageIndex = 0;
+// lifecycle
+onMounted(() => {
     fetchData();
-}
-
-function handleFilterChange(updaterOrValue) {
-    columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue;
-    pagination.value.pageIndex = 0;
-    debouncedFetch();
-}
-
-function handleColumnVisibilityChange(updaterOrValue) {
-    columnVisibility.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility.value) : updaterOrValue;
-    fetchData();
-}
-
-// Pagination navigation
-const goToFirstPage = () => {
-    if (table.getCanPreviousPage() && !isLoading.value) {
-        saveScrollPosition();
-        table.setPageIndex(0);
-        fetchData().then(() => {
-            restoreScrollPosition();
-        });
-    }
-};
-
-const goToPreviousPage = () => {
-    if (table.getCanPreviousPage() && !isLoading.value) {
-        saveScrollPosition();
-        table.previousPage();
-        fetchData().then(() => {
-            restoreScrollPosition();
-        });
-    }
-};
-
-const goToNextPage = () => {
-    if (table.getCanNextPage() && !isLoading.value) {
-        saveScrollPosition();
-        table.nextPage();
-        fetchData().then(() => {
-            restoreScrollPosition();
-        });
-    }
-};
-
-const goToLastPage = () => {
-    if (table.getCanNextPage() && !isLoading.value) {
-        saveScrollPosition();
-        table.setPageIndex(table.getPageCount() - 1);
-        fetchData().then(() => {
-            restoreScrollPosition();
-        });
-    }
-};
-
-const handlePageSizeChange = (value: string) => {
-    if (!isLoading.value) {
-        saveScrollPosition();
-        table.setPageSize(Number(value));
-        fetchData().then(() => {
-            restoreScrollPosition();
-        });
-    }
-};
-
-// Search functionality
-const filterInput = ref<string>('');
-
-const applyFilter = () => {
-    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-    if (filterInput.value.trim()) {
-        newFilters.push({ id: 'search', value: filterInput.value.trim() });
-    }
-    table.setColumnFilters(newFilters);
-};
-
-const clearFilter = () => {
-    filterInput.value = '';
-    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-    table.setColumnFilters(newFilters);
-};
-
-// Debounced search with focus preservation
-const debouncedApplyFilter = debounce(() => {
-    applyFilter();
-}, 300);
-
-watch(filterInput, (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-        const hadFocus = document.activeElement === searchInputRef.value;
-        debouncedApplyFilter();
-        if (hadFocus) {
-            nextTick(() => {
-                searchInputRef.value?.focus();
-            });
-        }
-    }
 });
 
-// Initialize from URL
-const initializeFromURL = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const page = parseInt(urlParams.get('page') || '1');
-    const perPageParam = parseInt(urlParams.get('per_page') || '10');
-    pagination.value.pageIndex = page - 1;
-    pagination.value.pageSize = perPageParam;
-
-    const sortField = urlParams.get('sort_field');
-    const sortDirection = urlParams.get('sort_direction');
-    if (sortField) {
-        sorting.value = [{ id: sortField, desc: sortDirection === 'desc' }];
-    }
-
-    const searchParam = urlParams.get('search');
-    if (searchParam) {
-        filterInput.value = searchParam;
-        columnFilters.value = [{ id: 'search', value: searchParam }];
-    }
-
-    urlParams.forEach((value, key) => {
-        if (key.startsWith('show_')) {
-            const columnKey = key.replace('show_', '');
-            columnVisibility.value[columnKey] = value === '1';
-        } else if (key.startsWith('hide_')) {
-            const columnKey = key.replace('hide_', '');
-            columnVisibility.value[columnKey] = value !== '1';
-        }
-    });
-};
-
-// Delete handling
-const showDeleteAlert = ref(false);
-const selectedBookId = ref(null);
-const handleDelete = (id) => {
-    router.delete(route('books.destroy', id), {
-        preserveState: false,
-        preserveScroll: true,
-    });
-    showDeleteAlert.value = false;
-    selectedBookId.value = null;
-};
-
-// Breadcrumbs
+// breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Records', href: '/records' },
     { title: 'Books', href: '/records/books' },
 ];
-
-// Lifecycle
-onMounted(() => {
-    initializeFromURL();
-    fetchData();
-});
-
-watch(() => window.location.search, () => {
-    initializeFromURL();
-    fetchData();
-});
 </script>
 
 <template>
     <Head title="Books" />
-
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
             <div class="w-full">
-                <!-- Error message -->
-                <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-                    <p>{{ error }}</p>
-                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2">Retry</Button>
-                </div>
-
-                <div class="flex items-center justify-between gap-2 py-4">
-                    <div class="flex gap-2">
-                        <div class="relative">
-                            <Input
-                                ref="searchInputRef"
-                                class="w-[380px] pr-8"
-                                placeholder="Search by acc no., title, authors, or isbn ..."
-                                v-model="filterInput"
-                            />
-                            <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
-                                <X class="h-4 w-4" />
-                            </Button>
-                            <div v-else class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none">
-                                <Search class="h-4 w-4 text-foreground" />
-                            </div>
+                <!-- Search -->
+                <div class="flex items-center gap-2 py-4">
+                    <div class="relative">
+                        <Input
+                            class="w-[380px] pr-8"
+                            placeholder="Search by acc no. or title..."
+                            v-model="filterInput"
+                        />
+                        <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="filterInput = ''">
+                            <X class="h-4 w-4" />
+                        </Button>
+                        <div v-else class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none">
+                            <Search class="h-4 w-4 text-foreground" />
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <Button variant="secondary" @click="() => router.get(route('books.create'))">
-                            <Plus class="h-4 w-4" /> Add New Book
-                        </Button>
-                        <DropdownMenuRoot>
-                            <DropdownMenuTrigger as-child>
-                                <Button variant="outline" class="ml-auto" :disabled="isLoading">
-                                    Columns
-                                    <ChevronDown class="ml-2 h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" class="z-50 min-w-[220px] rounded-md border border-gray-200 bg-white p-1 shadow-lg">
-                                <DropdownMenuCheckboxItem
-                                    v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
-                                    :key="column.id"
-                                    :checked="column.getIsVisible()"
-                                    @update:checked="(value) => column.toggleVisibility(!!value)"
-                                    class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
-                                >
-                                    <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                                        <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </span>
-                                    {{ column.id }}
-                                </DropdownMenuCheckboxItem>
-                            </DropdownMenuContent>
-                        </DropdownMenuRoot>
-                    </div>
                 </div>
 
+                <!-- Table -->
                 <div class="rounded-md border">
                     <Table class="w-full">
                         <TableHeader>
@@ -523,142 +140,24 @@ watch(() => window.location.search, () => {
                         </TableHeader>
                         <TableBody>
                             <template v-if="table.getRowModel().rows?.length && !isLoading">
-                                <template v-for="row in table.getRowModel().rows" :key="row.id">
-                                    <TableRow :data-state="row.getIsSelected() && 'selected'">
-                                        <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-                                            <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow v-if="row.getIsExpanded()">
-                                        <TableCell :colspan="row.getAllCells().length">
-                                            {{ JSON.stringify(row.original) }}
-                                        </TableCell>
-                                    </TableRow>
-                                </template>
+                                <TableRow v-for="row in table.getRowModel().rows" :key="row.id">
+                                    <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
+                                        <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+                                    </TableCell>
+                                </TableRow>
                             </template>
                             <TableRow v-else-if="isLoading">
                                 <TableCell :colspan="columns.length" class="h-24 text-center">
-                                    <div class="flex justify-center items-center">
-                                        <Loader2 class="h-4 w-4 animate-spin mr-2" />
-                                        Loading...
-                                    </div>
+                                    <Loader2 class="h-4 w-4 animate-spin mr-2 inline" /> Loading...
                                 </TableCell>
                             </TableRow>
                             <TableRow v-else>
-                                <TableCell :colspan="columns.length" class="h-24 text-center">
-                                    No results found.
-                                </TableCell>
+                                <TableCell :colspan="columns.length" class="h-24 text-center">No results found.</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
                 </div>
-
-                <div class="flex items-center justify-end space-x-2 py-4">
-                    <div class="flex-1 text-sm text-muted-foreground">
-                        Showing page {{ currentPage }} of {{ lastPage }} in {{ total }} {{ total === 1 || total === 0 ? 'book' : 'books' }}.
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <p class="text-sm font-medium">Rows per page</p>
-                        <Select
-                            :model-value="table.getState().pagination.pageSize.toString()"
-                            @update:model-value="handlePageSizeChange"
-                            :disabled="isLoading"
-                        >
-                            <SelectTrigger class="h-8 w-[80px]">
-                                <SelectValue :placeholder="table.getState().pagination.pageSize.toString()" />
-                            </SelectTrigger>
-                            <SelectContent side="top">
-                                <SelectItem v-for="pageSize in pageSizes" :key="pageSize" :value="pageSize.toString()">
-                                    {{ pageSize }}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div class="space-x-2">
-                        <Button
-                            variant="outline"
-                            class="hidden h-8 w-8 p-0 lg:flex"
-                            :disabled="!table.getCanPreviousPage() || isLoading"
-                            @click="goToFirstPage"
-                        >
-                            <DoubleArrowLeftIcon class="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            class="h-8 w-8 p-0"
-                            :disabled="!table.getCanPreviousPage() || isLoading"
-                            @click="goToPreviousPage"
-                        >
-                            <ChevronLeftIcon class="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            class="h-8 w-8 p-0"
-                            :disabled="!table.getCanNextPage() || isLoading"
-                            @click="goToNextPage"
-                        >
-                            <ChevronRightIcon class="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            class="hidden h-8 w-8 p-0 lg:flex"
-                            :disabled="!table.getCanNextPage() || isLoading"
-                            @click="goToLastPage"
-                        >
-                            <DoubleArrowRightIcon class="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-
-                <Dialog v-model:open="isDialogOpen">
-                    <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
-                        <DialogHeader class="p-6 pb-0">
-                            <DialogTitle>Book Details</DialogTitle>
-                            <DialogDescription>
-                                Viewing book information.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
-                            <div class="flex flex-col items-center md:items-start gap-4">
-                                <img
-                                    v-if="selectedBook?.cover_image"
-                                    :src="'/storage/cover_images/' + selectedBook.cover_image"
-                                    alt="Cover Image"
-                                    class="h-32 w-24 rounded-md object-cover border shadow-md"
-                                />
-                                <div
-                                    v-else
-                                    class="h-32 w-24 rounded-md flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
-                                >
-                                    <span class="text-sm">No Image</span>
-                                </div>
-                            </div>
-                            <div class="md:col-span-2">
-                                <div v-if="selectedBook" class="grid gap-2 text-sm">
-                                    <p><strong>Accession Number:</strong> {{ selectedBook.accession_number }}</p>
-                                    <p><strong>Title:</strong> {{ selectedBook.title }}</p>
-                                    <p><strong>ISBN:</strong> {{ selectedBook.book?.isbn || '-' }}</p>
-                                    <p><strong>Publication Year:</strong> {{ selectedBook.book?.publication_year || '-' }}</p>
-                                    <p><strong>Status:</strong> {{ selectedBook.status }}</p>
-                                    <p><strong>Authors:</strong> {{ selectedBook.book?.authors || '-' }}</p>
-                                </div>
-                                <div v-else class="text-muted-foreground">
-                                    <p>No book selected.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <DialogFooter class="p-6 pt-0">
-                            <div class="flex justify-between w-full">
-                                <Button variant="outline" @click="isDialogOpen = false">Close</Button>
-                                <Button @click="handleEdit(selectedBook.id)">Edit Book Details</Button>
-                            </div>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                <DeleteDialog v-model:open="showDeleteAlert" :userId="selectedBookId" @confirm-delete="handleDelete" />
             </div>
         </Layout>
     </AppLayout>
 </template>
-
