@@ -6,23 +6,23 @@ import { Link, usePage } from '@inertiajs/vue3';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Collections',
+        title: 'Collection',
         href: '/records/all',
     },
     {
-        title: 'Books',
+        title: 'Book',
         href: '/records/books',
     },
     {
-        title: 'Multimedia Collections',
+        title: 'Multimedia Collection',
         href: '/records/multimedia',
     },
     {
-        title: 'Magazines/Periodicals',
+        title: 'Magazine/Periodical',
         href: '/records/periodicals',
     },
     {
-        title: 'Theses/Dissertations',
+        title: 'Thesis/Dissertation',
         href: '/records/theses',
     },
 ];
