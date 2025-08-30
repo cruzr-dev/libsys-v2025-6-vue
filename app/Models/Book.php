@@ -51,4 +51,18 @@ class Book extends Model
     {
         return $this->belongsTo(Source::class);
     }
+
+    public function authors()
+    {
+        return $this->belongsToMany(Author::class, 'author_book')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    public function editors()
+    {
+        return $this->belongsToMany(Editor::class, 'book_editor')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
 }
