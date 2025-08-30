@@ -153,7 +153,7 @@ class BookImportSeeder extends Seeder
             'date_received' => $this->parseDate($row[2] ?? null),
             'title' => $this->parseString($row[5] ?? null),
             'status' => $lookupIds['default_status_name'],
-            'subject_headings' => $this->parseString($row[13] ?? null),
+            'subject' => $this->parseString($row[13] ?? null),
         ];
     }
 
