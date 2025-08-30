@@ -17,8 +17,6 @@ return new class extends Migration
             ->constrained('records')->onDelete('cascade');
 
             $table->string('volume')->nullable();
-            $table->json('authors')->nullable();
-            $table->json('editors')->nullable();
             $table->year('publication_year')->nullable();
             $table->string('publisher')->nullable();
             $table->string('publication_place')->nullable();
