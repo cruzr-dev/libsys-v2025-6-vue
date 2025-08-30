@@ -91,7 +91,7 @@ const handleEdit = (id: string | number) => {
     router.get(route('records.books.edit', id));
 };
 
-// Columns with action column added
+// Columns with authors column added
 const columns = [
     {
         accessorKey: 'accession_number',
@@ -108,6 +108,14 @@ const columns = [
                 'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
             ]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
+    },
+    {
+        accessorKey: 'authors_list',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Authors', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => h('div', { class: 'truncate max-w-xs' }, row.getValue('authors_list') || 'N/A'),
     },
     {
         id: 'action',
@@ -178,7 +186,7 @@ watch(filterInput, (newValue, oldValue) => {
     }
 });
 
-// fetch data with search support
+// fetch data with search support and sorting
 const fetchData = async () => {
     isLoading.value = true;
     error.value = null;
@@ -186,9 +194,22 @@ const fetchData = async () => {
         const searchFilter = columnFilters.value.find(f => f.id === 'search');
         const searchQuery = searchFilter ? searchFilter.value : '';
 
+        // Get current sorting state
+        const sortState = sorting.value[0];
+        let sortField = '';
+        let sortDirection = 'asc';
+
+        if (sortState) {
+            sortField = sortState.id;
+            sortDirection = sortState.desc ? 'desc' : 'asc';
+        }
+
         let url = `/api/records?page=${currentPage.value}&per_page=${pagination.value.pageSize}`;
         if (searchQuery) {
             url += `&search=${encodeURIComponent(searchQuery)}`;
+        }
+        if (sortField) {
+            url += `&sort_field=${sortField}&sort_direction=${sortDirection}`;
         }
 
         const response = await fetch(url);
@@ -206,6 +227,13 @@ const fetchData = async () => {
         isLoading.value = false;
     }
 };
+
+// Watch for sorting changes
+watch(sorting, () => {
+    currentPage.value = 1;
+    pagination.value.pageIndex = 0;
+    fetchData();
+}, { deep: true });
 
 // Pagination handlers
 function handlePaginationChange(updater) {
@@ -288,12 +316,18 @@ const table = useVueTable({
         return lastPage.value;
     },
     manualPagination: true,
+    manualSorting: true, // Enable manual sorting for server-side sorting
     onPaginationChange: handlePaginationChange,
+    onSortingChange: (updater) => {
+        sorting.value = typeof updater === 'function' ? updater(sorting.value) : updater;
+    },
     state: {
         get pagination() {
             return pagination.value;
         },
-        sorting: sorting.value,
+        get sorting() {
+            return sorting.value;
+        },
         columnFilters: columnFilters.value,
     },
 });
@@ -322,7 +356,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <Input
                             ref="searchInputRef"
                             class="w-[380px] pr-8"
-                            placeholder="Search by acc no. or title..."
+                            placeholder="Search by acc no., title, or author..."
                             v-model="filterInput"
                         />
                         <Button
@@ -432,7 +466,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </div>
                 </div>
 
-                <!-- Book Details Modal -->
+                <!-- Book Details Modal with Authors -->
                 <Dialog v-model:open="isDialogOpen">
                     <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                         <DialogHeader class="p-6 pb-0">
@@ -483,21 +517,34 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <div v-if="selectedBook" class="grid gap-2 text-sm">
                                     <p><strong>Accession No.:</strong> {{ selectedBook.accession_number }}</p>
                                     <p><strong>Title:</strong> {{ selectedBook.title }}</p>
-                                    <p><strong>Author:</strong> {{ selectedBook.author || 'N/A' }}</p>
-                                    <p><strong>ISBN:</strong> {{ selectedBook.isbn || 'N/A' }}</p>
-                                    <p><strong>Publisher:</strong> {{ selectedBook.publisher || 'N/A' }}</p>
-                                    <p><strong>Publication Year:</strong> {{ selectedBook.publication_year || 'N/A' }}</p>
-                                    <p><strong>Category:</strong> {{ selectedBook.category?.name || 'N/A' }}</p>
-                                    <p><strong>Location:</strong> {{ selectedBook.location || 'N/A' }}</p>
+
+                                    <!-- Authors Section -->
+                                    <div>
+                                        <strong>Authors:</strong>
+                                        <div v-if="selectedBook.book?.authors && selectedBook.book.authors.length > 0" class="mt-1">
+                                            <span v-for="(author, index) in selectedBook.book.authors" :key="author.id">
+                                                {{ author.name }}<span v-if="index < selectedBook.book.authors.length - 1">, </span>
+                                            </span>
+                                        </div>
+                                        <span v-else class="text-muted-foreground">No authors listed</span>
+                                    </div>
+
+                                    <p><strong>ISBN:</strong> {{ selectedBook.book?.isbn || 'N/A' }}</p>
+                                    <p><strong>Publisher:</strong> {{ selectedBook.book?.publisher || 'N/A' }}</p>
+                                    <p><strong>Publication Year:</strong> {{ selectedBook.book?.publication_year || 'N/A' }}</p>
+                                    <p><strong>Category:</strong> {{ selectedBook.book?.category?.name || 'N/A' }}</p>
+                                    <p><strong>Location:</strong> {{ selectedBook.book?.location || 'N/A' }}</p>
+                                    <p><strong>Subject:</strong> {{ selectedBook.subject || 'N/A' }}</p>
                                     <p><strong>Status:</strong>
                                         <span :class="{
                                             'text-green-600': selectedBook.status === 'available',
                                             'text-yellow-600': selectedBook.status === 'borrowed',
-                                            'text-red-600': selectedBook.status === 'lost'
+                                            'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedBook.status)
                                         }">
                                             {{ selectedBook.status || 'N/A' }}
                                         </span>
                                     </p>
+                                    <p><strong>Date Received:</strong> {{ selectedBook.date_received ? new Date(selectedBook.date_received).toLocaleDateString() : 'N/A' }}</p>
                                     <p><strong>Added:</strong> {{ selectedBook.created_at ? new Date(selectedBook.created_at).toLocaleDateString() : 'N/A' }}</p>
                                 </div>
                                 <div v-else class="text-muted-foreground">

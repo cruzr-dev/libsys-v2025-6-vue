@@ -28,14 +28,19 @@ class RecordController extends Controller
     {
         $query = Record::query()
             ->select(['id', 'accession_number', 'title']) // only fetch needed columns
-            ->whereNull('deleted_at'); // respect soft deletes
+            ->whereNull('deleted_at') // respect soft deletes
+            ->with(['book.authors']); // Eager load book and authors relationship
 
         // Handle search
         if ($request->filled('search')) {
             $searchTerm = $request->get('search');
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('accession_number', 'like', "%{$searchTerm}%")
-                    ->orWhere('title', 'like', "%{$searchTerm}%");
+                    ->orWhere('title', 'like', "%{$searchTerm}%")
+                    // Search in book authors as well
+                    ->orWhereHas('book.authors', function ($authorQuery) use ($searchTerm) {
+                        $authorQuery->where('name', 'like', "%{$searchTerm}%");
+                    });
             });
         }
 
@@ -46,6 +51,13 @@ class RecordController extends Controller
 
             if (in_array($sortField, ['accession_number', 'title'])) {
                 $query->orderBy($sortField, $sortDirection);
+            } elseif ($sortField === 'authors') {
+                // Sort by first author's name
+                $query->leftJoin('books', 'records.id', '=', 'books.record_id')
+                    ->leftJoin('book_authors', 'books.id', '=', 'book_authors.book_id')
+                    ->leftJoin('authors', 'book_authors.author_id', '=', 'authors.id')
+                    ->orderBy('authors.name', $sortDirection)
+                    ->select('records.*'); // Ensure we only select records columns
             }
         } else {
             $query->latest('created_at');
@@ -54,7 +66,19 @@ class RecordController extends Controller
         // Pagination
         $perPage = $request->get('per_page', 10);
 
-        return $query->paginate($perPage);
+        $records = $query->paginate($perPage);
+
+        // Transform the data to include author information
+        $records->getCollection()->transform(function ($record) {
+            if ($record->book && $record->book->authors) {
+                $record->authors_list = $record->book->authors->pluck('name')->join(', ');
+            } else {
+                $record->authors_list = 'N/A';
+            }
+            return $record;
+        });
+
+        return $records;
     }
 
     /**
