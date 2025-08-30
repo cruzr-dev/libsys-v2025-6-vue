@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('title');
             $table->date('date_received')->nullable();
             $table->enum('status', ['available', 'damaged', 'missing', 'borrowed', 'discarded']);
-            $table->json('subject_headings')->nullable();
+            $table->string('subject')->nullable();
 
             $table->foreignId('added_by')->nullable()
                 ->constrained('users')
