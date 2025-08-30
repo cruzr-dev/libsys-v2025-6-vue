@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\AcademicPeriod;
+use App\Models\Author;
 use App\Models\CoverType;
 use App\Models\DdcClassification;
 use App\Models\PhysicalLocation;
@@ -92,6 +93,7 @@ class BookImportSeeder extends Seeder
 
                 $recordData = $this->parseRecordData($row, $lookupIds);
                 $bookData = $this->parseBookData($row);
+                $authorData = $this->parseAuthorData($row);
                 // turn off for now
 //                $remarkData = $this->parseRemarkData($row);
 
@@ -106,7 +108,12 @@ class BookImportSeeder extends Seeder
                 }
 
                 $record = Record::create($recordData);
-                $record->book()->create($bookData);
+                $book = $record->book()->create($bookData);
+
+                // Handle authors relationship
+                if (!empty($authorData)) {
+                    $this->attachAuthorsToBook($book, $authorData);
+                }
 
                 // turn off for now
 //                foreach ($remarkData as $remark) {
@@ -168,7 +175,6 @@ class BookImportSeeder extends Seeder
         $sourceData = $this->parseSourceData($row);
         return [
             'volume' => $this->parseString($row[0] ?? null),
-            'authors' => $this->parseAuthors($row[4] ?? null),
             'edition' => $this->parseString($row[6] ?? null),
             'publication_year' => $this->parseNumeric($row[11] ?? null),
             'publisher' => $this->parseString($row[10] ?? null),
@@ -185,6 +191,55 @@ class BookImportSeeder extends Seeder
             'donated_by' => $sourceData['donated_by'],
             'table_of_contents' => $this->parseTableOfContents($row[14] ?? null),
         ];
+    }
+
+    /**
+     * Parse author data from a CSV row.
+     *
+     * @param array $row
+     * @return array
+     */
+    private function parseAuthorData(array $row): array
+    {
+        $authorNames = $this->parseAuthors($row[4] ?? null);
+
+        if (empty($authorNames)) {
+            return [];
+        }
+
+        $authors = [];
+        foreach ($authorNames as $authorName) {
+            $authors[] = [
+                'name' => $authorName,
+                'role' => 'primary author' // Default role, can be customized based on your needs
+            ];
+        }
+
+        return $authors;
+    }
+
+    /**
+     * Attach authors to a book with their roles.
+     *
+     * @param mixed $book
+     * @param array $authorData
+     */
+    private function attachAuthorsToBook($book, array $authorData): void
+    {
+        foreach ($authorData as $authorInfo) {
+            // Find or create the author
+            $author = Author::firstOrCreate(
+                ['name' => $authorInfo['name']],
+                ['name' => $authorInfo['name']]
+            );
+
+            // Attach author to book with role
+            $book->authors()->attach($author->id, [
+                'role' => $authorInfo['role'],
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
     }
 
     /**
@@ -390,7 +445,7 @@ class BookImportSeeder extends Seeder
                 return $location->id;
             }
 
-                return null;
+            return null;
         }
 
         return null;
