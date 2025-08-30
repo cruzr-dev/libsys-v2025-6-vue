@@ -29,7 +29,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 
 // API Data Interface
@@ -188,6 +187,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
     let timeout: ReturnType<typeof setTimeout>;
     return ((...args: any[]) => {
         clearTimeout(timeout);
+        // eslint-disable-next-line prefer-spread
         timeout = setTimeout(() => func.apply(null, args), wait);
     }) as T;
 }

@@ -13,8 +13,22 @@ import {
     getCoreRowModel,
     getPaginationRowModel,
     getSortedRowModel,
+    getFilteredRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
+
+// Utility function for debouncing
+function debounce(func: Function, wait: number) {
+    let timeout: ReturnType<typeof setTimeout>;
+    return function executedFunction(...args: any[]) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
 // API Response type
 interface ApiResponse {
@@ -34,7 +48,11 @@ const total = ref(0);
 const error = ref<string | null>(null);
 
 const sorting = ref([]);
+const columnFilters = ref([]);
+
+// --- Search functionality state ---
 const filterInput = ref<string>('');
+const searchInputRef = ref(null);
 
 // Columns (only accession no + title)
 const columns = [
@@ -64,12 +82,59 @@ function cycleSort(column) {
     else column.clearSorting();
 }
 
-// fetch data
+// Apply search filter
+const applyFilter = () => {
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
+    if (filterInput.value.trim()) {
+        newFilters.push({ id: 'search', value: filterInput.value.trim() });
+    }
+    columnFilters.value = newFilters;
+    // Reset to first page when searching
+    currentPage.value = 1;
+    fetchData();
+};
+
+// Clear search filter
+const clearFilter = () => {
+    filterInput.value = '';
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
+    columnFilters.value = newFilters;
+    currentPage.value = 1;
+    fetchData();
+};
+
+// Debounced search
+const debouncedApplyFilter = debounce(() => {
+    applyFilter();
+}, 300);
+
+// Watch input and trigger search
+watch(filterInput, (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+        const hadFocus = document.activeElement === searchInputRef.value;
+        debouncedApplyFilter();
+        if (hadFocus) {
+            nextTick(() => {
+                searchInputRef.value?.focus();
+            });
+        }
+    }
+});
+
+// fetch data with search support
 const fetchData = async () => {
     isLoading.value = true;
     error.value = null;
     try {
-        const response = await fetch(`/api/records?page=${currentPage.value}`);
+        const searchFilter = columnFilters.value.find(f => f.id === 'search');
+        const searchQuery = searchFilter ? searchFilter.value : '';
+
+        let url = `/api/records?page=${currentPage.value}`;
+        if (searchQuery) {
+            url += `&search=${encodeURIComponent(searchQuery)}`;
+        }
+
+        const response = await fetch(url);
         const result: ApiResponse = await response.json();
         data.value = result.data;
         currentPage.value = result.current_page;
@@ -82,6 +147,16 @@ const fetchData = async () => {
     }
 };
 
+// Initialize from URL (search param)
+const initializeFromURL = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+        filterInput.value = searchParam;
+        columnFilters.value = [{ id: 'search', value: searchParam }];
+    }
+};
+
 // table instance
 const table = useVueTable({
     get data() { return data.value; },
@@ -89,13 +164,18 @@ const table = useVueTable({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     manualPagination: true,
     pageCount: lastPage.value,
-    state: { sorting: sorting.value },
+    state: {
+        sorting: sorting.value,
+        columnFilters: columnFilters.value,
+    },
 });
 
 // lifecycle
 onMounted(() => {
+    initializeFromURL();
     fetchData();
 });
 
@@ -115,14 +195,23 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <div class="flex items-center gap-2 py-4">
                     <div class="relative">
                         <Input
+                            ref="searchInputRef"
                             class="w-[380px] pr-8"
                             placeholder="Search by acc no. or title..."
                             v-model="filterInput"
                         />
-                        <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="filterInput = ''">
+                        <Button
+                            v-if="filterInput"
+                            variant="ghost"
+                            class="absolute top-0 right-0 h-full px-2"
+                            @click="clearFilter"
+                        >
                             <X class="h-4 w-4" />
                         </Button>
-                        <div v-else class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none">
+                        <div
+                            v-else
+                            class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none"
+                        >
                             <Search class="h-4 w-4 text-foreground" />
                         </div>
                     </div>
