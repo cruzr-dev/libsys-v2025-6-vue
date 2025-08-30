@@ -91,6 +91,8 @@ const handleEdit = (id: string | number) => {
     router.get(route('records.books.edit', id));
 };
 
+console.log(data)
+
 // Columns with authors column added
 const columns = [
     {

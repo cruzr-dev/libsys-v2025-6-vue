@@ -53,8 +53,8 @@ class RecordController extends Controller
             } elseif ($sortField === 'authors') {
                 // Sort by first author's name
                 $query->leftJoin('books', 'records.id', '=', 'books.record_id')
-                    ->leftJoin('book_authors', 'books.id', '=', 'book_authors.book_id')
-                    ->leftJoin('authors', 'book_authors.author_id', '=', 'authors.id')
+                    ->leftJoin('author_book', 'books.id', '=', 'author_book.book_id')
+                    ->leftJoin('authors', 'author_book.author_id', '=', 'authors.id')
                     ->orderBy('authors.name', $sortDirection)
                     ->select('records.*'); // Ensure we only select records columns
             }
@@ -69,6 +69,7 @@ class RecordController extends Controller
 
         // Transform the data to include author information
         $records->getCollection()->transform(function ($record) {
+            return $record->book->authors->toArray();
             if ($record->book && $record->book->authors && $record->book->authors->count() > 0) {
                 $record->authors_list = $record->book->authors->pluck('name')->join(', ');
             } else {
