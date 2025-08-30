@@ -168,7 +168,7 @@ class BookImportSeeder extends Seeder
         $sourceData = $this->parseSourceData($row);
         return [
             'volume' => $this->parseString($row[0] ?? null),
-            'authors' => $this->parseString($row[4] ?? null),
+            'authors' => $this->parseAuthors($row[4] ?? null),
             'edition' => $this->parseString($row[6] ?? null),
             'publication_year' => $this->parseNumeric($row[11] ?? null),
             'publisher' => $this->parseString($row[10] ?? null),
@@ -307,6 +307,38 @@ class BookImportSeeder extends Seeder
             }
         }
         return null;
+    }
+
+    /**
+     * Parse authors field into a standardized format.
+     *
+     * @param mixed $value
+     * @return array|null
+     */
+    private function parseAuthors($value): ?array
+    {
+        if (empty($value) || !is_string($value)) {
+            return null;
+        }
+
+        // Normalize spacing
+        $processedAuthor = trim(preg_replace('/\s+/', ' ', $value));
+
+        // Check if the format is "Last, First Middle" (contains a comma)
+        if (strpos($processedAuthor, ',') !== false) {
+            // Split by comma
+            $parts = array_map('trim', explode(',', $processedAuthor, 2));
+
+            if (count($parts) === 2) {
+                $lastName = $parts[0];
+                $firstMiddle = $parts[1];
+
+                // Reorder to "First Middle Last"
+                $processedAuthor = $firstMiddle . ' ' . $lastName;
+            }
+        }
+
+        return [$processedAuthor];
     }
 
     /**
