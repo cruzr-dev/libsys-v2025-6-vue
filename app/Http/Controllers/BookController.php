@@ -43,7 +43,7 @@ class BookController extends Controller
         }
 
         // Define all possible columns that can be toggled
-        $toggleableColumns = ['isbn', 'bookEditors', 'pubYear'];
+        $toggleableColumns = ['isbn', 'pubYear'];
         $columnVisibility = [];
 
         // Check for visibility parameters in the URL
@@ -66,7 +66,6 @@ class BookController extends Controller
         } else {
             $columnVisibility = [
                 'isbn' => false,
-                'bookEditors' => false,
                 'pubYear' => true,
             ];
         }
@@ -74,7 +73,7 @@ class BookController extends Controller
         $records = Record::query()
             ->select('records.id', 'records.accession_number', 'records.title', 'records.status', 'records.created_at')
             ->with(['book' => function ($query) {
-                $query->select('id', 'record_id', 'isbn', 'authors', 'editors', 'publication_year', 'created_at');
+                $query->select('id', 'record_id', 'isbn', 'publication_year', 'created_at');
             }])
             ->join('books', 'records.id', '=', 'books.record_id')
             ->when($searchTerm, function ($query, $searchTerm) {
@@ -82,8 +81,6 @@ class BookController extends Controller
                     $q->where('records.accession_number', 'like', '%' . $searchTerm . '%')
                         ->orWhere('records.title', 'like', '%' . $searchTerm . '%')
                         ->orWhere('books.isbn', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('books.authors', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('books.editors', 'like', '%' . $searchTerm . '%')
                         ->orWhere('books.publication_year', 'like', '%' . $searchTerm . '%');
                 });
             })
@@ -93,8 +90,6 @@ class BookController extends Controller
                     'accession_number' => 'records.accession_number',
                     'title' => 'records.title',
                     'status' => 'records.status',
-                    'bookAuthors' => 'books.authors',
-                    'bookEditors' => 'books.editors',
                     'isbn' => 'books.isbn',
                     'pubYear' => 'books.publication_year',
                 ];

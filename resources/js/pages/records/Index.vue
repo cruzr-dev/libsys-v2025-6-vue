@@ -205,7 +205,7 @@ const fetchData = async () => {
             }
         });
 
-        const response = await fetch(`/api/books?${params.toString()}`, {
+        const response = await fetch(`/api/records?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -661,3 +661,4 @@ watch(() => window.location.search, () => {
         </Layout>
     </AppLayout>
 </template>
+
