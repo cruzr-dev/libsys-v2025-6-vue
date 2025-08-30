@@ -69,7 +69,6 @@ class RecordController extends Controller
 
         // Transform the data to include author information
         $records->getCollection()->transform(function ($record) {
-            return $record->book->authors->toArray();
             if ($record->book && $record->book->authors && $record->book->authors->count() > 0) {
                 $record->authors_list = $record->book->authors->pluck('name')->join(', ');
             } else {
