@@ -16,9 +16,9 @@ class DatabaseSeeder extends Seeder
     {
         // users related
         $this->call(UserTypeSeeder::class);
-//        $this->call(OfficeSeeder::class);
-//        $this->call(AcademicSeeder::class);
-//        $this->call(UserImportSeeder::class);
+        $this->call(OfficeSeeder::class);
+        $this->call(AcademicSeeder::class);
+        $this->call(UserImportSeeder::class);
 
         // records related seeders
         $this->call(DdcClassificationSeeder::class);
