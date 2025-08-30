@@ -27,7 +27,6 @@ class RecordController extends Controller
     public function fetchAll(Request $request)
     {
         $query = Record::query()
-            ->select(['id', 'accession_number', 'title']) // only fetch needed columns
             ->whereNull('deleted_at') // respect soft deletes
             ->with(['book.authors']); // Eager load book and authors relationship
 
@@ -70,10 +69,10 @@ class RecordController extends Controller
 
         // Transform the data to include author information
         $records->getCollection()->transform(function ($record) {
-            if ($record->book && $record->book->authors) {
+            if ($record->book && $record->book->authors && $record->book->authors->count() > 0) {
                 $record->authors_list = $record->book->authors->pluck('name')->join(', ');
             } else {
-                $record->authors_list = 'N/A';
+                $record->authors_list = null; // Use null instead of 'N/A' for consistency
             }
             return $record;
         });

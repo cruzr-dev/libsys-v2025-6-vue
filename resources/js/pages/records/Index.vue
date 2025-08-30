@@ -115,7 +115,10 @@ const columns = [
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
                 'Authors', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
             ]),
-        cell: ({ row }) => h('div', { class: 'truncate max-w-xs' }, row.getValue('authors_list') || 'N/A'),
+        cell: ({ row }) => {
+            const authorsList = row.getValue('authors_list');
+            return h('div', { class: 'truncate max-w-xs' }, authorsList || 'No authors');
+        },
     },
     {
         id: 'action',
