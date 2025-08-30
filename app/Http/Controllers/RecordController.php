@@ -36,27 +36,19 @@ class RecordController extends Controller
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('accession_number', 'like', "%{$searchTerm}%")
                     ->orWhere('title', 'like', "%{$searchTerm}%")
-                    // Search in book authors as well
                     ->orWhereHas('book.authors', function ($authorQuery) use ($searchTerm) {
                         $authorQuery->where('name', 'like', "%{$searchTerm}%");
                     });
             });
         }
 
-        // Handle sorting
+        // Handle sorting (only accession_number & title allowed)
         if ($request->filled('sort_field')) {
             $sortField = $request->get('sort_field');
             $sortDirection = $request->get('sort_direction', 'asc');
 
             if (in_array($sortField, ['accession_number', 'title'])) {
                 $query->orderBy($sortField, $sortDirection);
-            } elseif ($sortField === 'authors') {
-                // Sort by first author's name
-                $query->leftJoin('books', 'records.id', '=', 'books.record_id')
-                    ->leftJoin('author_book', 'books.id', '=', 'author_book.book_id')
-                    ->leftJoin('authors', 'author_book.author_id', '=', 'authors.id')
-                    ->orderBy('authors.name', $sortDirection)
-                    ->select('records.*'); // Ensure we only select records columns
             }
         } else {
             $query->latest('created_at');
@@ -72,7 +64,7 @@ class RecordController extends Controller
             if ($record->book && $record->book->authors && $record->book->authors->count() > 0) {
                 $record->authors_list = $record->book->authors->pluck('name')->join(', ');
             } else {
-                $record->authors_list = null; // Use null instead of 'N/A' for consistency
+                $record->authors_list = null;
             }
             return $record;
         });

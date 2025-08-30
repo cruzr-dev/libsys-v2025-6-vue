@@ -113,10 +113,7 @@ const columns = [
     },
     {
         accessorKey: 'authors_list',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Authors', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+        header: () => h('div', 'Authors'),
         cell: ({ row }) => {
             const authorsList = row.getValue('authors_list');
             return h('div', { class: 'truncate max-w-xs' }, authorsList || 'No authors');
