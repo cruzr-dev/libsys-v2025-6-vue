@@ -21,8 +21,6 @@ class DatabaseSeeder extends Seeder
 //        $this->call(UserImportSeeder::class);
 
         // records related seeders
-        $this->call(CoverTypeSeeder::class);
-        $this->call(SourceSeeder::class);
         $this->call(DdcClassificationSeeder::class);
         $this->call(PhysicalLocationSeeder::class);
         $this->call(BorrowingPolicySeeder::class);
@@ -30,5 +28,8 @@ class DatabaseSeeder extends Seeder
         $this->call(AcademicPeriodSeeder::class);
         $this->call(BookImportSeeder::class);
 
+        // discarded
+//        $this->call(CoverTypeSeeder::class);
+//        $this->call(SourceSeeder::class);
     }
 }
