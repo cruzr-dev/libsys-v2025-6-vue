@@ -3,12 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import { ArrowUpDown, Search, X, Loader2 } from 'lucide-vue-next';
+import { ArrowUpDown, Search, X, Loader2, Eye } from 'lucide-vue-next';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import {
     FlexRender,
@@ -52,6 +53,10 @@ const error = ref<string | null>(null);
 const sorting = ref([]);
 const columnFilters = ref([]);
 
+// --- Modal dialog state ---
+const isDialogOpen = ref(false);
+const selectedBook = ref<any | null>(null);
+
 // --- Search functionality state ---
 const filterInput = ref<string>('');
 const searchInputRef = ref(null);
@@ -76,7 +81,17 @@ const restoreScrollPosition = () => {
     });
 };
 
-// Columns (only accession no + title)
+// Modal handlers
+const handleShow = (book: any) => {
+    selectedBook.value = book;
+    isDialogOpen.value = true;
+};
+
+const handleEdit = (id: string | number) => {
+    router.get(route('records.books.edit', id));
+};
+
+// Columns with action column added
 const columns = [
     {
         accessorKey: 'accession_number',
@@ -94,6 +109,24 @@ const columns = [
             ]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
     },
+    {
+        id: 'action',
+        header: 'Action',
+        enableHiding: false,
+        cell: ({ row }) =>
+            h(Button,
+                {
+                    variant: 'outline',
+                    size: 'sm',
+                    onClick: () => handleShow(row.original),
+                    class: 'flex items-center gap-2'
+                },
+                () => [
+                    h(Eye, { class: 'h-4 w-4 text-muted-foreground' }),
+                    'Show'
+                ]
+            )
+    }
 ];
 
 // sort helper
@@ -398,6 +431,89 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </div>
                     </div>
                 </div>
+
+                <!-- Book Details Modal -->
+                <Dialog v-model:open="isDialogOpen">
+                    <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+                        <DialogHeader class="p-6 pb-0">
+                            <DialogTitle>Book Details</DialogTitle>
+                            <DialogDescription>
+                                Viewing book information.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
+                            <!-- Book Cover and Barcode -->
+                            <div class="flex flex-col items-center md:items-start gap-4">
+                                <!-- Book Cover Image -->
+                                <img
+                                    v-if="selectedBook?.cover_image"
+                                    :src="'/storage/book_covers/' + selectedBook.cover_image"
+                                    alt="Book Cover"
+                                    class="h-40 w-32 object-cover border shadow-md rounded"
+                                />
+                                <div
+                                    v-else
+                                    class="h-40 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md rounded"
+                                >
+                                    <span class="text-sm text-center">No Cover</span>
+                                </div>
+
+                                <!-- Barcode -->
+                                <div v-if="selectedBook?.barcode_path" class="flex flex-col items-center">
+                                    <img
+                                        :src="'/storage/' + selectedBook.barcode_path"
+                                        alt="Book Barcode"
+                                        class="h-16 w-auto border shadow-md"
+                                    />
+                                    <span class="text-xs text-muted-foreground mt-2">
+                                        Barcode: {{ selectedBook.accession_number }}
+                                    </span>
+                                </div>
+                                <div
+                                    v-else
+                                    class="h-16 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
+                                >
+                                    <span class="text-xs">No Barcode</span>
+                                </div>
+                            </div>
+
+                            <!-- Book Details -->
+                            <div class="md:col-span-2">
+                                <div v-if="selectedBook" class="grid gap-2 text-sm">
+                                    <p><strong>Accession No.:</strong> {{ selectedBook.accession_number }}</p>
+                                    <p><strong>Title:</strong> {{ selectedBook.title }}</p>
+                                    <p><strong>Author:</strong> {{ selectedBook.author || 'N/A' }}</p>
+                                    <p><strong>ISBN:</strong> {{ selectedBook.isbn || 'N/A' }}</p>
+                                    <p><strong>Publisher:</strong> {{ selectedBook.publisher || 'N/A' }}</p>
+                                    <p><strong>Publication Year:</strong> {{ selectedBook.publication_year || 'N/A' }}</p>
+                                    <p><strong>Category:</strong> {{ selectedBook.category?.name || 'N/A' }}</p>
+                                    <p><strong>Location:</strong> {{ selectedBook.location || 'N/A' }}</p>
+                                    <p><strong>Status:</strong>
+                                        <span :class="{
+                                            'text-green-600': selectedBook.status === 'available',
+                                            'text-yellow-600': selectedBook.status === 'borrowed',
+                                            'text-red-600': selectedBook.status === 'lost'
+                                        }">
+                                            {{ selectedBook.status || 'N/A' }}
+                                        </span>
+                                    </p>
+                                    <p><strong>Added:</strong> {{ selectedBook.created_at ? new Date(selectedBook.created_at).toLocaleDateString() : 'N/A' }}</p>
+                                </div>
+                                <div v-else class="text-muted-foreground">
+                                    <p>No book selected.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <DialogFooter class="p-6 pt-0">
+                            <div class="flex justify-between w-full">
+                                <Button variant="outline" @click="isDialogOpen = false">Close</Button>
+                                <Button @click="handleEdit(selectedBook?.id)">Edit Book Details</Button>
+                            </div>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </Layout>
     </AppLayout>
