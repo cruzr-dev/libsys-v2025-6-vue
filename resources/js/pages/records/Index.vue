@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
+import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
 import { ArrowUpDown, Search, X, Loader2 } from 'lucide-vue-next';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import {
@@ -54,6 +56,26 @@ const columnFilters = ref([]);
 const filterInput = ref<string>('');
 const searchInputRef = ref(null);
 
+// --- Pagination state ---
+const pageSizes = [5, 10, 20, 30, 40, 50];
+const pagination = ref({
+    pageIndex: 0,
+    pageSize: 10,
+});
+
+// Scroll position tracking
+let scrollPosition = 0;
+
+const saveScrollPosition = () => {
+    scrollPosition = window.scrollY;
+};
+
+const restoreScrollPosition = () => {
+    nextTick(() => {
+        window.scrollTo(0, scrollPosition);
+    });
+};
+
 // Columns (only accession no + title)
 const columns = [
     {
@@ -91,6 +113,7 @@ const applyFilter = () => {
     columnFilters.value = newFilters;
     // Reset to first page when searching
     currentPage.value = 1;
+    pagination.value.pageIndex = 0;
     fetchData();
 };
 
@@ -100,6 +123,7 @@ const clearFilter = () => {
     const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
     columnFilters.value = newFilters;
     currentPage.value = 1;
+    pagination.value.pageIndex = 0;
     fetchData();
 };
 
@@ -129,7 +153,7 @@ const fetchData = async () => {
         const searchFilter = columnFilters.value.find(f => f.id === 'search');
         const searchQuery = searchFilter ? searchFilter.value : '';
 
-        let url = `/api/records?page=${currentPage.value}`;
+        let url = `/api/records?page=${currentPage.value}&per_page=${pagination.value.pageSize}`;
         if (searchQuery) {
             url += `&search=${encodeURIComponent(searchQuery)}`;
         }
@@ -140,10 +164,72 @@ const fetchData = async () => {
         currentPage.value = result.current_page;
         lastPage.value = result.last_page;
         total.value = result.total;
+
+        // Update pagination state to match server response
+        pagination.value.pageIndex = result.current_page - 1;
     } catch (err) {
         error.value = 'Failed to load data.';
     } finally {
         isLoading.value = false;
+    }
+};
+
+// Pagination handlers
+function handlePaginationChange(updater) {
+    saveScrollPosition();
+    pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater;
+    currentPage.value = pagination.value.pageIndex + 1;
+    fetchData().then(() => restoreScrollPosition());
+}
+
+// Pagination navigation functions
+const goToFirstPage = () => {
+    if (table.getCanPreviousPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.setPageIndex(0);
+        currentPage.value = 1;
+        pagination.value.pageIndex = 0;
+        fetchData().then(() => restoreScrollPosition());
+    }
+};
+
+const goToPreviousPage = () => {
+    if (table.getCanPreviousPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.previousPage();
+        currentPage.value = pagination.value.pageIndex + 1;
+        fetchData().then(() => restoreScrollPosition());
+    }
+};
+
+const goToNextPage = () => {
+    if (table.getCanNextPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.nextPage();
+        currentPage.value = pagination.value.pageIndex + 1;
+        fetchData().then(() => restoreScrollPosition());
+    }
+};
+
+const goToLastPage = () => {
+    if (table.getCanNextPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.setPageIndex(lastPage.value - 1);
+        currentPage.value = lastPage.value;
+        pagination.value.pageIndex = lastPage.value - 1;
+        fetchData().then(() => restoreScrollPosition());
+    }
+};
+
+const handlePageSizeChange = (value: string) => {
+    if (!isLoading.value) {
+        saveScrollPosition();
+        table.setPageSize(Number(value));
+        pagination.value.pageSize = Number(value);
+        // Reset to first page when changing page size
+        currentPage.value = 1;
+        pagination.value.pageIndex = 0;
+        fetchData().then(() => restoreScrollPosition());
     }
 };
 
@@ -165,9 +251,15 @@ const table = useVueTable({
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    get pageCount() {
+        return lastPage.value;
+    },
     manualPagination: true,
-    pageCount: lastPage.value,
+    onPaginationChange: handlePaginationChange,
     state: {
+        get pagination() {
+            return pagination.value;
+        },
         sorting: sorting.value,
         columnFilters: columnFilters.value,
     },
@@ -245,6 +337,66 @@ const breadcrumbs: BreadcrumbItem[] = [
                             </TableRow>
                         </TableBody>
                     </Table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="flex items-center justify-end space-x-2 py-4">
+                    <div class="flex-1 text-sm text-muted-foreground">
+                        Showing page {{ currentPage }} of {{ lastPage }} in {{ total }} {{ total === 1 || total === 0 ? 'item' : 'items' }}.
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <p class="text-sm font-medium">Rows per page</p>
+                        <Select
+                            :model-value="pagination.pageSize.toString()"
+                            @update:model-value="handlePageSizeChange"
+                            :disabled="isLoading"
+                        >
+                            <SelectTrigger class="h-8 w-[80px]">
+                                <SelectValue :placeholder="pagination.pageSize.toString()" />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                                <SelectItem v-for="pageSize in pageSizes" :key="pageSize" :value="pageSize.toString()">
+                                    {{ pageSize }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div class="space-x-2">
+                        <div class="flex items-center space-x-2">
+                            <Button
+                                variant="outline"
+                                class="hidden h-8 w-8 p-0 lg:flex"
+                                :disabled="!table.getCanPreviousPage() || isLoading"
+                                @click="goToFirstPage"
+                            >
+                                <DoubleArrowLeftIcon class="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="h-8 w-8 p-0"
+                                :disabled="!table.getCanPreviousPage() || isLoading"
+                                @click="goToPreviousPage"
+                            >
+                                <ChevronLeftIcon class="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="h-8 w-8 p-0"
+                                :disabled="!table.getCanNextPage() || isLoading"
+                                @click="goToNextPage"
+                            >
+                                <ChevronRightIcon class="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="hidden h-8 w-8 p-0 lg:flex"
+                                :disabled="!table.getCanNextPage() || isLoading"
+                                @click="goToLastPage"
+                            >
+                                <DoubleArrowRightIcon class="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </Layout>
