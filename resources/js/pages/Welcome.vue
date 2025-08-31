@@ -61,6 +61,13 @@ const collectionsError = ref<string | null>(null);
 // Collection search state
 const selectedCollection = ref(null);
 
+// Filter state
+const filterType = ref('all'); // 'all' for Collections, 'books' for Books only
+const filterOptions = [
+    { value: 'all', label: 'Collections' },
+    { value: 'books', label: 'Books' }
+];
+
 // Pagination state for collections
 const pageSizes = [3, 6, 9, 12]; // Multiples of 3 for grid layout
 const pagination = ref({
@@ -110,6 +117,11 @@ const fetchLatestCollections = async () => {
         params.append('sort_field', 'created_at');
         params.append('sort_direction', 'desc');
 
+        // Add filter parameter
+        if (filterType.value === 'books') {
+            params.append('filter', 'books');
+        }
+
         // Make API request for collections
         const response = await fetch(`/api/welcome_records?${params.toString()}`, {
             headers: {
@@ -146,6 +158,18 @@ const fetchLatestCollections = async () => {
 
 // Debounced fetch for immediate UI feedback
 const debouncedFetch = debounce(fetchLatestCollections, 300);
+
+// Handle filter change
+const handleFilterChange = (value: string) => {
+    if (!isLoadingCollections.value) {
+        saveScrollPosition();
+        filterType.value = value;
+        pagination.value.pageIndex = 0; // Reset to first page on filter change
+        fetchLatestCollections().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
 
 // Pagination navigation functions with scroll preservation
 const goToFirstPage = () => {
@@ -210,8 +234,11 @@ const initializeFromURL = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const page = parseInt(urlParams.get('page') || '1');
     const perPageParam = parseInt(urlParams.get('per_page') || '6');
+    const filterParam = urlParams.get('filter') || 'all';
+
     pagination.value.pageIndex = page - 1;
     pagination.value.pageSize = perPageParam;
+    filterType.value = filterParam;
 };
 
 // Statistics data
@@ -362,11 +389,39 @@ watch(() => window.location.search, () => {
 
             <!-- Latest collections section -->
             <div class="w-full px-16 py-12" v-if="collections.length > 0 || isLoadingCollections">
-                <CardTitle class="pb-12 text-center text-2xl font-medium text-foreground"> Latest in Collections </CardTitle>
+                <!-- Section header with filter -->
+                <div class="flex items-center justify-between pb-12">
+                    <CardTitle class="text-2xl font-medium text-foreground">
+                        Latest in {{ filterType === 'books' ? 'Books' : 'Collections' }}
+                    </CardTitle>
+
+                    <!-- Filter dropdown -->
+                    <div class="flex items-center space-x-2">
+                        <p class="text-sm font-medium text-muted-foreground">Show:</p>
+                        <Select
+                            :model-value="filterType"
+                            @update:model-value="handleFilterChange"
+                            :disabled="isLoadingCollections"
+                        >
+                            <SelectTrigger class="h-9 w-[140px]">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem
+                                    v-for="option in filterOptions"
+                                    :key="option.value"
+                                    :value="option.value"
+                                >
+                                    {{ option.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
 
                 <!-- Loading state -->
                 <div v-if="isLoadingCollections" class="text-center py-8">
-                    <p class="text-muted-foreground">Loading latest collections...</p>
+                    <p class="text-muted-foreground">Loading latest {{ filterType === 'books' ? 'books' : 'collections' }}...</p>
                 </div>
 
                 <!-- Collections grid -->
@@ -452,9 +507,36 @@ watch(() => window.location.search, () => {
 
             <!-- Empty state for collections -->
             <div v-else-if="!isLoadingCollections && collections.length === 0" class="w-full px-16 py-12">
-                <CardTitle class="pb-12 text-center text-2xl font-medium text-foreground"> Latest in Collections </CardTitle>
+                <div class="flex items-center justify-between pb-12">
+                    <CardTitle class="text-2xl font-medium text-foreground">
+                        Latest in {{ filterType === 'books' ? 'Books' : 'Collections' }}
+                    </CardTitle>
+
+                    <!-- Filter dropdown for empty state -->
+                    <div class="flex items-center space-x-2">
+                        <p class="text-sm font-medium text-muted-foreground">Show:</p>
+                        <Select
+                            :model-value="filterType"
+                            @update:model-value="handleFilterChange"
+                            :disabled="isLoadingCollections"
+                        >
+                            <SelectTrigger class="h-9 w-[140px]">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem
+                                    v-for="option in filterOptions"
+                                    :key="option.value"
+                                    :value="option.value"
+                                >
+                                    {{ option.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
                 <div class="text-center py-8">
-                    <p class="text-muted-foreground">No collections available at the moment.</p>
+                    <p class="text-muted-foreground">No {{ filterType === 'books' ? 'books' : 'collections' }} available at the moment.</p>
                 </div>
             </div>
         </div>

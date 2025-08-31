@@ -65,6 +65,14 @@ class RecordController extends Controller
         $query = Record::query()
             ->whereNull('deleted_at');
 
+        // Handle filter parameter
+        $filter = $request->get('filter', 'all');
+        if ($filter === 'books') {
+            // Only show records that have a book relation
+            $query->whereHas('book');
+        }
+        // If filter is 'all' or any other value, show all records (no additional filtering)
+
         // Handle sorting (optional, aligning with original fetchAll)
         if ($request->filled('sort_field')) {
             $sortField = $request->get('sort_field');
