@@ -234,12 +234,12 @@ onMounted(() => {
         <!-- Main Content -->
         <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
             <div class="flex min-w-full flex-col items-center p-8">
-                <div class="relative w-full max-w-sm items-center">
+                <div class="relative w-full max-w-80 items-center">
                     <Input
                         id="search"
                         type="text"
                         placeholder="Enter card number..."
-                        class="p-6 pl-10 md:text-xl"
+                        class="p-4 pl-10 md:text-lg pr-10"
                         v-model="searchQuery"
                         @input="handleSearchInput"
                         @keydown="handleKeyDown"
@@ -249,10 +249,19 @@ onMounted(() => {
                     <span class="absolute start-0 inset-y-0 flex items-center justify-center px-2">
                         <UserRound class="size-6 text-muted-foreground" />
                     </span>
+                    <!-- Clear button -->
+                    <Button
+                        v-if="searchQuery"
+                        variant="ghost"
+                        class="absolute right-0 top-1/2 transform -translate-y-1/2 px-2"
+                        @click="searchQuery = ''; handleSearchInput()"
+                    >
+                        <X class="size-5 text-muted-foreground" />
+                    </Button>
                     <!-- Loading indicator -->
                     <div
                         v-if="isLoading"
-                        class="absolute right-3 top-1/2 transform -translate-y-1/2"
+                        class="absolute right-8 top-1/2 transform -translate-y-1/2"
                     >
                         <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
                     </div>
