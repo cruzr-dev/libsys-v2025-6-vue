@@ -83,11 +83,11 @@ watch(selectedFilter, () => {
     }
 })
 
-// Clear search
+// Clear search - only clear search query and results, preserve filter
 const clearSearch = () => {
     searchQuery.value = ''
     searchResults.value = []
-    selectedFilter.value = 'all'
+    // Remove this line to preserve the filter: selectedFilter.value = 'all'
 }
 
 // Get resource type display name
