@@ -67,9 +67,22 @@ class RecordController extends Controller
 
         // Handle filter parameter
         $filter = $request->get('filter', 'all');
-        if ($filter === 'books') {
-            // Only show records that have a book relation
-            $query->whereHas('book');
+
+        // Define valid filter types based on your relations
+        $validFilters = ['all', 'books', 'digital_resources', 'periodicals', 'theses'];
+
+        if (in_array($filter, $validFilters) && $filter !== 'all') {
+            // Map filter names to relation names
+            $relationMap = [
+                'books' => 'book',
+                'digital_resources' => 'digitalResource',
+                'periodicals' => 'periodical',
+                'theses' => 'thesis'
+            ];
+
+            if (isset($relationMap[$filter])) {
+                $query->whereHas($relationMap[$filter]);
+            }
         }
         // If filter is 'all' or any other value, show all records (no additional filtering)
 

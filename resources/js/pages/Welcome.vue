@@ -61,11 +61,14 @@ const collectionsError = ref<string | null>(null);
 // Collection search state
 const selectedCollection = ref(null);
 
-// Filter state
-const filterType = ref('all'); // 'all' for Collections, 'books' for Books only
+// Updated filter state with all resource types
+const filterType = ref('all');
 const filterOptions = [
-    { value: 'all', label: 'Collections' },
-    { value: 'books', label: 'Books' }
+    { value: 'all', label: 'All Collections' },
+    { value: 'books', label: 'Books' },
+    { value: 'digital_resources', label: 'Multimedia Collections' },
+    { value: 'periodicals', label: 'Periodicals/Magazines' },
+    { value: 'theses', label: 'Theses/Dissertations' }
 ];
 
 // Pagination state for collections
@@ -104,6 +107,12 @@ function debounce(func: Function, wait: number) {
     };
 }
 
+// Helper function to get display name for current filter
+const getFilterDisplayName = () => {
+    const option = filterOptions.find(opt => opt.value === filterType.value);
+    return option ? option.label : 'Collections';
+};
+
 // Fetch latest collections data
 const fetchLatestCollections = async () => {
     isLoadingCollections.value = true;
@@ -117,9 +126,9 @@ const fetchLatestCollections = async () => {
         params.append('sort_field', 'created_at');
         params.append('sort_direction', 'desc');
 
-        // Add filter parameter
-        if (filterType.value === 'books') {
-            params.append('filter', 'books');
+        // Add filter parameter - now supports all relation types
+        if (filterType.value !== 'all') {
+            params.append('filter', filterType.value);
         }
 
         // Make API request for collections
@@ -236,9 +245,12 @@ const initializeFromURL = () => {
     const perPageParam = parseInt(urlParams.get('per_page') || '6');
     const filterParam = urlParams.get('filter') || 'all';
 
+    // Validate filter parameter against available options
+    const validFilter = filterOptions.some(opt => opt.value === filterParam) ? filterParam : 'all';
+
     pagination.value.pageIndex = page - 1;
     pagination.value.pageSize = perPageParam;
-    filterType.value = filterParam;
+    filterType.value = validFilter;
 };
 
 // Statistics data
@@ -356,7 +368,7 @@ watch(() => window.location.search, () => {
                 <div class="relative flex h-[360px] min-w-full items-center justify-center rounded-2xl bg-[url(/storage/system_images/eagle.jpg)] bg-cover">
                     <!-- Heading + Sub-heading -->
                     <div class="absolute top-10 left-1/2 transform -translate-x-1/2 text-center text-primary-foreground dark:text-muted-foreground">
-                        <h1 class="text-3xl font-bold">USeP Tagum-Mabini Library</h1>
+                        <h1 class="text-4xl font-bold">ULRC Tagum-Mabini</h1>
                         <p class="text-lg">Your gateway to knowledge and discovery</p>
                     </div>
 
@@ -392,7 +404,7 @@ watch(() => window.location.search, () => {
                 <!-- Section header with filter -->
                 <div class="flex items-center justify-between pb-12">
                     <CardTitle class="text-2xl font-medium text-foreground">
-                        Latest in {{ filterType === 'books' ? 'Books' : 'Collections' }}
+                        Latest in {{ getFilterDisplayName() }}
                     </CardTitle>
 
                     <!-- Filter dropdown -->
@@ -403,7 +415,7 @@ watch(() => window.location.search, () => {
                             @update:model-value="handleFilterChange"
                             :disabled="isLoadingCollections"
                         >
-                            <SelectTrigger class="h-9 w-[140px]">
+                            <SelectTrigger class="h-9 w-[180px]">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -421,7 +433,7 @@ watch(() => window.location.search, () => {
 
                 <!-- Loading state -->
                 <div v-if="isLoadingCollections" class="text-center py-8">
-                    <p class="text-muted-foreground">Loading latest {{ filterType === 'books' ? 'books' : 'collections' }}...</p>
+                    <p class="text-muted-foreground">Loading latest {{ getFilterDisplayName().toLowerCase() }}...</p>
                 </div>
 
                 <!-- Collections grid -->
@@ -432,7 +444,7 @@ watch(() => window.location.search, () => {
                 </div>
 
                 <!-- Pagination Controls -->
-                <div class="flex items-center justify-end space-x-4 py-8">
+                <div class="flex items-center justify-end space-x-4 pt-8">
                     <div class="flex-1 text-sm text-muted-foreground">
                         Showing page {{ currentPage }} of {{ lastPage }} in {{ total }} {{ total === 1 || total === 0 ? 'item' : 'items' }}.
                     </div>
@@ -509,7 +521,7 @@ watch(() => window.location.search, () => {
             <div v-else-if="!isLoadingCollections && collections.length === 0" class="w-full px-16 py-12">
                 <div class="flex items-center justify-between pb-12">
                     <CardTitle class="text-2xl font-medium text-foreground">
-                        Latest in {{ filterType === 'books' ? 'Books' : 'Collections' }}
+                        Latest in {{ getFilterDisplayName() }}
                     </CardTitle>
 
                     <!-- Filter dropdown for empty state -->
@@ -520,7 +532,7 @@ watch(() => window.location.search, () => {
                             @update:model-value="handleFilterChange"
                             :disabled="isLoadingCollections"
                         >
-                            <SelectTrigger class="h-9 w-[140px]">
+                            <SelectTrigger class="h-9 w-[180px]">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -536,7 +548,7 @@ watch(() => window.location.search, () => {
                     </div>
                 </div>
                 <div class="text-center py-8">
-                    <p class="text-muted-foreground">No {{ filterType === 'books' ? 'books' : 'collections' }} available at the moment.</p>
+                    <p class="text-muted-foreground">No {{ getFilterDisplayName().toLowerCase() }} available at the moment.</p>
                 </div>
             </div>
         </div>
