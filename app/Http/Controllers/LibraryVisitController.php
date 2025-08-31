@@ -6,6 +6,7 @@ use App\Models\LibraryVisit;
 use App\Models\User;
 use App\Models\VisitPurpose;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -166,35 +167,49 @@ class LibraryVisitController extends Controller
 
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(LibraryVisit $libraryVisit)
+    public function search(Request $request): JsonResponse
     {
-        //
-    }
+        try {
+            // Validate the request
+            $request->validate([
+                'card_number' => 'required|string|min:2'
+            ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(LibraryVisit $libraryVisit)
-    {
-        //
-    }
+            $cardNumber = $request->input('card_number');
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, LibraryVisit $libraryVisit)
-    {
-        //
-    }
+            // Search for user with exact card number match
+            $user = User::where('card_number', $cardNumber)
+                ->select('id', 'first_name', 'last_name', 'email', 'card_number')
+                ->first();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(LibraryVisit $libraryVisit)
-    {
-        //
+            if ($user) {
+                return response()->json([
+                    'success' => true,
+                    'user' => $user,
+                    'message' => 'User found successfully'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'user' => null,
+                    'message' => 'No user found with the provided card number'
+                ], 404);
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'user' => null,
+                'message' => 'Invalid card number provided',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'user' => null,
+                'message' => 'An error occurred while searching for the user',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
     }
 }

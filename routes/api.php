@@ -5,6 +5,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\BorrowingTransactionController;
 use App\Http\Controllers\DigitalResourceController;
 use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\LibraryVisitController;
 use App\Http\Controllers\PeriodicalController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\StaffController;
@@ -25,6 +26,7 @@ Route::get('/sample', function () {
     ]);
 });
 
+Route::get('/logger/patron/search', [LibraryVisitController::class, 'search']);
 Route::get('/welcome/records/search', [WelcomeController::class, 'searchRecords']);
 
 Route::get('/borrowings/books/search', [BorrowingTransactionController::class, 'searchBook']);
