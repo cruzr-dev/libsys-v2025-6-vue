@@ -149,6 +149,7 @@ const performSearch = async (query: string, showLoadingState = true): Promise<vo
             foundUser.value = result.user;
             isDialogOpen.value = true;
             showSearchFeedback.value = false; // Don't show feedback when opening dialog
+            searchQuery.value = ''; // Clear the search box on successful search
         } else {
             foundUser.value = null;
             searchMessage.value = result.message;
