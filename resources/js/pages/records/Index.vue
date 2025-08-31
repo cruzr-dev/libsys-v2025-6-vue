@@ -9,10 +9,9 @@ import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import { ArrowUpDown, Search, X, Loader2, Eye, ChevronDown } from 'lucide-vue-next';
-import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
+import { ArrowUpDown, Search, X, Loader2, Eye } from 'lucide-vue-next';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
-import type { ColumnDef, VisibilityState, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
+import type { ColumnDef, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
 import {
     FlexRender,
     getCoreRowModel,
@@ -54,9 +53,6 @@ const error = ref<string | null>(null);
 
 const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
-const columnVisibility = ref<VisibilityState>({
-    editors_list: false, // Hide editors column by default
-});
 
 // Modal dialog state
 const isDialogOpen = ref(false);
@@ -107,7 +103,7 @@ function cycleSort(column: any) {
     else column.clearSorting();
 }
 
-// Columns definition with visibility support
+// Columns definition
 const columns: ColumnDef<any>[] = [
     {
         accessorKey: 'accession_number',
@@ -116,7 +112,7 @@ const columns: ColumnDef<any>[] = [
                 'Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
             ]),
         cell: ({ row }) => h('div', row.getValue('accession_number')),
-        enableHiding: false, // Always show accession number
+        enableHiding: false,
     },
     {
         accessorKey: 'title',
@@ -125,25 +121,7 @@ const columns: ColumnDef<any>[] = [
                 'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
             ]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
-        enableHiding: false, // Always show title
-    },
-    {
-        accessorKey: 'authors_list',
-        header: () => h('div', 'Authors'),
-        cell: ({ row }) => {
-            const authorsList = row.getValue('authors_list');
-            return h('div', { class: 'truncate max-w-xs' }, authorsList || 'No authors');
-        },
-        enableHiding: true,
-    },
-    {
-        accessorKey: 'editors_list',
-        header: () => h('div', 'Editors'),
-        cell: ({ row }) => {
-            const editorsList = row.getValue('editors_list');
-            return h('div', { class: 'truncate max-w-xs' }, editorsList || 'No editors');
-        },
-        enableHiding: true,
+        enableHiding: false,
     },
     {
         id: 'action',
@@ -227,15 +205,6 @@ const fetchData = async () => {
             }
         });
 
-        // Column visibility
-        Object.entries(columnVisibility.value).forEach(([key, value]) => {
-            if (value === true) {
-                params.append(`show_${key}`, '1');
-            } else {
-                params.append(`hide_${key}`, '1');
-            }
-        });
-
         // Make API request
         const response = await fetch(`/api/records?${params.toString()}`, {
             headers: {
@@ -292,11 +261,6 @@ function handleFilterChange(updaterOrValue: any) {
     columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue;
     pagination.value.pageIndex = 0;
     debouncedFetch();
-}
-
-function handleColumnVisibilityChange(updaterOrValue: any) {
-    columnVisibility.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility.value) : updaterOrValue;
-    fetchData();
 }
 
 // Pagination navigation functions with scroll preservation
@@ -373,17 +337,6 @@ const initializeFromURL = () => {
         filterInput.value = searchParam;
         columnFilters.value = [{ id: 'search', value: searchParam }];
     }
-
-    // Initialize column visibility
-    urlParams.forEach((value, key) => {
-        if (key.startsWith('show_')) {
-            const columnKey = key.replace('show_', '');
-            columnVisibility.value[columnKey] = value === '1';
-        } else if (key.startsWith('hide_')) {
-            const columnKey = key.replace('hide_', '');
-            columnVisibility.value[columnKey] = value !== '1';
-        }
-    });
 };
 
 // Table instance
@@ -403,7 +356,6 @@ const table = useVueTable({
     onPaginationChange: handlePaginationChange,
     onSortingChange: handleSortingChange,
     onColumnFiltersChange: handleFilterChange,
-    onColumnVisibilityChange: handleColumnVisibilityChange,
     state: {
         get pagination() {
             return pagination.value;
@@ -413,9 +365,6 @@ const table = useVueTable({
         },
         get columnFilters() {
             return columnFilters.value;
-        },
-        get columnVisibility() {
-            return columnVisibility.value;
         },
     },
 });
@@ -452,13 +401,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </Button>
                 </div>
 
-                <!-- Search and Controls -->
+                <!-- Search -->
                 <div class="flex items-center justify-between gap-2 py-4">
                     <div class="relative">
                         <Input
                             ref="searchInputRef"
                             class="w-[380px] pr-8"
-                            placeholder="Search by acc no., title, author, or editor..."
+                            placeholder="Search by acc no. or title..."
                             v-model="filterInput"
                         />
                         <Button
@@ -476,32 +425,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <Search class="h-4 w-4 text-foreground" />
                         </div>
                     </div>
-
-                    <!-- Column Visibility Dropdown -->
-                    <DropdownMenuRoot>
-                        <DropdownMenuTrigger as-child>
-                            <Button variant="outline" class="ml-auto" :disabled="isLoading">
-                                Columns
-                                <ChevronDown class="ml-2 h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="z-50 min-w-[220px] rounded-md border border-gray-200 bg-white p-1 shadow-lg">
-                            <DropdownMenuCheckboxItem
-                                v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
-                                :key="column.id"
-                                :checked="column.getIsVisible()"
-                                @update:checked="(value) => column.toggleVisibility(!!value)"
-                                class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
-                            >
-                                <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                                    <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span>
-                                {{ column.id.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
-                            </DropdownMenuCheckboxItem>
-                        </DropdownMenuContent>
-                    </DropdownMenuRoot>
                 </div>
 
                 <!-- Table -->
@@ -648,29 +571,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <div v-if="selectedBook" class="grid gap-2 text-sm">
                                     <p><strong>Accession No.:</strong> {{ selectedBook.accession_number }}</p>
                                     <p><strong>Title:</strong> {{ selectedBook.title }}</p>
-
-                                    <!-- Authors Section -->
-                                    <div>
-                                        <strong>Authors:</strong>
-                                        <div v-if="selectedBook.book?.authors && selectedBook.book.authors.length > 0" class="mt-1">
-                                            <span v-for="(author, index) in selectedBook.book.authors" :key="author.id">
-                                                {{ author.name }}<span v-if="index < selectedBook.book.authors.length - 1">, </span>
-                                            </span>
-                                        </div>
-                                        <span v-else class="text-muted-foreground">No authors listed</span>
-                                    </div>
-
-                                    <!-- Editors Section -->
-                                    <div>
-                                        <strong>Editors:</strong>
-                                        <div v-if="selectedBook.book?.editors && selectedBook.book.editors.length > 0" class="mt-1">
-                                            <span v-for="(editor, index) in selectedBook.book.editors" :key="editor.id">
-                                                {{ editor.name }}<span v-if="index < selectedBook.book.editors.length - 1">, </span>
-                                            </span>
-                                        </div>
-                                        <span v-else class="text-muted-foreground">No editors listed</span>
-                                    </div>
-
                                     <p><strong>ISBN:</strong> {{ selectedBook.book?.isbn || 'N/A' }}</p>
                                     <p><strong>Publisher:</strong> {{ selectedBook.book?.publisher || 'N/A' }}</p>
                                     <p><strong>Publication Year:</strong> {{ selectedBook.book?.publication_year || 'N/A' }}</p>
