@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Check, Search, X, Book } from "lucide-vue-next"
+import { Check, X, Book } from "lucide-vue-next"
 import {
     Combobox,
     ComboboxAnchor,
@@ -11,6 +11,13 @@ import {
     ComboboxItemIndicator,
     ComboboxList
 } from "@/components/ui/combobox"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { debounce } from 'lodash-es'
 
@@ -19,6 +26,16 @@ const searchQuery = ref('')
 const searchResults = ref<any[]>([])
 const isLoading = ref(false)
 const selectedRecord = ref(null)
+const selectedFilter = ref('all') // Default to "all records"
+
+// Filter options
+const filterOptions = [
+    { value: 'all', label: 'All Records' },
+    { value: 'book', label: 'Books' },
+    { value: 'digital_resource', label: 'Multimedia' },
+    { value: 'periodical', label: 'Periodicals' },
+    { value: 'thesis', label: 'Thesis' }
+]
 
 // Debounced search function
 const debouncedSearch = debounce(async (query: string) => {
@@ -31,7 +48,17 @@ const debouncedSearch = debounce(async (query: string) => {
     isLoading.value = true
 
     try {
-        const response = await fetch(`/api/welcome/records/search?q=${encodeURIComponent(query)}`, {
+        // Build query parameters
+        const params = new URLSearchParams({
+            q: query
+        })
+
+        // Add filter parameter if not "all"
+        if (selectedFilter.value !== 'all') {
+            params.append('type', selectedFilter.value)
+        }
+
+        const response = await fetch(`/api/welcome/records/search?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -58,6 +85,13 @@ watch(searchQuery, (newQuery) => {
     debouncedSearch(newQuery)
 })
 
+// Watch for filter changes and re-trigger search if there's a query
+watch(selectedFilter, () => {
+    if (searchQuery.value && searchQuery.value.length >= 2) {
+        debouncedSearch(searchQuery.value)
+    }
+})
+
 // Handle record selection
 const handleRecordSelect = (record: any) => {
     selectedRecord.value = record
@@ -68,6 +102,7 @@ const clearFilter = () => {
     searchQuery.value = ''
     searchResults.value = []
     selectedRecord.value = null
+    selectedFilter.value = 'all'
 }
 
 // Display function for selected record
@@ -90,81 +125,101 @@ const getResourceType = (record: any) => {
 
 <template>
     <div class="grid space-y-4">
-        <Combobox
-            v-model="selectedRecord"
-            by="id"
-            @update:model-value="handleRecordSelect"
-        >
-            <ComboboxAnchor class="w-full border-1 rounded-lg focus-within:ring-2 focus-within:ring-[var(--ring)]">
-                <div class="relative w-full">
-                    <ComboboxInput
-                        v-model="searchQuery"
-                        class="w-full pl-3 pr-10 py-2 dark:text-muted-foreground"
-                        :display-value="displayValue"
-                        placeholder="Search by title, or accession number..."
-                    />
-
-                    <!-- Clear button always visible -->
-                    <Button
-                        variant="ghost"
-                        class="absolute top-0 right-0 h-full px-2"
-                        @click="clearFilter"
+        <div class="flex gap-2">
+            <!-- Filter Select Box -->
+            <Select v-model="selectedFilter">
+                <SelectTrigger class="w-48">
+                    <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem
+                        v-for="option in filterOptions"
+                        :key="option.value"
+                        :value="option.value"
                     >
-                        <X class="h-4 w-4" />
-                    </Button>
+                        {{ option.label }}
+                    </SelectItem>
+                </SelectContent>
+            </Select>
 
-                    <!-- Loading spinner -->
-                    <div
-                        v-if="isLoading"
-                        class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none"
-                    >
-                        <div class="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                    </div>
-                </div>
-            </ComboboxAnchor>
+            <!-- Search Combobox -->
+            <Combobox
+                v-model="selectedRecord"
+                by="id"
+                @update:model-value="handleRecordSelect"
+                class="flex-1"
+            >
+                <ComboboxAnchor class="w-full border-1 rounded-lg focus-within:ring-2 focus-within:ring-[var(--ring)]">
+                    <div class="relative w-full">
+                        <ComboboxInput
+                            v-model="searchQuery"
+                            class="w-full pl-3 pr-10 py-2 dark:text-muted-foreground"
+                            :display-value="displayValue"
+                            placeholder="Search by title, or accession number..."
+                        />
 
-            <ComboboxList>
-                <ComboboxEmpty>
-                    <div class="flex flex-col items-center p-4 text-center">
-                        <Book class="size-8 text-muted-foreground mb-2" />
-                        <p class="text-sm text-muted-foreground">
-                            {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No records found' }}
-                        </p>
-                    </div>
-                </ComboboxEmpty>
+                        <!-- Clear button always visible -->
+                        <Button
+                            variant="ghost"
+                            class="absolute top-0 right-0 h-full px-2"
+                            @click="clearFilter"
+                        >
+                            <X class="h-4 w-4" />
+                        </Button>
 
-                <ComboboxGroup v-if="searchResults.length > 0">
-                    <ComboboxItem
-                        v-for="record in searchResults"
-                        :key="record.id"
-                        :value="record"
-                        class="flex flex-col items-start py-3"
-                    >
-                        <div class="flex w-full items-center justify-between">
-                            <div class="flex flex-col flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="font-medium truncate">
-                                        {{ record.title || 'Untitled' }}
-                                    </span>
-                                    <span class="flex-shrink-0 inline-flex items-center px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md">
-                                        {{ getResourceType(record) }}
-                                    </span>
-                                </div>
-
-                                <div class="flex flex-col text-sm text-muted-foreground space-y-0.5">
-                                    <span v-if="record.accession_number">
-                                        Accession: {{ record.accession_number }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <ComboboxItemIndicator>
-                                <Check class="ml-2 h-4 w-4 flex-shrink-0" />
-                            </ComboboxItemIndicator>
+                        <!-- Loading spinner -->
+                        <div
+                            v-if="isLoading"
+                            class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none"
+                        >
+                            <div class="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                         </div>
-                    </ComboboxItem>
-                </ComboboxGroup>
-            </ComboboxList>
-        </Combobox>
+                    </div>
+                </ComboboxAnchor>
+
+                <ComboboxList>
+                    <ComboboxEmpty>
+                        <div class="flex flex-col items-center p-4 text-center">
+                            <Book class="size-8 text-muted-foreground mb-2" />
+                            <p class="text-sm text-muted-foreground">
+                                {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No records found' }}
+                            </p>
+                        </div>
+                    </ComboboxEmpty>
+
+                    <ComboboxGroup v-if="searchResults.length > 0">
+                        <ComboboxItem
+                            v-for="record in searchResults"
+                            :key="record.id"
+                            :value="record"
+                            class="flex flex-col items-start py-3"
+                        >
+                            <div class="flex w-full items-center justify-between">
+                                <div class="flex flex-col flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-medium truncate">
+                                            {{ record.title || 'Untitled' }}
+                                        </span>
+                                        <span class="flex-shrink-0 inline-flex items-center px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md">
+                                            {{ getResourceType(record) }}
+                                        </span>
+                                    </div>
+
+                                    <div class="flex flex-col text-sm text-muted-foreground space-y-0.5">
+                                        <span v-if="record.accession_number">
+                                            Accession: {{ record.accession_number }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <ComboboxItemIndicator>
+                                    <Check class="ml-2 h-4 w-4 flex-shrink-0" />
+                                </ComboboxItemIndicator>
+                            </div>
+                        </ComboboxItem>
+                    </ComboboxGroup>
+                </ComboboxList>
+            </Combobox>
+        </div>
     </div>
 </template>

@@ -20,21 +20,43 @@ class WelcomeController extends Controller
 
     public function searchRecords(Request $request)
     {
-        // Validate the search query
+        // Validate the search query and optional type filter
         $request->validate([
-            'q' => 'required|string|min:2|max:255'
+            'q' => 'required|string|min:2|max:255',
+            'type' => 'nullable|string|in:book,digital_resource,periodical,thesis'
         ]);
 
         $searchQuery = $request->get('q');
+        $typeFilter = $request->get('type');
         $limit = $request->get('limit', 5); // Limit results to prevent overwhelming UI
 
         try {
-            $records = Record::query()
+            $query = Record::query()
                 ->whereNull('deleted_at')
                 ->where(function ($query) use ($searchQuery) {
                     $query->where('title', 'LIKE', "%{$searchQuery}%")
                         ->orWhere('accession_number', 'LIKE', "%{$searchQuery}%");
-                })
+                });
+
+            // Apply type filter if specified
+            if ($typeFilter) {
+                switch ($typeFilter) {
+                    case 'book':
+                        $query->whereHas('book');
+                        break;
+                    case 'digital_resource':
+                        $query->whereHas('digitalResource');
+                        break;
+                    case 'periodical':
+                        $query->whereHas('periodical');
+                        break;
+                    case 'thesis':
+                        $query->whereHas('thesis');
+                        break;
+                }
+            }
+
+            $records = $query
                 ->with(['book', 'digitalResource', 'periodical', 'thesis']) // Eager load relations
                 ->orderBy('title', 'asc')
                 ->limit($limit)
@@ -44,7 +66,8 @@ class WelcomeController extends Controller
                 'success' => true,
                 'records' => $records,
                 'count' => $records->count(),
-                'query' => $searchQuery
+                'query' => $searchQuery,
+                'type_filter' => $typeFilter
             ]);
 
         } catch (\Exception $e) {
