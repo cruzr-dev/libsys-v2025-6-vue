@@ -1,42 +1,41 @@
-
 <script setup lang="ts">
-import DeleteDialog from '@/components/DeleteDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
+import { ArrowUpDown, Search, X, Loader2, Eye, ChevronDown } from 'lucide-vue-next';
+import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
+import { h, ref, onMounted, watch, nextTick } from 'vue';
+import type { ColumnDef, VisibilityState, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
 import {
     FlexRender,
     getCoreRowModel,
-    getExpandedRowModel,
-    getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
+    getFilteredRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, Plus, X, Loader2, Eye, Search } from 'lucide-vue-next';
-import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
-import { h, ref, onMounted, watch, nextTick } from 'vue';
-import { route } from 'ziggy-js';
-import DropdownAction from '../records/DataTableDemoColumn.vue';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
 
-// API Data Interface
+// Utility function for debouncing
+function debounce(func: Function, wait: number) {
+    let timeout: ReturnType<typeof setTimeout>;
+    return function executedFunction(...args: any[]) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// API Response type
 interface ApiResponse {
     data: any[];
     current_page: number;
@@ -45,150 +44,181 @@ interface ApiResponse {
     total: number;
 }
 
-// Reactive data state
+// Reactive state
 const data = ref<any[]>([]);
 const isLoading = ref(false);
 const currentPage = ref(1);
-const perPage = ref(10);
 const lastPage = ref(1);
 const total = ref(0);
 const error = ref<string | null>(null);
 
-// Scroll position preservation
-const scrollPosition = ref(0);
+const sorting = ref<SortingState>([]);
+const columnFilters = ref<ColumnFiltersState>([]);
+const columnVisibility = ref<VisibilityState>({
+    editors_list: false, // Hide editors column by default
+});
 
-// Search input ref for focus preservation
-const searchInputRef = ref(null);
-
-// Show handler function
+// Modal dialog state
 const isDialogOpen = ref(false);
 const selectedBook = ref<any | null>(null);
 
-const handleShow = (book: any) => {
-    selectedBook.value = book;
-    isDialogOpen.value = true;
-};
+// Search functionality state
+const filterInput = ref<string>('');
+const searchInputRef = ref(null);
 
-const handleEdit = (id) => {
-    router.get(route('books.edit', id));
-};
-
-// Table columns definition
-const columns: ColumnDef<any>[] = [
-    {
-        accessorKey: 'accession_number',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('accession_number')),
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'title',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'max-w-sm truncate' }, row.getValue('title')),
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'isbn',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', row.original.book?.isbn || '-'),
-    },
-    {
-        accessorKey: 'pubYear',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Pub. Year', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', row.original.book?.publication_year || '-'),
-    },
-    {
-        accessorKey: 'status',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Status', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => {
-            const status = row.getValue('status');
-            const statusConfig = {
-                available: { label: 'Available', class: 'bg-chart-1/10 text-chart-1 border-chart-1/20 hover:bg-chart-1/20' },
-                damaged: { label: 'Damaged', class: 'bg-chart-2/10 text-chart-2 border-chart-2/20 hover:bg-chart-2/20' },
-                missing: { label: 'Missing', class: 'bg-chart-3/10 text-chart-3 border-chart-3/20 hover:bg-chart-3/20' },
-                borrowed: { label: 'Borrowed', class: 'bg-chart-4/10 text-chart-4 border-chart-4/20 hover:bg-chart-4/20' },
-                discarded: { label: 'Discarded', class: 'bg-chart-5/10 text-chart-5 border-chart-5/20 hover:bg-chart-5/20' },
-            };
-            const config = statusConfig[status] || statusConfig.available;
-            return h(Badge, { variant: 'outline', class: config.class }, config.label);
-        },
-        enableHiding: false,
-    },
-    {
-        id: 'action',
-        header: 'Action',
-        enableHiding: false,
-        cell: ({ row }) => [
-            h(DropdownAction, { user: row.original }),
-            h(Button, {
-                variant: 'outline',
-                size: 'sm',
-                onClick: () => handleShow(row.original),
-                class: 'flex items-center gap-2 ml-2',
-            }, () => [h(Eye, { class: 'h-4 w-4 text-muted-foreground' }), 'Show']),
-        ],
-    },
-];
-
-// Sorting helper
-function cycleSort(column: Column<any, any>) {
-    const currentSort = column.getIsSorted();
-    if (currentSort === false) column.toggleSorting(false);
-    else if (currentSort === 'asc') column.toggleSorting(true);
-    else column.clearSorting();
-}
-
-// Table state
-const sorting = ref<SortingState>([]);
-const columnFilters = ref<ColumnFiltersState>([]);
-const columnVisibility = ref<VisibilityState>({ isbn: false, pubYear: false });
-const expanded = ref({});
+// Pagination state
 const pageSizes = [5, 10, 20, 30, 40, 50];
 const pagination = ref({
     pageIndex: 0,
     pageSize: 10,
 });
 
-// Scroll position management
+// Scroll position tracking
+const scrollPosition = ref(0);
+
 const saveScrollPosition = () => {
     scrollPosition.value = window.pageYOffset || document.documentElement.scrollTop;
 };
 
 const restoreScrollPosition = () => {
     nextTick(() => {
-        window.scrollTo({ top: scrollPosition.value, behavior: 'instant' });
+        window.scrollTo({
+            top: scrollPosition.value,
+            behavior: 'instant'
+        });
     });
 };
 
-// Debounce utility
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
-    let timeout: ReturnType<typeof setTimeout>;
-    return ((...args: any[]) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(null, args), wait);
-    }) as T;
+// Modal handlers
+const handleShow = (book: any) => {
+    selectedBook.value = book;
+    isDialogOpen.value = true;
+};
+
+const handleEdit = (id: string | number) => {
+    router.get(route('records.books.edit', id));
+};
+
+// Sorting helper
+function cycleSort(column: any) {
+    const currentSort = column.getIsSorted();
+    if (currentSort === false) column.toggleSorting(false);
+    else if (currentSort === 'asc') column.toggleSorting(true);
+    else column.clearSorting();
 }
 
-// API fetch function
+// Columns definition with visibility support
+const columns: ColumnDef<any>[] = [
+    {
+        accessorKey: 'accession_number',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => h('div', row.getValue('accession_number')),
+        enableHiding: false, // Always show accession number
+    },
+    {
+        accessorKey: 'title',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
+        enableHiding: false, // Always show title
+    },
+    {
+        accessorKey: 'authors_list',
+        header: () => h('div', 'Authors'),
+        cell: ({ row }) => {
+            const authorsList = row.getValue('authors_list');
+            return h('div', { class: 'truncate max-w-xs' }, authorsList || 'No authors');
+        },
+        enableHiding: true,
+    },
+    {
+        accessorKey: 'editors_list',
+        header: () => h('div', 'Editors'),
+        cell: ({ row }) => {
+            const editorsList = row.getValue('editors_list');
+            return h('div', { class: 'truncate max-w-xs' }, editorsList || 'No editors');
+        },
+        enableHiding: true,
+    },
+    {
+        id: 'action',
+        header: 'Action',
+        enableHiding: false,
+        cell: ({ row }) =>
+            h(Button,
+                {
+                    variant: 'outline',
+                    size: 'sm',
+                    onClick: () => handleShow(row.original),
+                    class: 'flex items-center gap-2'
+                },
+                () => [
+                    h(Eye, { class: 'h-4 w-4 text-muted-foreground' }),
+                    'Show'
+                ]
+            )
+    }
+];
+
+// Apply search filter
+const applyFilter = () => {
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
+    if (filterInput.value.trim()) {
+        newFilters.push({ id: 'search', value: filterInput.value.trim() });
+    }
+    table.setColumnFilters(newFilters);
+};
+
+// Clear search filter
+const clearFilter = () => {
+    filterInput.value = '';
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
+    table.setColumnFilters(newFilters);
+};
+
+// Debounced search
+const debouncedApplyFilter = debounce(() => {
+    applyFilter();
+}, 300);
+
+// Watch input and trigger search
+watch(filterInput, (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+        const hadFocus = document.activeElement === searchInputRef.value;
+        debouncedApplyFilter();
+        if (hadFocus) {
+            nextTick(() => {
+                searchInputRef.value?.focus();
+            });
+        }
+    }
+});
+
+// Fetch data with all parameters
 const fetchData = async () => {
     isLoading.value = true;
     error.value = null;
 
     try {
+        // Build query parameters
         const params = new URLSearchParams();
+
+        // Pagination
         params.append('page', (pagination.value.pageIndex + 1).toString());
         params.append('per_page', pagination.value.pageSize.toString());
 
+        // Sorting
         if (sorting.value.length > 0) {
             params.append('sort_field', sorting.value[0].id);
             params.append('sort_direction', sorting.value[0].desc ? 'desc' : 'asc');
         }
 
+        // Filters
         columnFilters.value.forEach(filter => {
             if (Array.isArray(filter.value) && filter.value.length > 0) {
                 params.append(filter.id, filter.value.join(','));
@@ -197,6 +227,7 @@ const fetchData = async () => {
             }
         });
 
+        // Column visibility
         Object.entries(columnVisibility.value).forEach(([key, value]) => {
             if (value === true) {
                 params.append(`show_${key}`, '1');
@@ -205,12 +236,13 @@ const fetchData = async () => {
             }
         });
 
+        // Make API request
         const response = await fetch(`/api/books?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-            },
+            }
         });
 
         if (!response.ok) {
@@ -218,13 +250,17 @@ const fetchData = async () => {
         }
 
         const result: ApiResponse = await response.json();
+
+        // Update reactive data
         data.value = result.data || [];
         currentPage.value = result.current_page || 1;
-        perPage.value = result.per_page || 10;
         lastPage.value = result.last_page || 1;
         total.value = result.total || 0;
+
+        // Update pagination state to match API response
         pagination.value.pageIndex = (result.current_page || 1) - 1;
         pagination.value.pageSize = result.per_page || 10;
+
     } catch (err) {
         console.error('API fetch error:', err);
         error.value = err instanceof Error ? err.message : 'An error occurred while fetching data';
@@ -234,54 +270,11 @@ const fetchData = async () => {
     }
 };
 
-// Debounced fetch
+// Debounced fetch for immediate UI feedback
 const debouncedFetch = debounce(fetchData, 300);
 
-// Table instance
-const table = useVueTable({
-    get data() {
-        return data.value;
-    },
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    get pageCount() {
-        return lastPage.value;
-    },
-    manualPagination: true,
-    manualSorting: true,
-    manualFiltering: true,
-    onPaginationChange: handlePaginationChange,
-    onSortingChange: handleSortingChange,
-    onColumnFiltersChange: handleFilterChange,
-    onColumnVisibilityChange: handleColumnVisibilityChange,
-    onExpandedChange: (updater) => {
-        expanded.value = typeof updater === 'function' ? updater(expanded.value) : updater;
-    },
-    state: {
-        get sorting() {
-            return sorting.value;
-        },
-        get columnFilters() {
-            return columnFilters.value;
-        },
-        get columnVisibility() {
-            return columnVisibility.value;
-        },
-        get expanded() {
-            return expanded.value;
-        },
-        get pagination() {
-            return pagination.value;
-        },
-    },
-});
-
-// Event handlers with scroll preservation
-function handlePaginationChange(updater) {
+// Enhanced event handlers
+function handlePaginationChange(updater: any) {
     saveScrollPosition();
     pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater;
     fetchData().then(() => {
@@ -289,24 +282,24 @@ function handlePaginationChange(updater) {
     });
 }
 
-function handleSortingChange(updaterOrValue) {
+function handleSortingChange(updaterOrValue: any) {
     sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue;
     pagination.value.pageIndex = 0;
     fetchData();
 }
 
-function handleFilterChange(updaterOrValue) {
+function handleFilterChange(updaterOrValue: any) {
     columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue;
     pagination.value.pageIndex = 0;
     debouncedFetch();
 }
 
-function handleColumnVisibilityChange(updaterOrValue) {
+function handleColumnVisibilityChange(updaterOrValue: any) {
     columnVisibility.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility.value) : updaterOrValue;
     fetchData();
 }
 
-// Pagination navigation
+// Pagination navigation functions with scroll preservation
 const goToFirstPage = () => {
     if (table.getCanPreviousPage() && !isLoading.value) {
         saveScrollPosition();
@@ -357,60 +350,31 @@ const handlePageSizeChange = (value: string) => {
     }
 };
 
-// Search functionality
-const filterInput = ref<string>('');
-
-const applyFilter = () => {
-    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-    if (filterInput.value.trim()) {
-        newFilters.push({ id: 'search', value: filterInput.value.trim() });
-    }
-    table.setColumnFilters(newFilters);
-};
-
-const clearFilter = () => {
-    filterInput.value = '';
-    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-    table.setColumnFilters(newFilters);
-};
-
-// Debounced search with focus preservation
-const debouncedApplyFilter = debounce(() => {
-    applyFilter();
-}, 300);
-
-watch(filterInput, (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-        const hadFocus = document.activeElement === searchInputRef.value;
-        debouncedApplyFilter();
-        if (hadFocus) {
-            nextTick(() => {
-                searchInputRef.value?.focus();
-            });
-        }
-    }
-});
-
 // Initialize from URL
 const initializeFromURL = () => {
     const urlParams = new URLSearchParams(window.location.search);
+
+    // Initialize pagination
     const page = parseInt(urlParams.get('page') || '1');
     const perPageParam = parseInt(urlParams.get('per_page') || '10');
     pagination.value.pageIndex = page - 1;
     pagination.value.pageSize = perPageParam;
 
+    // Initialize sorting
     const sortField = urlParams.get('sort_field');
     const sortDirection = urlParams.get('sort_direction');
     if (sortField) {
         sorting.value = [{ id: sortField, desc: sortDirection === 'desc' }];
     }
 
+    // Initialize search filter
     const searchParam = urlParams.get('search');
     if (searchParam) {
         filterInput.value = searchParam;
         columnFilters.value = [{ id: 'search', value: searchParam }];
     }
 
+    // Initialize column visibility
     urlParams.forEach((value, key) => {
         if (key.startsWith('show_')) {
             const columnKey = key.replace('show_', '');
@@ -422,23 +386,39 @@ const initializeFromURL = () => {
     });
 };
 
-// Delete handling
-const showDeleteAlert = ref(false);
-const selectedBookId = ref(null);
-const handleDelete = (id) => {
-    router.delete(route('books.destroy', id), {
-        preserveState: false,
-        preserveScroll: true,
-    });
-    showDeleteAlert.value = false;
-    selectedBookId.value = null;
-};
-
-// Breadcrumbs
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Records', href: '/records' },
-    { title: 'Books', href: '/records/books' },
-];
+// Table instance
+const table = useVueTable({
+    get data() { return data.value; },
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    get pageCount() {
+        return lastPage.value;
+    },
+    manualPagination: true,
+    manualSorting: true,
+    manualFiltering: true,
+    onPaginationChange: handlePaginationChange,
+    onSortingChange: handleSortingChange,
+    onColumnFiltersChange: handleFilterChange,
+    onColumnVisibilityChange: handleColumnVisibilityChange,
+    state: {
+        get pagination() {
+            return pagination.value;
+        },
+        get sorting() {
+            return sorting.value;
+        },
+        get columnFilters() {
+            return columnFilters.value;
+        },
+        get columnVisibility() {
+            return columnVisibility.value;
+        },
+    },
+});
 
 // Lifecycle
 onMounted(() => {
@@ -446,72 +426,85 @@ onMounted(() => {
     fetchData();
 });
 
+// Watch for external changes
 watch(() => window.location.search, () => {
     initializeFromURL();
     fetchData();
 });
+
+// Breadcrumbs
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Records', href: '/records' },
+    { title: 'Books', href: '/records/books' },
+];
 </script>
 
 <template>
     <Head title="Books" />
-
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
             <div class="w-full">
                 <!-- Error message -->
                 <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
                     <p>{{ error }}</p>
-                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2">Retry</Button>
+                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2">
+                        Retry
+                    </Button>
                 </div>
 
+                <!-- Search and Controls -->
                 <div class="flex items-center justify-between gap-2 py-4">
-                    <div class="flex gap-2">
-                        <div class="relative">
-                            <Input
-                                ref="searchInputRef"
-                                class="w-[380px] pr-8"
-                                placeholder="Search by acc no., title, authors, or isbn ..."
-                                v-model="filterInput"
-                            />
-                            <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
-                                <X class="h-4 w-4" />
-                            </Button>
-                            <div v-else class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none">
-                                <Search class="h-4 w-4 text-foreground" />
-                            </div>
+                    <div class="relative">
+                        <Input
+                            ref="searchInputRef"
+                            class="w-[380px] pr-8"
+                            placeholder="Search by acc no., title, author, or editor..."
+                            v-model="filterInput"
+                        />
+                        <Button
+                            v-if="filterInput"
+                            variant="ghost"
+                            class="absolute top-0 right-0 h-full px-2"
+                            @click="clearFilter"
+                        >
+                            <X class="h-4 w-4" />
+                        </Button>
+                        <div
+                            v-else
+                            class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none"
+                        >
+                            <Search class="h-4 w-4 text-foreground" />
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <Button variant="secondary" @click="() => router.get(route('books.create'))">
-                            <Plus class="h-4 w-4" /> Add New Book
-                        </Button>
-                        <DropdownMenuRoot>
-                            <DropdownMenuTrigger as-child>
-                                <Button variant="outline" class="ml-auto" :disabled="isLoading">
-                                    Columns
-                                    <ChevronDown class="ml-2 h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" class="z-50 min-w-[220px] rounded-md border border-gray-200 bg-white p-1 shadow-lg">
-                                <DropdownMenuCheckboxItem
-                                    v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
-                                    :key="column.id"
-                                    :checked="column.getIsVisible()"
-                                    @update:checked="(value) => column.toggleVisibility(!!value)"
-                                    class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
-                                >
-                                    <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                                        <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </span>
-                                    {{ column.id }}
-                                </DropdownMenuCheckboxItem>
-                            </DropdownMenuContent>
-                        </DropdownMenuRoot>
-                    </div>
+
+                    <!-- Column Visibility Dropdown -->
+                    <DropdownMenuRoot>
+                        <DropdownMenuTrigger as-child>
+                            <Button variant="outline" class="ml-auto" :disabled="isLoading">
+                                Columns
+                                <ChevronDown class="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" class="z-50 min-w-[220px] rounded-md border border-gray-200 bg-white p-1 shadow-lg">
+                            <DropdownMenuCheckboxItem
+                                v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
+                                :key="column.id"
+                                :checked="column.getIsVisible()"
+                                @update:checked="(value) => column.toggleVisibility(!!value)"
+                                class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
+                            >
+                                <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                                    <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </span>
+                                {{ column.id.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                            </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                    </DropdownMenuRoot>
                 </div>
 
+                <!-- Table -->
                 <div class="rounded-md border">
                     <Table class="w-full">
                         <TableHeader>
@@ -523,18 +516,11 @@ watch(() => window.location.search, () => {
                         </TableHeader>
                         <TableBody>
                             <template v-if="table.getRowModel().rows?.length && !isLoading">
-                                <template v-for="row in table.getRowModel().rows" :key="row.id">
-                                    <TableRow :data-state="row.getIsSelected() && 'selected'">
-                                        <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-                                            <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow v-if="row.getIsExpanded()">
-                                        <TableCell :colspan="row.getAllCells().length">
-                                            {{ JSON.stringify(row.original) }}
-                                        </TableCell>
-                                    </TableRow>
-                                </template>
+                                <TableRow v-for="row in table.getRowModel().rows" :key="row.id">
+                                    <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
+                                        <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+                                    </TableCell>
+                                </TableRow>
                             </template>
                             <TableRow v-else-if="isLoading">
                                 <TableCell :colspan="columns.length" class="h-24 text-center">
@@ -545,27 +531,26 @@ watch(() => window.location.search, () => {
                                 </TableCell>
                             </TableRow>
                             <TableRow v-else>
-                                <TableCell :colspan="columns.length" class="h-24 text-center">
-                                    No results found.
-                                </TableCell>
+                                <TableCell :colspan="columns.length" class="h-24 text-center">No results found.</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
                 </div>
 
+                <!-- Pagination Controls -->
                 <div class="flex items-center justify-end space-x-2 py-4">
                     <div class="flex-1 text-sm text-muted-foreground">
-                        Showing page {{ currentPage }} of {{ lastPage }} in {{ total }} {{ total === 1 || total === 0 ? 'book' : 'books' }}.
+                        Showing page {{ currentPage }} of {{ lastPage }} in {{ total }} {{ total === 1 || total === 0 ? 'item' : 'items' }}.
                     </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
                         <Select
-                            :model-value="table.getState().pagination.pageSize.toString()"
+                            :model-value="pagination.pageSize.toString()"
                             @update:model-value="handlePageSizeChange"
                             :disabled="isLoading"
                         >
                             <SelectTrigger class="h-8 w-[80px]">
-                                <SelectValue :placeholder="table.getState().pagination.pageSize.toString()" />
+                                <SelectValue :placeholder="pagination.pageSize.toString()" />
                             </SelectTrigger>
                             <SelectContent side="top">
                                 <SelectItem v-for="pageSize in pageSizes" :key="pageSize" :value="pageSize.toString()">
@@ -575,41 +560,44 @@ watch(() => window.location.search, () => {
                         </Select>
                     </div>
                     <div class="space-x-2">
-                        <Button
-                            variant="outline"
-                            class="hidden h-8 w-8 p-0 lg:flex"
-                            :disabled="!table.getCanPreviousPage() || isLoading"
-                            @click="goToFirstPage"
-                        >
-                            <DoubleArrowLeftIcon class="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            class="h-8 w-8 p-0"
-                            :disabled="!table.getCanPreviousPage() || isLoading"
-                            @click="goToPreviousPage"
-                        >
-                            <ChevronLeftIcon class="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            class="h-8 w-8 p-0"
-                            :disabled="!table.getCanNextPage() || isLoading"
-                            @click="goToNextPage"
-                        >
-                            <ChevronRightIcon class="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            class="hidden h-8 w-8 p-0 lg:flex"
-                            :disabled="!table.getCanNextPage() || isLoading"
-                            @click="goToLastPage"
-                        >
-                            <DoubleArrowRightIcon class="h-4 w-4" />
-                        </Button>
+                        <div class="flex items-center space-x-2">
+                            <Button
+                                variant="outline"
+                                class="hidden h-8 w-8 p-0 lg:flex"
+                                :disabled="!table.getCanPreviousPage() || isLoading"
+                                @click="goToFirstPage"
+                            >
+                                <DoubleArrowLeftIcon class="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="h-8 w-8 p-0"
+                                :disabled="!table.getCanPreviousPage() || isLoading"
+                                @click="goToPreviousPage"
+                            >
+                                <ChevronLeftIcon class="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="h-8 w-8 p-0"
+                                :disabled="!table.getCanNextPage() || isLoading"
+                                @click="goToNextPage"
+                            >
+                                <ChevronRightIcon class="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="hidden h-8 w-8 p-0 lg:flex"
+                                :disabled="!table.getCanNextPage() || isLoading"
+                                @click="goToLastPage"
+                            >
+                                <DoubleArrowRightIcon class="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Book Details Modal -->
                 <Dialog v-model:open="isDialogOpen">
                     <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                         <DialogHeader class="p-6 pb-0">
@@ -618,45 +606,103 @@ watch(() => window.location.search, () => {
                                 Viewing book information.
                             </DialogDescription>
                         </DialogHeader>
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
+                            <!-- Book Cover and Barcode -->
                             <div class="flex flex-col items-center md:items-start gap-4">
+                                <!-- Book Cover Image -->
                                 <img
                                     v-if="selectedBook?.cover_image"
-                                    :src="'/storage/cover_images/' + selectedBook.cover_image"
-                                    alt="Cover Image"
-                                    class="h-32 w-24 rounded-md object-cover border shadow-md"
+                                    :src="'/storage/book_covers/' + selectedBook.cover_image"
+                                    alt="Book Cover"
+                                    class="h-40 w-32 object-cover border shadow-md rounded"
                                 />
                                 <div
                                     v-else
-                                    class="h-32 w-24 rounded-md flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
+                                    class="h-40 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md rounded"
                                 >
-                                    <span class="text-sm">No Image</span>
+                                    <span class="text-sm text-center">No Cover</span>
+                                </div>
+
+                                <!-- Barcode -->
+                                <div v-if="selectedBook?.barcode_path" class="flex flex-col items-center">
+                                    <img
+                                        :src="'/storage/' + selectedBook.barcode_path"
+                                        alt="Book Barcode"
+                                        class="h-16 w-auto border shadow-md"
+                                    />
+                                    <span class="text-xs text-muted-foreground mt-2">
+                                        Barcode: {{ selectedBook.accession_number }}
+                                    </span>
+                                </div>
+                                <div
+                                    v-else
+                                    class="h-16 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
+                                >
+                                    <span class="text-xs">No Barcode</span>
                                 </div>
                             </div>
+
+                            <!-- Book Details -->
                             <div class="md:col-span-2">
                                 <div v-if="selectedBook" class="grid gap-2 text-sm">
-                                    <p><strong>Accession Number:</strong> {{ selectedBook.accession_number }}</p>
+                                    <p><strong>Accession No.:</strong> {{ selectedBook.accession_number }}</p>
                                     <p><strong>Title:</strong> {{ selectedBook.title }}</p>
-                                    <p><strong>ISBN:</strong> {{ selectedBook.book?.isbn || '-' }}</p>
-                                    <p><strong>Publication Year:</strong> {{ selectedBook.book?.publication_year || '-' }}</p>
-                                    <p><strong>Status:</strong> {{ selectedBook.status }}</p>
-                                    <p><strong>Authors:</strong> {{ selectedBook.book?.authors || '-' }}</p>
+
+                                    <!-- Authors Section -->
+                                    <div>
+                                        <strong>Authors:</strong>
+                                        <div v-if="selectedBook.book?.authors && selectedBook.book.authors.length > 0" class="mt-1">
+                                            <span v-for="(author, index) in selectedBook.book.authors" :key="author.id">
+                                                {{ author.name }}<span v-if="index < selectedBook.book.authors.length - 1">, </span>
+                                            </span>
+                                        </div>
+                                        <span v-else class="text-muted-foreground">No authors listed</span>
+                                    </div>
+
+                                    <!-- Editors Section -->
+                                    <div>
+                                        <strong>Editors:</strong>
+                                        <div v-if="selectedBook.book?.editors && selectedBook.book.editors.length > 0" class="mt-1">
+                                            <span v-for="(editor, index) in selectedBook.book.editors" :key="editor.id">
+                                                {{ editor.name }}<span v-if="index < selectedBook.book.editors.length - 1">, </span>
+                                            </span>
+                                        </div>
+                                        <span v-else class="text-muted-foreground">No editors listed</span>
+                                    </div>
+
+                                    <p><strong>ISBN:</strong> {{ selectedBook.book?.isbn || 'N/A' }}</p>
+                                    <p><strong>Publisher:</strong> {{ selectedBook.book?.publisher || 'N/A' }}</p>
+                                    <p><strong>Publication Year:</strong> {{ selectedBook.book?.publication_year || 'N/A' }}</p>
+                                    <p><strong>Category:</strong> {{ selectedBook.book?.category?.name || 'N/A' }}</p>
+                                    <p><strong>Location:</strong> {{ selectedBook.book?.location || 'N/A' }}</p>
+                                    <p><strong>Subject:</strong> {{ selectedBook.subject || 'N/A' }}</p>
+                                    <p><strong>Status:</strong>
+                                        <span :class="{
+                                            'text-green-600': selectedBook.status === 'available',
+                                            'text-yellow-600': selectedBook.status === 'borrowed',
+                                            'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedBook.status)
+                                        }">
+                                            {{ selectedBook.status || 'N/A' }}
+                                        </span>
+                                    </p>
+                                    <p><strong>Date Received:</strong> {{ selectedBook.date_received ? new Date(selectedBook.date_received).toLocaleDateString() : 'N/A' }}</p>
+                                    <p><strong>Added:</strong> {{ selectedBook.created_at ? new Date(selectedBook.created_at).toLocaleDateString() : 'N/A' }}</p>
                                 </div>
                                 <div v-else class="text-muted-foreground">
                                     <p>No book selected.</p>
                                 </div>
                             </div>
                         </div>
+
                         <DialogFooter class="p-6 pt-0">
                             <div class="flex justify-between w-full">
                                 <Button variant="outline" @click="isDialogOpen = false">Close</Button>
-                                <Button @click="handleEdit(selectedBook.id)">Edit Book Details</Button>
+                                <Button @click="handleEdit(selectedBook?.id)">Edit Book Details</Button>
                             </div>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-
-                <DeleteDialog v-model:open="showDeleteAlert" :userId="selectedBookId" @confirm-delete="handleDelete" />
             </div>
         </Layout>
     </AppLayout>

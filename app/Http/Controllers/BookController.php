@@ -28,92 +28,88 @@ class BookController extends Controller
      */
     public function index(Request $request): \Inertia\Response
     {
-        $perPage = $request->input('per_page', 10);
-        $sortField = $request->input('sort_field', null);
-        $sortDirection = $request->input('sort_direction', 'asc');
-        $filters = [];
+        return Inertia::render('books/Index');
+    }
 
-        // Capture search parameters
-        $searchTerm = $request->input('search');
-        if (!empty($searchTerm)) {
-            $filters[] = [
-                'id' => 'search',
-                'value' => $searchTerm
-            ];
+    public function fetchAll(Request $request)
+    {
+        $query = Record::query()
+            ->whereNull('deleted_at') // respect soft deletes
+            ->with(['book.authors', 'book.editors']); // Eager load book, authors, and editors relationships
+
+        // Handle search
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('accession_number', 'like', "%{$searchTerm}%")
+                    ->orWhere('title', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('book.authors', function ($authorQuery) use ($searchTerm) {
+                        $authorQuery->where('name', 'like', "%{$searchTerm}%");
+                    })
+                    ->orWhereHas('book.editors', function ($editorQuery) use ($searchTerm) {
+                        $editorQuery->where('name', 'like', "%{$searchTerm}%");
+                    });
+            });
         }
 
-        // Define all possible columns that can be toggled
-        $toggleableColumns = ['isbn', 'pubYear'];
-        $columnVisibility = [];
+        // Handle sorting (only accession_number & title allowed)
+        if ($request->filled('sort_field')) {
+            $sortField = $request->get('sort_field');
+            $sortDirection = $request->get('sort_direction', 'asc');
 
-        // Check for visibility parameters in the URL
-        $hasVisibilityParams = collect($request->query())
-            ->keys()
-            ->contains(function ($key) {
-                return str_starts_with($key, 'hide_') || str_starts_with($key, 'show_');
-            });
-
-        if ($hasVisibilityParams) {
-            foreach ($toggleableColumns as $columnName) {
-                if ($request->has("show_$columnName") && $request->input("show_$columnName") === '1') {
-                    $columnVisibility[$columnName] = true;
-                } elseif ($request->has("hide_$columnName") && $request->input("hide_$columnName") === '1') {
-                    $columnVisibility[$columnName] = false;
-                } else {
-                    $columnVisibility[$columnName] = in_array($columnName, ['accession_number', 'isbn']) ? true : false;
-                }
+            if (in_array($sortField, ['accession_number', 'title'])) {
+                $query->orderBy($sortField, $sortDirection);
             }
         } else {
-            $columnVisibility = [
-                'isbn' => false,
-                'pubYear' => true,
-            ];
+            $query->latest('created_at');
         }
 
-        $records = Record::query()
-            ->select('records.id', 'records.accession_number', 'records.title', 'records.status', 'records.created_at')
-            ->with(['book' => function ($query) {
-                $query->select('id', 'record_id', 'isbn', 'publication_year', 'created_at');
-            }])
-            ->join('books', 'records.id', '=', 'books.record_id')
-            ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where(function ($q) use ($searchTerm) {
-                    $q->where('records.accession_number', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('records.title', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('books.isbn', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('books.publication_year', 'like', '%' . $searchTerm . '%');
-                });
-            })
-            ->when($sortField, function ($query, $sortField) use ($sortDirection) {
-                // Map frontend column keys to actual database columns
-                $sortMappings = [
-                    'accession_number' => 'records.accession_number',
-                    'title' => 'records.title',
-                    'status' => 'records.status',
-                    'isbn' => 'books.isbn',
-                    'pubYear' => 'books.publication_year',
-                ];
+        // Handle column visibility (optional - for server-side optimization)
+        $showAuthors = !$request->has('hide_authors_list') || $request->get('show_authors_list') === '1';
+        $showEditors = !$request->has('hide_editors_list') || $request->get('show_editors_list') === '1';
 
-                $actualSortField = $sortMappings[$sortField] ?? $sortField;
+        // Conditionally load relationships based on visibility
+        if (!$showAuthors && !$showEditors) {
+            // Don't load any author/editor relationships if both are hidden
+            $query->with(['book']);
+        } elseif (!$showAuthors) {
+            // Only load editors if authors are hidden
+            $query->with(['book.editors']);
+        } elseif (!$showEditors) {
+            // Only load authors if editors are hidden
+            $query->with(['book.authors']);
+        }
+        // If both are visible (default), the original with() at the top handles it
 
-                // Handle potential null values in book columns by using COALESCE or ISNULL
-                if (str_starts_with($actualSortField, 'books.')) {
-                    // For MySQL use COALESCE, for PostgreSQL use COALESCE, for SQLite use COALESCE
-                    $query->orderByRaw("COALESCE($actualSortField, '') $sortDirection");
+        // Pagination
+        $perPage = $request->get('per_page', 10);
+
+        $records = $query->paginate($perPage);
+
+        // Transform the data to include author and editor information
+        $records->getCollection()->transform(function ($record) use ($showAuthors, $showEditors) {
+            // Transform authors only if visible
+            if ($showAuthors) {
+                if ($record->book && $record->book->authors && $record->book->authors->count() > 0) {
+                    $record->authors_list = $record->book->authors->pluck('name')->join(', ');
                 } else {
-                    $query->orderBy($actualSortField, $sortDirection);
+                    $record->authors_list = null;
                 }
-            })
-            ->latest()
-            ->paginate(perPage: $perPage);
+            }
 
-        return Inertia::render('books/Index', [
-            'data' => $records,
-            'filter' => $filters,
-            'currentSortField' => $sortField,
-            'currentSortDirection' => $sortDirection,
-            'columnVisibility' => $columnVisibility,
-        ]);
+            // Transform editors only if visible
+            if ($showEditors) {
+                if ($record->book && $record->book->editors && $record->book->editors->count() > 0) {
+                    $record->editors_list = $record->book->editors->pluck('name')->join(', ');
+                } else {
+                    $record->editors_list = null;
+                }
+            }
+
+            return $record;
+        });
+
+        return $records;
     }
 
     public function create(): \Inertia\Response
