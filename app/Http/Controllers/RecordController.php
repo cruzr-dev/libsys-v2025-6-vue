@@ -62,29 +62,8 @@ class RecordController extends Controller
         $query = Record::query()
             ->whereNull('deleted_at');
 
-        // Handle search
-        if ($request->filled('search')) {
-            $searchTerm = $request->get('search');
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('accession_number', 'like', "%{$searchTerm}%")
-                    ->orWhere('title', 'like', "%{$searchTerm}%");
-            });
-        }
-
-        // Handle sorting (only accession_number & title allowed)
-        if ($request->filled('sort_field')) {
-            $sortField = $request->get('sort_field');
-            $sortDirection = $request->get('sort_direction', 'asc');
-
-            if (in_array($sortField, ['accession_number', 'title'])) {
-                $query->orderBy($sortField, $sortDirection);
-            }
-        } else {
-            $query->latest('created_at');
-        }
-
-        // Pagination
-        $perPage = $request->get('per_page', 10);
+        // Pagination only
+        $perPage = $request->get('per_page', 9);
         $records = $query->paginate($perPage);
 
         return $records;
