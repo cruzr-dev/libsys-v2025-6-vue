@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
         $this->call(BookImportSeeder::class);
         $this->call(DigitalResourceSeeder::class);
         $this->call(PeriodicalSeeder::class);
+        $this->call(ThesisSeeder::class);
 
         // discarded
 //        $this->call(CoverTypeSeeder::class);
