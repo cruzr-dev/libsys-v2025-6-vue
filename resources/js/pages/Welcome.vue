@@ -8,7 +8,7 @@ import WelcomeRecordDialog from '@/components/WelcomeRecordDialog.vue';
 import WelcomeSearch from '@/components/WelcomeSearch.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import WelcomeFooter from '@/components/WelcomeFooter.vue';
 import CollectionSearchComboBox from '@/components/CollectionSearchComboBox.vue';
 
@@ -28,6 +28,20 @@ interface Config {
     login_enabled?: boolean | null;
 }
 
+interface CollectionRecord {
+    id: number;
+    [key: string]: any;
+}
+
+// API Response type for collections
+interface ApiResponse {
+    data: CollectionRecord[];
+    current_page: number;
+    per_page: number;
+    last_page: number;
+    total: number;
+}
+
 declare module '@inertiajs/core' {
     interface PageProps {
         flash: Flash;
@@ -35,13 +49,78 @@ declare module '@inertiajs/core' {
     }
 }
 
-// Component props
-defineProps<{
-    records: object;
-    search_result: object;
-    search_term: string;
-    search_button: boolean;
-}>();
+// Reactive state for collections data
+const collections = ref<CollectionRecord[]>([]);
+const isLoadingCollections = ref(false);
+const currentPage = ref(1);
+const lastPage = ref(1);
+const total = ref(0);
+const collectionsError = ref<string | null>(null);
+
+// Collection search state
+const selectedCollection = ref(null);
+
+// Pagination state for collections
+const pagination = ref({
+    pageIndex: 0,
+    pageSize: 6, // Show 6 latest collections
+});
+
+// Fetch latest collections data
+const fetchLatestCollections = async () => {
+    isLoadingCollections.value = true;
+    collectionsError.value = null;
+
+    try {
+        // Build query parameters for latest collections
+        const params = new URLSearchParams();
+
+        // Pagination - get first page with limited results for latest items
+        params.append('page', '1');
+        params.append('per_page', pagination.value.pageSize.toString());
+
+        // Sort by latest (assuming created_at or id for newest first)
+        params.append('sort_field', 'created_at');
+        params.append('sort_direction', 'desc');
+
+        // Make API request for collections
+        const response = await fetch(`/api/welcome_records?${params.toString()}`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result: ApiResponse = await response.json();
+
+        // Update reactive data
+        collections.value = result.data || [];
+        currentPage.value = result.current_page || 1;
+        lastPage.value = result.last_page || 1;
+        total.value = result.total || 0;
+
+        // Update pagination state to match API response
+        pagination.value.pageIndex = (result.current_page || 1) - 1;
+
+    } catch (err) {
+        console.error('Collections API fetch error:', err);
+        collectionsError.value = err instanceof Error ? err.message : 'An error occurred while fetching collections';
+        collections.value = [];
+    } finally {
+        isLoadingCollections.value = false;
+    }
+};
+
+// Handle collection selection
+const handleCollectionSelected = (collection: any) => {
+    selectedCollection.value = collection;
+    // Handle navigation or other logic here
+};
 
 // Statistics data
 const stats = [
@@ -78,6 +157,14 @@ onMounted(() => {
             showAlert.value = false;
         }, 5000);
     }
+
+    // Fetch latest collections on component mount
+    fetchLatestCollections();
+});
+
+// Watch for URL changes and refetch data if needed
+watch(() => window.location.search, () => {
+    fetchLatestCollections();
 });
 </script>
 
@@ -96,6 +183,16 @@ onMounted(() => {
             </button>
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{{ page.props.flash.error }}</AlertDescription>
+        </Alert>
+
+        <!-- Collections API Error alert -->
+        <Alert v-if="collectionsError && showAlert" class="absolute top-20 right-5 w-fit pr-8 z-50" variant="destructive">
+            <AlertCircle class="h-4 w-4" />
+            <button @click="collectionsError = null" class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-red-100">
+                <X class="h-4 w-4" />
+            </button>
+            <AlertTitle>Collections Error</AlertTitle>
+            <AlertDescription>{{ collectionsError }}</AlertDescription>
         </Alert>
 
         <!-- Header section -->
@@ -172,12 +269,27 @@ onMounted(() => {
             </div>
 
             <!-- Latest collections section -->
-            <div class="w-full px-16 py-12" v-if="Object.keys(records?.data).length">
+            <div class="w-full px-16 py-12" v-if="collections.length > 0">
                 <CardTitle class="pb-12 text-center text-2xl font-medium text-foreground"> Latest in Collections </CardTitle>
-                <div class="grid grid-cols-3 gap-4">
-                    <div v-for="record in records?.data" :key="record.id">
+
+                <!-- Loading state -->
+                <div v-if="isLoadingCollections" class="text-center py-8">
+                    <p class="text-muted-foreground">Loading latest collections...</p>
+                </div>
+
+                <!-- Collections grid -->
+                <div v-else class="grid grid-cols-3 gap-4">
+                    <div v-for="record in collections" :key="record.id">
                         <WelcomeRecordDialog :record="record" />
                     </div>
+                </div>
+            </div>
+
+            <!-- Empty state for collections -->
+            <div v-else-if="!isLoadingCollections && collections.length === 0" class="w-full px-16 py-12">
+                <CardTitle class="pb-12 text-center text-2xl font-medium text-foreground"> Latest in Collections </CardTitle>
+                <div class="text-center py-8">
+                    <p class="text-muted-foreground">No collections available at the moment.</p>
                 </div>
             </div>
         </div>

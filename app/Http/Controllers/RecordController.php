@@ -57,51 +57,36 @@ class RecordController extends Controller
         return $records;
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function fetchAllWelcome(Request $request)
     {
-        //
-    }
+        $query = Record::query()
+            ->whereNull('deleted_at');
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        // Handle search
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('accession_number', 'like', "%{$searchTerm}%")
+                    ->orWhere('title', 'like', "%{$searchTerm}%");
+            });
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Record $record)
-    {
-        //
-    }
+        // Handle sorting (only accession_number & title allowed)
+        if ($request->filled('sort_field')) {
+            $sortField = $request->get('sort_field');
+            $sortDirection = $request->get('sort_direction', 'asc');
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Record $record)
-    {
-        //
-    }
+            if (in_array($sortField, ['accession_number', 'title'])) {
+                $query->orderBy($sortField, $sortDirection);
+            }
+        } else {
+            $query->latest('created_at');
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Record $record)
-    {
-        //
-    }
+        // Pagination
+        $perPage = $request->get('per_page', 10);
+        $records = $query->paginate($perPage);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Record $record)
-    {
-        //
+        return $records;
     }
 }
