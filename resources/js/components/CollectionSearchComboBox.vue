@@ -170,7 +170,7 @@ const getResourceType = (record: any) => {
                             :key="record.id"
                             class="flex flex-col items-start py-3 px-3 hover:bg-accent rounded-sm cursor-pointer"
                         >
-                            <div class="flex w植物-full items-center justify-between">
+                            <div class="flex w-full items-center justify-between">
                                 <WelcomeSearchDialog :record="record"/>
                             </div>
                         </div>
