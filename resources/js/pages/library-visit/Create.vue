@@ -250,7 +250,7 @@ onMounted(() => {
 <template>
     <Head title="Patron Logger" />
 
-    <div class="flex min-h-screen bg-green-100 flex-col items-center text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a]">
+    <div class="flex min-h-screen flex-col items-center text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a]">
         <!-- Hidden redirect link -->
         <Link :href="route('home')" class="fixed top-0 left-0 bg-red-500 opacity-0">
             hi
@@ -277,7 +277,7 @@ onMounted(() => {
         </Alert>
 
         <!-- Main Content -->
-        <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0 bg-red-100">
+        <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
             <div class="flex min-w-full flex-col items-center p-8">
                 <div class="relative w-full max-w-80 items-center">
                     <Input
