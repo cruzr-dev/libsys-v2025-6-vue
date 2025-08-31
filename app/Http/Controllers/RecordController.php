@@ -59,14 +59,34 @@ class RecordController extends Controller
 
     public function fetchAllWelcome(Request $request)
     {
-        $perPage = $request->get('per_page', 6);
+        // Validate per_page to ensure it's within acceptable bounds
+        $perPage = in_array($request->get('per_page', 6), [3, 6, 9, 12]) ? $request->get('per_page') : 6;
 
-        $records = Record::query()
-            ->whereNull('deleted_at')
-            ->latest()             // orders by `created_at DESC`
-            ->paginate($perPage);
+        $query = Record::query()
+            ->whereNull('deleted_at');
 
-        return $records;
+        // Handle sorting (optional, aligning with original fetchAll)
+        if ($request->filled('sort_field')) {
+            $sortField = $request->get('sort_field');
+            $sortDirection = $request->get('sort_direction', 'asc');
+
+            if (in_array($sortField, ['created_at', 'accession_number', 'title'])) {
+                $query->orderBy($sortField, $sortDirection);
+            }
+        } else {
+            $query->latest('created_at'); // Default sort by created_at DESC
+        }
+
+        // Paginate results
+        $records = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $records->items(),
+            'current_page' => $records->currentPage(),
+            'per_page' => $records->perPage(),
+            'last_page' => $records->lastPage(),
+            'total' => $records->total(),
+        ]);
     }
 
 }

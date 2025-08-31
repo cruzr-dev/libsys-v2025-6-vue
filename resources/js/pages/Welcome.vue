@@ -4,11 +4,12 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import WelcomeRecordDialog from '@/components/WelcomeRecordDialog.vue';
-import WelcomeSearch from '@/components/WelcomeSearch.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
 import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, nextTick } from 'vue';
 import WelcomeFooter from '@/components/WelcomeFooter.vue';
 import CollectionSearchComboBox from '@/components/CollectionSearchComboBox.vue';
 
@@ -61,10 +62,40 @@ const collectionsError = ref<string | null>(null);
 const selectedCollection = ref(null);
 
 // Pagination state for collections
+const pageSizes = [3, 6, 9, 12]; // Multiples of 3 for grid layout
 const pagination = ref({
     pageIndex: 0,
-    pageSize: 6, // Show 6 latest collections
+    pageSize: 6, // Default to 6 items per page
 });
+
+// Scroll position tracking
+const scrollPosition = ref(0);
+
+const saveScrollPosition = () => {
+    scrollPosition.value = window.pageYOffset || document.documentElement.scrollTop;
+};
+
+const restoreScrollPosition = () => {
+    nextTick(() => {
+        window.scrollTo({
+            top: scrollPosition.value,
+            behavior: 'instant'
+        });
+    });
+};
+
+// Utility function for debouncing
+function debounce(func: Function, wait: number) {
+    let timeout: ReturnType<typeof setTimeout>;
+    return function executedFunction(...args: any[]) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
 // Fetch latest collections data
 const fetchLatestCollections = async () => {
@@ -72,14 +103,10 @@ const fetchLatestCollections = async () => {
     collectionsError.value = null;
 
     try {
-        // Build query parameters for latest collections
+        // Build query parameters for collections
         const params = new URLSearchParams();
-
-        // Pagination - get first page with limited results for latest items
-        params.append('page', '1');
+        params.append('page', (pagination.value.pageIndex + 1).toString());
         params.append('per_page', pagination.value.pageSize.toString());
-
-        // Sort by latest (assuming created_at or id for newest first)
         params.append('sort_field', 'created_at');
         params.append('sort_direction', 'desc');
 
@@ -106,6 +133,7 @@ const fetchLatestCollections = async () => {
 
         // Update pagination state to match API response
         pagination.value.pageIndex = (result.current_page || 1) - 1;
+        pagination.value.pageSize = result.per_page || 6;
 
     } catch (err) {
         console.error('Collections API fetch error:', err);
@@ -116,10 +144,74 @@ const fetchLatestCollections = async () => {
     }
 };
 
+// Debounced fetch for immediate UI feedback
+const debouncedFetch = debounce(fetchLatestCollections, 300);
+
+// Pagination navigation functions with scroll preservation
+const goToFirstPage = () => {
+    if (pagination.value.pageIndex > 0 && !isLoadingCollections.value) {
+        saveScrollPosition();
+        pagination.value.pageIndex = 0;
+        fetchLatestCollections().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const goToPreviousPage = () => {
+    if (pagination.value.pageIndex > 0 && !isLoadingCollections.value) {
+        saveScrollPosition();
+        pagination.value.pageIndex -= 1;
+        fetchLatestCollections().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const goToNextPage = () => {
+    if (pagination.value.pageIndex < lastPage.value - 1 && !isLoadingCollections.value) {
+        saveScrollPosition();
+        pagination.value.pageIndex += 1;
+        fetchLatestCollections().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const goToLastPage = () => {
+    if (pagination.value.pageIndex < lastPage.value - 1 && !isLoadingCollections.value) {
+        saveScrollPosition();
+        pagination.value.pageIndex = lastPage.value - 1;
+        fetchLatestCollections().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const handlePageSizeChange = (value: string) => {
+    if (!isLoadingCollections.value) {
+        saveScrollPosition();
+        pagination.value.pageSize = Number(value);
+        pagination.value.pageIndex = 0; // Reset to first page on page size change
+        fetchLatestCollections().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
 // Handle collection selection
 const handleCollectionSelected = (collection: any) => {
     selectedCollection.value = collection;
     // Handle navigation or other logic here
+};
+
+// Initialize from URL
+const initializeFromURL = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = parseInt(urlParams.get('page') || '1');
+    const perPageParam = parseInt(urlParams.get('per_page') || '6');
+    pagination.value.pageIndex = page - 1;
+    pagination.value.pageSize = perPageParam;
 };
 
 // Statistics data
@@ -150,20 +242,20 @@ const stats = [
     },
 ];
 
-// Alert timeout logic
+// Lifecycle
 onMounted(() => {
     if (page.props.flash.error) {
         setTimeout(() => {
             showAlert.value = false;
         }, 5000);
     }
-
-    // Fetch latest collections on component mount
+    initializeFromURL();
     fetchLatestCollections();
 });
 
-// Watch for URL changes and refetch data if needed
+// Watch for URL changes and refetch data
 watch(() => window.location.search, () => {
+    initializeFromURL();
     fetchLatestCollections();
 });
 </script>
@@ -236,7 +328,7 @@ watch(() => window.location.search, () => {
             <div class="px-4">
                 <div class="relative flex h-[360px] min-w-full items-center justify-center rounded-2xl bg-[url(/storage/system_images/eagle.jpg)] bg-cover">
                     <!-- Heading + Sub-heading -->
-                    <div class="absolute top-10 left-1/2 transform -translate-x-1/2 text-center text-primary-foreground  dark:text-muted-foreground">
+                    <div class="absolute top-10 left-1/2 transform -translate-x-1/2 text-center text-primary-foreground dark:text-muted-foreground">
                         <h1 class="text-3xl font-bold">USeP Tagum-Mabini Library</h1>
                         <p class="text-lg">Your gateway to knowledge and discovery</p>
                     </div>
@@ -269,7 +361,7 @@ watch(() => window.location.search, () => {
             </div>
 
             <!-- Latest collections section -->
-            <div class="w-full px-16 py-12" v-if="collections.length > 0">
+            <div class="w-full px-16 py-12" v-if="collections.length > 0 || isLoadingCollections">
                 <CardTitle class="pb-12 text-center text-2xl font-medium text-foreground"> Latest in Collections </CardTitle>
 
                 <!-- Loading state -->
@@ -283,6 +375,79 @@ watch(() => window.location.search, () => {
                         <WelcomeRecordDialog :record="record" />
                     </div>
                 </div>
+
+                <!-- Pagination Controls -->
+                <div class="flex items-center justify-end space-x-4 py-8">
+                    <div class="flex-1 text-sm text-muted-foreground">
+                        Showing page {{ currentPage }} of {{ lastPage }} in {{ total }} {{ total === 1 || total === 0 ? 'item' : 'items' }}.
+                    </div>
+
+                    <!-- Combine select + buttons in one flex group -->
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-2">
+                            <p class="text-sm font-medium">Items per page</p>
+                            <Select
+                                :model-value="pagination.pageSize.toString()"
+                                @update:model-value="handlePageSizeChange"
+                                :disabled="isLoadingCollections"
+                            >
+                                <SelectTrigger class="h-8 w-[80px]">
+                                    <SelectValue :placeholder="pagination.pageSize.toString()" />
+                                </SelectTrigger>
+                                <SelectContent side="top">
+                                    <SelectItem
+                                        v-for="pageSize in pageSizes"
+                                        :key="pageSize"
+                                        :value="pageSize.toString()"
+                                    >
+                                        {{ pageSize }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <!-- Pagination buttons -->
+                        <div class="flex items-center space-x-2">
+                            <Button
+                                variant="outline"
+                                class="hidden h-8 w-8 p-0 lg:flex"
+                                :disabled="pagination.pageIndex === 0 || isLoadingCollections"
+                                @click="goToFirstPage"
+                                aria-label="Go to first page"
+                            >
+                                <DoubleArrowLeftIcon class="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="h-8 w-8 p-0"
+                                :disabled="pagination.pageIndex === 0 || isLoadingCollections"
+                                @click="goToPreviousPage"
+                                aria-label="Go to previous page"
+                            >
+                                <ChevronLeftIcon class="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="h-8 w-8 p-0"
+                                :disabled="pagination.pageIndex >= lastPage - 1 || isLoadingCollections"
+                                @click="goToNextPage"
+                                aria-label="Go to next page"
+                            >
+                                <ChevronRightIcon class="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="hidden h-8 w-8 p-0 lg:flex"
+                                :disabled="pagination.pageIndex >= lastPage - 1 || isLoadingCollections"
+                                @click="goToLastPage"
+                                aria-label="Go to last page"
+                            >
+                                <DoubleArrowRightIcon class="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Empty state for collections -->

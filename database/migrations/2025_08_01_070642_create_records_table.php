@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('records', function (Blueprint $table) {
             $table->id(); // Primary key, auto-generated
 
-            $table->string('accession_number')->unique()->nullable();
+            $table->unsignedInteger('accession_number')->unique()->nullable();
             $table->string('title');
             $table->date('date_received')->nullable();
             $table->enum('status', ['available', 'damaged', 'missing', 'borrowed', 'discarded']);
