@@ -64,7 +64,15 @@ class UserController extends Controller
         if ($request->has('sort_field')) {
             $sortField = $request->get('sort_field');
             $sortDirection = $request->get('sort_direction', 'asc');
-            $query->orderBy($sortField, $sortDirection);
+
+            // Handle user_type sorting with join
+            if ($sortField === 'user_type') {
+                $query->join('user_types', 'users.user_type_id', '=', 'user_types.id')
+                    ->orderBy('user_types.name', $sortDirection)
+                    ->select('users.*'); // Make sure to only select users columns
+            } else {
+                $query->orderBy($sortField, $sortDirection);
+            }
         } else {
             $query->latest();
         }

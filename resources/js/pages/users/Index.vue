@@ -127,6 +127,16 @@ const columns: ColumnDef<any>[] = [
         enableHiding: false,
     },
     {
+        accessorKey: 'user_type',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['User Type', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+        cell: ({ row }) => {
+            const userType = row.getValue('user_type');
+            return h('div', { class: 'capitalize' }, userType?.name || 'N/A');
+        },
+        enableHiding: true,
+    },
+    {
         id: 'action',
         header: 'Action',
         enableHiding: false,
