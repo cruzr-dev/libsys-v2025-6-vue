@@ -2,15 +2,6 @@
 import { ref, watch } from 'vue'
 import { X, Book } from "lucide-vue-next"
 import {
-    Combobox,
-    ComboboxAnchor,
-    ComboboxEmpty,
-    ComboboxGroup,
-    ComboboxInput,
-    ComboboxItem,
-    ComboboxList
-} from "@/components/ui/combobox"
-import {
     Select,
     SelectContent,
     SelectItem,
@@ -18,6 +9,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { debounce } from 'lodash-es'
 import WelcomeSearchDialog from '@/components/WelcomeSearchDialog.vue';
 
@@ -127,63 +119,63 @@ const getResourceType = (record: any) => {
                 </SelectContent>
             </Select>
 
-            <!-- Search Combobox -->
-            <Combobox
-                v-model="searchQuery"
-                class="flex-1"
-            >
-                <ComboboxAnchor class="w-full border-1 rounded-lg focus-within:ring-2 focus-within:ring-[var(--ring)]">
-                    <div class="relative w-full">
-                        <ComboboxInput
-                            v-model="searchQuery"
-                            class="w-full pl-2 pr-10 py-2 dark:text-muted-foreground"
-                            placeholder="Search by title, or accession number..."
-                        />
+            <!-- Search Input with Results -->
+            <div class="relative flex-1">
+                <div class="relative">
+                    <Input
+                        v-model="searchQuery"
+                        class="pr-10"
+                        placeholder="Search by title, or accession number..."
+                    />
 
-                        <!-- Clear button -->
-                        <Button
-                            v-if="searchQuery"
-                            variant="ghost"
-                            class="absolute top-0 right-0 h-full px-2"
-                            @click="clearSearch"
-                        >
-                            <X class="h-4 w-4" />
-                        </Button>
+                    <!-- Clear button -->
+                    <Button
+                        v-if="searchQuery"
+                        variant="ghost"
+                        class="absolute top-0 right-0 h-full px-2"
+                        @click="clearSearch"
+                    >
+                        <X class="h-4 w-4" />
+                    </Button>
 
-                        <!-- Loading spinner -->
-                        <div
-                            v-if="isLoading"
-                            class="absolute top-0 right-8 h-full px-2 flex items-center justify-center pointer-events-none"
-                        >
-                            <div class="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                        </div>
+                    <!-- Loading spinner -->
+                    <div
+                        v-if="isLoading"
+                        class="absolute top-0 right-8 h-full px-2 flex items-center justify-center pointer-events-none"
+                    >
+                        <div class="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                     </div>
-                </ComboboxAnchor>
+                </div>
 
-                <ComboboxList>
-                    <ComboboxEmpty>
-                        <div class="flex flex-col items-center p-4 text-center">
-                            <Book class="size-8 text-muted-foreground mb-2" />
-                            <p class="text-sm text-muted-foreground">
-                                {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No records found' }}
-                            </p>
-                        </div>
-                    </ComboboxEmpty>
+                <!-- Search Results Dropdown -->
+                <div
+                    class="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-lg max-h-96 overflow-y-auto"
+                >
+                    <!-- Empty state -->
+                    <div
+                        v-if="!searchResults.length && !isLoading"
+                        class="flex flex-col items-center p-4 text-center"
+                    >
+                        <Book class="size-8 text-muted-foreground mb-2" />
+                        <p class="text-sm text-muted-foreground">
+                            {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No records found' }}
+                        </p>
+                    </div>
 
-                    <ComboboxGroup v-if="searchResults.length > 0">
-                        <ComboboxItem
+                    <!-- Search Results -->
+                    <div v-if="searchResults.length > 0" class="p-1">
+                        <div
                             v-for="record in searchResults"
                             :key="record.id"
-                            :value="record.title"
-                            class="flex flex-col items-start py-3"
+                            class="flex flex-col items-start py-3 px-3 hover:bg-accent rounded-sm cursor-pointer"
                         >
                             <div class="flex w-full items-center justify-between">
                                 <WelcomeSearchDialog :record="record"/>
                             </div>
-                        </ComboboxItem>
-                    </ComboboxGroup>
-                </ComboboxList>
-            </Combobox>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
