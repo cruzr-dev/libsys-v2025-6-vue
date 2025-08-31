@@ -28,7 +28,7 @@ class RecordController extends Controller
     {
         $query = Record::query()
             ->whereNull('deleted_at') // respect soft deletes
-            ->with(['book.authors']); // Eager load book and authors relationship
+            ->with(['book.authors', 'book.editors']); // Eager load book, authors, and editors relationships
 
         // Handle search
         if ($request->filled('search')) {
@@ -38,6 +38,9 @@ class RecordController extends Controller
                     ->orWhere('title', 'like', "%{$searchTerm}%")
                     ->orWhereHas('book.authors', function ($authorQuery) use ($searchTerm) {
                         $authorQuery->where('name', 'like', "%{$searchTerm}%");
+                    })
+                    ->orWhereHas('book.editors', function ($editorQuery) use ($searchTerm) {
+                        $editorQuery->where('name', 'like', "%{$searchTerm}%");
                     });
             });
         }
@@ -59,13 +62,22 @@ class RecordController extends Controller
 
         $records = $query->paginate($perPage);
 
-        // Transform the data to include author information
+        // Transform the data to include author and editor information
         $records->getCollection()->transform(function ($record) {
+            // Transform authors
             if ($record->book && $record->book->authors && $record->book->authors->count() > 0) {
                 $record->authors_list = $record->book->authors->pluck('name')->join(', ');
             } else {
                 $record->authors_list = null;
             }
+
+            // Transform editors
+            if ($record->book && $record->book->editors && $record->book->editors->count() > 0) {
+                $record->editors_list = $record->book->editors->pluck('name')->join(', ');
+            } else {
+                $record->editors_list = null;
+            }
+
             return $record;
         });
 

@@ -93,7 +93,7 @@ const handleEdit = (id: string | number) => {
 
 console.log(data)
 
-// Columns with authors column added
+// Columns with authors and editors columns
 const columns = [
     {
         accessorKey: 'accession_number',
@@ -117,6 +117,15 @@ const columns = [
         cell: ({ row }) => {
             const authorsList = row.getValue('authors_list');
             return h('div', { class: 'truncate max-w-xs' }, authorsList || 'No authors');
+        },
+    },
+    // New Editors column
+    {
+        accessorKey: 'editors_list',
+        header: () => h('div', 'Editors'),
+        cell: ({ row }) => {
+            const editorsList = row.getValue('editors_list');
+            return h('div', { class: 'truncate max-w-xs' }, editorsList || 'No editors');
         },
     },
     {
@@ -358,7 +367,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <Input
                             ref="searchInputRef"
                             class="w-[380px] pr-8"
-                            placeholder="Search by acc no., title, or author..."
+                            placeholder="Search by acc no., title, author, or editor..."
                             v-model="filterInput"
                         />
                         <Button
@@ -468,7 +477,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </div>
                 </div>
 
-                <!-- Book Details Modal with Authors -->
+                <!-- Book Details Modal with Authors and Editors -->
                 <Dialog v-model:open="isDialogOpen">
                     <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                         <DialogHeader class="p-6 pb-0">
@@ -529,6 +538,17 @@ const breadcrumbs: BreadcrumbItem[] = [
                                             </span>
                                         </div>
                                         <span v-else class="text-muted-foreground">No authors listed</span>
+                                    </div>
+
+                                    <!-- Editors Section -->
+                                    <div>
+                                        <strong>Editors:</strong>
+                                        <div v-if="selectedBook.book?.editors && selectedBook.book.editors.length > 0" class="mt-1">
+                                            <span v-for="(editor, index) in selectedBook.book.editors" :key="editor.id">
+                                                {{ editor.name }}<span v-if="index < selectedBook.book.editors.length - 1">, </span>
+                                            </span>
+                                        </div>
+                                        <span v-else class="text-muted-foreground">No editors listed</span>
                                     </div>
 
                                     <p><strong>ISBN:</strong> {{ selectedBook.book?.isbn || 'N/A' }}</p>
