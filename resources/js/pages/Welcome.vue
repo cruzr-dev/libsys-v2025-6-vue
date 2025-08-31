@@ -364,7 +364,7 @@ watch(() => window.location.search, () => {
                     </div>
 
                     <!-- Search Box -->
-                    <div class="w-full max-w-md p-1 rounded-xl bg-background">
+                    <div class="w-full max-w-xl p-1 rounded-xl bg-background">
                         <CollectionSearchComboBox
                             class="w-full rounded-lg"
                         />

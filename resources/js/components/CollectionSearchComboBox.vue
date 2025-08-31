@@ -30,11 +30,11 @@ const selectedFilter = ref('all') // Default to "all records"
 
 // Filter options
 const filterOptions = [
-    { value: 'all', label: 'All Records' },
+    { value: 'all', label: 'Collections' },
     { value: 'book', label: 'Books' },
-    { value: 'digital_resource', label: 'Multimedia' },
-    { value: 'periodical', label: 'Periodicals' },
-    { value: 'thesis', label: 'Thesis' }
+    { value: 'digital_resource', label: 'Multimedia Collection' },
+    { value: 'periodical', label: 'Periodicals/Magazines' },
+    { value: 'thesis', label: 'Thesis/Dissertations' }
 ]
 
 // Debounced search function
