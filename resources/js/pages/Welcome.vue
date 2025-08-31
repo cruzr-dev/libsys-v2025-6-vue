@@ -4,7 +4,7 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import WelcomeBookDialog from '@/components/WelcomeBookDialog.vue';
+import WelcomeRecordDialog from '@/components/WelcomeRecordDialog.vue';
 import WelcomeSearch from '@/components/WelcomeSearch.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
@@ -176,7 +176,7 @@ onMounted(() => {
                 <CardTitle class="pb-12 text-center text-2xl font-medium text-foreground"> Latest in Collections </CardTitle>
                 <div class="grid grid-cols-3 gap-4">
                     <div v-for="record in records?.data" :key="record.id">
-                        <WelcomeBookDialog :record="record" />
+                        <WelcomeRecordDialog :record="record" />
                     </div>
                 </div>
             </div>
