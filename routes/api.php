@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\BorrowingTransactionController;
+use App\Http\Controllers\DigitalResourceController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\StaffController;
@@ -33,3 +34,4 @@ Route::get('/admins/', [AdminController::class, 'fetchAll']);
 
 Route::get('/records/', [RecordController::class, 'fetchAll']);
 Route::get('/books/', [BookController::class, 'fetchAll']);
+Route::get('/multimedia/', [DigitalResourceController::class, 'fetchAll']);
