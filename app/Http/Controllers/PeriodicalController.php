@@ -12,42 +12,45 @@ class PeriodicalController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): \Inertia\Response
+    public function index(): \Inertia\Response
     {
-        $perPage = $request->input('per_page', 10);
-        $sortField = $request->input('sort_field', null);
-        $sortDirection = $request->input('sort_direction', 'asc');
-        $filters = [];
+        return Inertia::render('periodicals/Index', [
+        ]);
+    }
 
-        // Capture search parameters
-        $searchTerm = $request->input('search');
-        if (!empty($searchTerm)) {
-            $filters[] = [
-                'id' => 'search',
-                'value' => $searchTerm
-            ];
+    public function fetchAll(Request $request)
+    {
+        $query = Record::query()
+            ->whereNull('deleted_at')
+            ->whereHas('periodical') // Only include records with a digitalResource
+            ->with('periodical');
+
+        // Handle search
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('accession_number', 'like', "%{$searchTerm}%")
+                    ->orWhere('title', 'like', "%{$searchTerm}%");
+            });
         }
 
-        $records = Record::query()
-            ->with('periodical')
-            ->whereHas('periodical')
-            ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where(function ($q) use ($searchTerm) {
-                    $q->where('accession_number', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('title', 'like', '%' . $searchTerm . '%');
-                });
-            })
-            ->when($sortField, function ($query, $sortField) use ($sortDirection) {
-                $query->orderBy($sortField, $sortDirection);
-            })
-            ->paginate(perPage: $perPage);
+        // Handle sorting (only accession_number & title allowed)
+        if ($request->filled('sort_field')) {
+            $sortField = $request->get('sort_field');
+            $sortDirection = $request->get('sort_direction', 'asc');
 
-        return Inertia::render('periodicals/Index', [
-            'data' => $records,
-            'filter' => $filters,
-            'currentSortField' => $sortField,
-            'currentSortDirection' => $sortDirection,
-        ]);
+            if (in_array($sortField, ['accession_number', 'title'])) {
+                $query->orderBy($sortField, $sortDirection);
+            }
+        } else {
+            $query->latest('created_at');
+        }
+
+        // Pagination
+        $perPage = $request->get('per_page', 10);
+        $records = $query->paginate($perPage);
+
+        return $records;
     }
 
     /**
