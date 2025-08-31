@@ -9,6 +9,7 @@ use App\Http\Controllers\PeriodicalController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\ThesisController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,3 +38,4 @@ Route::get('/records/', [RecordController::class, 'fetchAll']);
 Route::get('/books/', [BookController::class, 'fetchAll']);
 Route::get('/multimedia/', [DigitalResourceController::class, 'fetchAll']);
 Route::get('/periodicals/', [PeriodicalController::class, 'fetchAll']);
+Route::get('/theses/', [ThesisController::class, 'fetchAll']);

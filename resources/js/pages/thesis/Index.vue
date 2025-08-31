@@ -1,364 +1,433 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3'
-import { route } from 'ziggy-js'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import AppLayout from '@/layouts/AppLayout.vue';
+import Layout from '@/layouts/records/Layout.vue';
+import type { BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/vue3';
+import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
+import { ArrowUpDown, Search, X, Loader2, Eye } from 'lucide-vue-next';
+import { h, ref, onMounted, watch, nextTick } from 'vue';
+import type { ColumnDef, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
 import {
     FlexRender,
     getCoreRowModel,
-    getExpandedRowModel,
-    getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
-    useVueTable, VisibilityState
+    getFilteredRowModel,
+    useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, X } from 'lucide-vue-next'
 
-import { h, ref } from 'vue'
-import DropdownAction from '../users/DataTableDemoColumn.vue'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import {
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
-import { valueUpdater } from '@/lib/utils'
-import { ChevronRightIcon, ChevronLeftIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from "@radix-icons/vue";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-import { Plus } from 'lucide-vue-next'
-
-interface Props {
-    data?: {
-        data: any[]
-        current_page?: number
-        per_page?: number
-        last_page?: number
-    }
-    filter?: any[]
-    currentSortField?: string
-    currentSortDirection?: string
+// Utility function for debouncing
+function debounce(func: Function, wait: number) {
+    let timeout: ReturnType<typeof setTimeout>;
+    return function executedFunction(...args: any[]) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
-const props = withDefaults(defineProps<Props>(), {
-    data: () => ({ data: [], current_page: 1, per_page: 10, last_page: 1 }),
-    filter: () => [],
-    currentSortField: undefined,
-    currentSortDirection: 'asc'
-})
+// API Response type
+interface ApiResponse {
+    data: any[];
+    current_page: number;
+    per_page: number;
+    last_page: number;
+    total: number;
+}
 
-import type { Table, Row, Column, SortingState, ColumnFiltersState, ColumnDef } from '@tanstack/vue-table'
-type RowData = any
-const data = props.data.data; // Now safe to access directly
-const columns: ColumnDef<RowData>[] = [
+// Reactive state
+const data = ref<any[]>([]);
+const isLoading = ref(false);
+const currentPage = ref(1);
+const lastPage = ref(1);
+const total = ref(0);
+const error = ref<string | null>(null);
+
+const sorting = ref<SortingState>([]);
+const columnFilters = ref<ColumnFiltersState>([]);
+
+// Modal dialog state
+const isDialogOpen = ref(false);
+const selectedBook = ref<any | null>(null);
+
+// Search functionality state
+const filterInput = ref<string>('');
+const searchInputRef = ref(null);
+
+// Pagination state
+const pageSizes = [5, 10, 20, 30, 40, 50];
+const pagination = ref({
+    pageIndex: 0,
+    pageSize: 10,
+});
+
+// Scroll position tracking
+const scrollPosition = ref(0);
+
+const saveScrollPosition = () => {
+    scrollPosition.value = window.pageYOffset || document.documentElement.scrollTop;
+};
+
+const restoreScrollPosition = () => {
+    nextTick(() => {
+        window.scrollTo({
+            top: scrollPosition.value,
+            behavior: 'instant'
+        });
+    });
+};
+
+// Modal handlers
+const handleShow = (book: any) => {
+    selectedBook.value = book;
+    isDialogOpen.value = true;
+};
+
+const handleEdit = (id: string | number) => {
+    router.get(route('records.books.edit', id));
+};
+
+// Sorting helper
+function cycleSort(column: any) {
+    const currentSort = column.getIsSorted();
+    if (currentSort === false) column.toggleSorting(false);
+    else if (currentSort === 'asc') column.toggleSorting(true);
+    else column.clearSorting();
+}
+
+// Columns definition
+const columns: ColumnDef<any>[] = [
     {
         accessorKey: 'accession_number',
-        header: ({ column }: { column: Column<RowData, any> }) => {
-            return h(Button, {
-                variant: 'ghost',
-                onClick: () => {
-                    const currentSort = column.getIsSorted();
-                    if (currentSort === false) {
-                        column.toggleSorting(false); // asc
-                    } else if (currentSort === 'asc') {
-                        column.toggleSorting(true);  // desc
-                    } else {
-                        column.clearSorting();       // none
-                    }
-                },
-            }, () => ['Accession Number', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })])
-        },
-        cell: ({ row }: { row: Row<RowData> }) =>
-            h('div', row.getValue('accession_number')),
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => h('div', row.getValue('accession_number')),
+        enableHiding: false,
     },
     {
         accessorKey: 'title',
-        header: ({ column }: { column: Column<RowData, any> }) => {
-            return h(Button, {
-                variant: 'ghost',
-                onClick: () => {
-                    const currentSort = column.getIsSorted();
-                    if (currentSort === false) {
-                        column.toggleSorting(false); // asc
-                    } else if (currentSort === 'asc') {
-                        column.toggleSorting(true);  // desc
-                    } else {
-                        column.clearSorting();       // none
-                    }
-                },
-            }, () => ['Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })])
-        },
-        cell: ({ row }: { row: Row<RowData> }) =>
-            h('div', row.getValue('title')),
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
+        enableHiding: false,
     },
     {
-        accessorKey: 'date_received',
-        header: ({ column }: { column: Column<RowData, any> }) => {
-            return h(Button, {
-                variant: 'ghost',
-                onClick: () => {
-                    const currentSort = column.getIsSorted();
-                    if (currentSort === false) {
-                        column.toggleSorting(false); // asc
-                    } else if (currentSort === 'asc') {
-                        column.toggleSorting(true);  // desc
-                    } else {
-                        column.clearSorting();       // none
-                    }
+        id: 'action',
+        header: 'Action',
+        enableHiding: false,
+        cell: ({ row }) =>
+            h(Button,
+                {
+                    variant: 'outline',
+                    size: 'sm',
+                    onClick: () => handleShow(row.original),
+                    class: 'flex items-center gap-2'
                 },
-            }, () => ['Date Received', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })])
-        },
-        cell: ({ row }: { row: Row<RowData> }) => {
-            const date = row.getValue('date_received');
-            return h('div', date ? new Date(date).toLocaleDateString() : '');
-        },
-    },
+                () => [
+                    h(Eye, { class: 'h-4 w-4 text-muted-foreground' }),
+                    'Show'
+                ]
+            )
+    }
 ];
 
+// Apply search filter
+const applyFilter = () => {
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
+    if (filterInput.value.trim()) {
+        newFilters.push({ id: 'search', value: filterInput.value.trim() });
+    }
+    table.setColumnFilters(newFilters);
+};
 
-const sorting = ref<SortingState>(
-    props.currentSortField ? [{
-        id: props.currentSortField,
-        desc: props.currentSortDirection === 'desc'
-    }] : []
-)
-const columnFilters = ref<ColumnFiltersState>(
-    props.filter ? props.filter.map(f => ({ id: f.id, value: f.value })) : []
-)
-const columnVisibility = ref<VisibilityState>({
-    search: false, // Hide the search column by default
-})
-const rowSelection = ref({})
-const expanded = ref({})
-const pageSizes = [1, 2, 3, 5, 10, 15, 30, 40, 50, 100,];
-const pagination = ref({
-    pageIndex: (props.data?.current_page ?? 1) - 1,
-    pageSize: props.data?.per_page ?? 10,
-})
+// Clear search filter
+const clearFilter = () => {
+    filterInput.value = '';
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
+    table.setColumnFilters(newFilters);
+};
 
+// Debounced search
+const debouncedApplyFilter = debounce(() => {
+    applyFilter();
+}, 300);
+
+// Watch input and trigger search
+watch(filterInput, (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+        const hadFocus = document.activeElement === searchInputRef.value;
+        debouncedApplyFilter();
+        if (hadFocus) {
+            nextTick(() => {
+                searchInputRef.value?.focus();
+            });
+        }
+    }
+});
+
+// Fetch data with all parameters
+const fetchData = async () => {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+        // Build query parameters
+        const params = new URLSearchParams();
+
+        // Pagination
+        params.append('page', (pagination.value.pageIndex + 1).toString());
+        params.append('per_page', pagination.value.pageSize.toString());
+
+        // Sorting
+        if (sorting.value.length > 0) {
+            params.append('sort_field', sorting.value[0].id);
+            params.append('sort_direction', sorting.value[0].desc ? 'desc' : 'asc');
+        }
+
+        // Filters
+        columnFilters.value.forEach(filter => {
+            if (Array.isArray(filter.value) && filter.value.length > 0) {
+                params.append(filter.id, filter.value.join(','));
+            } else if (filter.value !== '' && filter.value !== null && filter.value !== undefined) {
+                params.append(filter.id, filter.value.toString());
+            }
+        });
+
+        // Make API request
+        const response = await fetch(`/api/theses?${params.toString()}`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result: ApiResponse = await response.json();
+
+        // Update reactive data
+        data.value = result.data || [];
+        currentPage.value = result.current_page || 1;
+        lastPage.value = result.last_page || 1;
+        total.value = result.total || 0;
+
+        // Update pagination state to match API response
+        pagination.value.pageIndex = (result.current_page || 1) - 1;
+        pagination.value.pageSize = result.per_page || 10;
+
+    } catch (err) {
+        console.error('API fetch error:', err);
+        error.value = err instanceof Error ? err.message : 'An error occurred while fetching data';
+        data.value = [];
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+// Debounced fetch for immediate UI feedback
+const debouncedFetch = debounce(fetchData, 300);
+
+// Enhanced event handlers
+function handlePaginationChange(updater: any) {
+    saveScrollPosition();
+    pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater;
+    fetchData().then(() => {
+        restoreScrollPosition();
+    });
+}
+
+function handleSortingChange(updaterOrValue: any) {
+    sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue;
+    pagination.value.pageIndex = 0;
+    fetchData();
+}
+
+function handleFilterChange(updaterOrValue: any) {
+    columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue;
+    pagination.value.pageIndex = 0;
+    debouncedFetch();
+}
+
+// Pagination navigation functions with scroll preservation
+const goToFirstPage = () => {
+    if (table.getCanPreviousPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.setPageIndex(0);
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const goToPreviousPage = () => {
+    if (table.getCanPreviousPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.previousPage();
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const goToNextPage = () => {
+    if (table.getCanNextPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.nextPage();
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const goToLastPage = () => {
+    if (table.getCanNextPage() && !isLoading.value) {
+        saveScrollPosition();
+        table.setPageIndex(table.getPageCount() - 1);
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+const handlePageSizeChange = (value: string) => {
+    if (!isLoading.value) {
+        saveScrollPosition();
+        table.setPageSize(Number(value));
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
+    }
+};
+
+// Initialize from URL
+const initializeFromURL = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Initialize pagination
+    const page = parseInt(urlParams.get('page') || '1');
+    const perPageParam = parseInt(urlParams.get('per_page') || '10');
+    pagination.value.pageIndex = page - 1;
+    pagination.value.pageSize = perPageParam;
+
+    // Initialize sorting
+    const sortField = urlParams.get('sort_field');
+    const sortDirection = urlParams.get('sort_direction');
+    if (sortField) {
+        sorting.value = [{ id: sortField, desc: sortDirection === 'desc' }];
+    }
+
+    // Initialize search filter
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+        filterInput.value = searchParam;
+        columnFilters.value = [{ id: 'search', value: searchParam }];
+    }
+};
+
+// Table instance
 const table = useVueTable({
-    data,
+    get data() { return data.value; },
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    pageCount: props.data?.last_page ?? 1,
+    get pageCount() {
+        return lastPage.value;
+    },
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,
-    onPaginationChange: updater => {
-        if (typeof updater === 'function') {
-            pagination.value = updater(pagination.value);
-        } else {
-            pagination.value = updater;
-        }
-        router.get(
-            route('students.index'),
-            {
-                page: pagination.value.pageIndex + 1,
-                per_page: pagination.value.pageSize,
-                sort_field: sorting.value[0]?.id,
-                sort_direction: sorting.value.length == 0 ? undefined : (sorting.value[0]?.desc ? "desc" : "asc"),
-            },
-            { preserveState: false, preserveScroll: true }
-        );
-    },
-    onSortingChange: updaterOrValue => {
-        if (typeof updaterOrValue === 'function') {
-            sorting.value = updaterOrValue(sorting.value)
-        } else {
-            sorting.value = updaterOrValue
-        }
-
-        // Build filters object (same logic as above)
-        let filters: Record<string, any> = {}
-        if (columnFilters.value && columnFilters.value.length > 0) {
-            filters = columnFilters.value.reduce((acc: Record<string, any>, filter) => {
-                if (Array.isArray(filter.value) && filter.value.length > 0) {
-                    acc[filter.id] = filter.value
-                } else if (!Array.isArray(filter.value) && filter.value !== '' && filter.value !== null && filter.value !== undefined) {
-                    acc[filter.id] = filter.value
-                }
-                return acc
-            }, {})
-        }
-
-        router.get(
-            route('students.index'),
-            {
-                page: 1, // Reset to first page when sorting changes
-                per_page: pagination.value.pageSize,
-                sort_field: sorting.value[0]?.id,
-                sort_direction: sorting.value.length == 0 ? undefined : (sorting.value[0]?.desc ? "desc" : "asc"),
-                ...filters
-            },
-            { preserveState: false, preserveScroll: true }
-        );
-    },
-    onColumnFiltersChange: updaterOrValue => {
-        if (typeof updaterOrValue === 'function') {
-            columnFilters.value = updaterOrValue(columnFilters.value)
-        } else {
-            columnFilters.value = updaterOrValue
-        }
-
-        // Build filters object
-        let filters: Record<string, any> = {}
-        if (columnFilters.value && columnFilters.value.length > 0) {
-            filters = columnFilters.value.reduce((acc: Record<string, any>, filter) => {
-                // Handle array values (for multi-select filters)
-                if (Array.isArray(filter.value) && filter.value.length > 0) {
-                    acc[filter.id] = filter.value
-                } else if (!Array.isArray(filter.value) && filter.value !== '' && filter.value !== null && filter.value !== undefined) {
-                    acc[filter.id] = filter.value
-                }
-                return acc
-            }, {})
-        }
-
-        router.get(
-            route('students.index'),
-            {
-                page: 1, // Reset to first page when filtering
-                per_page: pagination.value.pageSize,
-                sort_field: sorting.value[0]?.id,
-                sort_direction: sorting.value.length == 0 ? undefined : (sorting.value[0]?.desc ? "desc" : "asc"),
-                ...filters
-            },
-            { preserveState: false, preserveScroll: true }
-        );
-    },
-    onColumnVisibilityChange: updaterOrValue => valueUpdater(updaterOrValue, columnVisibility),
-    onRowSelectionChange: updaterOrValue => valueUpdater(updaterOrValue, rowSelection),
-    onExpandedChange: updaterOrValue => valueUpdater(updaterOrValue, expanded),
+    onPaginationChange: handlePaginationChange,
+    onSortingChange: handleSortingChange,
+    onColumnFiltersChange: handleFilterChange,
     state: {
-        get sorting() { return sorting.value },
-        get columnFilters() { return columnFilters.value },
-        get columnVisibility() { return columnVisibility.value },
-        get rowSelection() { return rowSelection.value },
-        get expanded() { return expanded.value },
-        get pagination() { return pagination.value },
-    },
-})
-
-// Local state for the input
-const filterInput = ref<string>((table.getColumn('search')?.getFilterValue() as string) ?? '')// Function to apply the filter
-const applyFilter = () => {
-    table.getColumn('search')?.setFilterValue(filterInput.value)
-}
-
-const clearFilter = () => {
-    filterInput.value = ''
-    table.getColumn('search')?.setFilterValue('')
-}
-
-import AppLayout from '@/layouts/AppLayout.vue';
-import type { BreadcrumbItem } from '@/types';
-import RecordsLayout from '@/layouts/records/Layout.vue';
-import DeleteDialog from '@/components/DeleteDialog.vue';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Records',
-        href: '/records',
-    },
-    {
-        title: 'Theses/Dissertation',
-        href: '/records/theses',
-    },
-];
-
-const createNewThesis = () => {
-    router.get(route('theses.create'));
-}
-
-const showDeleteAlert = ref(false);
-const selectedUserId = ref(null);
-
-const handleDelete = (id) => {
-    console.log('Deleting user with ID:', id);
-
-    router.delete(route('faculties.destroy', id), {
-        preserveState: false,  // Important: Don't preserve state so fresh data is fetched
-        preserveScroll: true,  // Keep scroll position
-        onSuccess: () => {
-            console.log('Delete successful');
-            // Optional: Force reload if still having issues
-            // router.reload({ only: ['data'] });
+        get pagination() {
+            return pagination.value;
         },
-        onError: (errors) => {
-            console.error('Delete failed:', errors);
-        }
-    });
+        get sorting() {
+            return sorting.value;
+        },
+        get columnFilters() {
+            return columnFilters.value;
+        },
+    },
+});
 
-    showDeleteAlert.value = false;
-    selectedUserId.value = null;
-};
+// Lifecycle
+onMounted(() => {
+    initializeFromURL();
+    fetchData();
+});
 
+// Watch for external changes
+watch(() => window.location.search, () => {
+    initializeFromURL();
+    fetchData();
+});
+
+// Breadcrumbs
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Records', href: '/records' },
+    { title: 'Books', href: '/records/books' },
+];
 </script>
 
 <template>
-    <Head title="Theses/Dissertations" />
-
+    <Head title="Books" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <RecordsLayout>
+        <Layout>
             <div class="w-full">
-                <div class="flex gap-2 items-center justify-between py-4">
-                    <div class="flex gap-2">
-                        <div class="relative">
-                            <Input
-                                class="w-[320px] pr-8"
-                                placeholder="Search by lib id, first name, or last name ..."
-                                v-model="filterInput"
-                                @keyup.enter="applyFilter"
-                                @blur="applyFilter"
-                            />
-                            <Button
-                                v-if="filterInput"
-                                variant="ghost"
-                                class="absolute right-0 top-0 h-full px-2"
-                                @click="clearFilter"
-                            >
-                                <X class="h-4 w-4" />
-                            </Button>
+                <!-- Error message -->
+                <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                    <p>{{ error }}</p>
+                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2">
+                        Retry
+                    </Button>
+                </div>
+
+                <!-- Search -->
+                <div class="flex items-center justify-between gap-2 py-4">
+                    <div class="relative">
+                        <Input
+                            ref="searchInputRef"
+                            class="w-[380px] pr-8"
+                            placeholder="Search by acc no. or title..."
+                            v-model="filterInput"
+                        />
+                        <Button
+                            v-if="filterInput"
+                            variant="ghost"
+                            class="absolute top-0 right-0 h-full px-2"
+                            @click="clearFilter"
+                        >
+                            <X class="h-4 w-4" />
+                        </Button>
+                        <div
+                            v-else
+                            class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none"
+                        >
+                            <Search class="h-4 w-4 text-foreground" />
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <Button variant="outline" @click="createNewThesis">
-                            <Plus class="h-4"></Plus>
-                            Create New
-                        </Button>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger as-child>
-                                <Button variant="outline" class="ml-auto">
-                                    Columns
-                                    <ChevronDown class="ml-2 h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuCheckboxItem v-for="column in
-                                table.getAllColumns().filter((column) => column.getCanHide())"
-                                                          :key="column.id" class="capitalize"
-                                                          :checked="column.getIsVisible()"
-                                                          @update:checked="(value: boolean | 'indeterminate') => {
-                                                          column.toggleVisibility(!!value)
-                                                        }">
-                                    {{ column.id }}
-                                </DropdownMenuCheckboxItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
                 </div>
+
+                <!-- Table -->
                 <div class="rounded-md border">
                     <Table class="w-full">
                         <TableHeader>
@@ -369,39 +438,42 @@ const handleDelete = (id) => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <template v-if="table.getRowModel().rows?.length">
-                                <template v-for="row in table.getRowModel().rows" :key="row.id">
-                                    <TableRow :data-state="row.getIsSelected() && 'selected'">
-                                        <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-                                            <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow v-if="row.getIsExpanded()">
-                                        <TableCell :colspan="row.getAllCells().length">
-                                            {{ JSON.stringify(row.original) }}
-                                        </TableCell>
-                                    </TableRow>
-                                </template>
+                            <template v-if="table.getRowModel().rows?.length && !isLoading">
+                                <TableRow v-for="row in table.getRowModel().rows" :key="row.id">
+                                    <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
+                                        <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+                                    </TableCell>
+                                </TableRow>
                             </template>
-
-                            <TableRow v-else>
+                            <TableRow v-else-if="isLoading">
                                 <TableCell :colspan="columns.length" class="h-24 text-center">
-                                    No results.
+                                    <div class="flex justify-center items-center">
+                                        <Loader2 class="h-4 w-4 animate-spin mr-2" />
+                                        Loading...
+                                    </div>
                                 </TableCell>
+                            </TableRow>
+                            <TableRow v-else>
+                                <TableCell :colspan="columns.length" class="h-24 text-center">No results found.</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
                 </div>
+
+                <!-- Pagination Controls -->
                 <div class="flex items-center justify-end space-x-2 py-4">
                     <div class="flex-1 text-sm text-muted-foreground">
-                        {{ table.getFilteredSelectedRowModel().rows.length }} of
-                        {{ table.getFilteredRowModel().rows.length }} row(s) selected.
+                        Showing page {{ currentPage }} of {{ lastPage }} in {{ total }} {{ total === 1 || total === 0 ? 'item' : 'items' }}.
                     </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
-                        <Select :model-value="table.getState().pagination.pageSize.toString()" @update:model-value="(value) => table.setPageSize(Number(value))">
-                            <SelectTrigger class="h-8 w-[70px]">
-                                <SelectValue :placeholder="table.getState().pagination.pageSize.toString()" />
+                        <Select
+                            :model-value="pagination.pageSize.toString()"
+                            @update:model-value="handlePageSizeChange"
+                            :disabled="isLoading"
+                        >
+                            <SelectTrigger class="h-8 w-[80px]">
+                                <SelectValue :placeholder="pagination.pageSize.toString()" />
                             </SelectTrigger>
                             <SelectContent side="top">
                                 <SelectItem v-for="pageSize in pageSizes" :key="pageSize" :value="pageSize.toString()">
@@ -412,28 +484,126 @@ const handleDelete = (id) => {
                     </div>
                     <div class="space-x-2">
                         <div class="flex items-center space-x-2">
-                            <Button variant="outline" class="hidden h-8 w-8 p-0 lg:flex" :disabled="!table.getCanPreviousPage()" @click="table.setPageIndex(0)">
+                            <Button
+                                variant="outline"
+                                class="hidden h-8 w-8 p-0 lg:flex"
+                                :disabled="!table.getCanPreviousPage() || isLoading"
+                                @click="goToFirstPage"
+                            >
                                 <DoubleArrowLeftIcon class="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" class="h-8 w-8 p-0" :disabled="!table.getCanPreviousPage()" @click="table.previousPage()">
+                            <Button
+                                variant="outline"
+                                class="h-8 w-8 p-0"
+                                :disabled="!table.getCanPreviousPage() || isLoading"
+                                @click="goToPreviousPage"
+                            >
                                 <ChevronLeftIcon class="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" class="h-8 w-8 p-0" :disabled="!table.getCanNextPage()" @click="table.nextPage()">
+                            <Button
+                                variant="outline"
+                                class="h-8 w-8 p-0"
+                                :disabled="!table.getCanNextPage() || isLoading"
+                                @click="goToNextPage"
+                            >
                                 <ChevronRightIcon class="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" class="hidden h-8 w-8 p-0 lg:flex" :disabled="!table.getCanNextPage()" @click="table.setPageIndex(table.getPageCount() - 1)">
+                            <Button
+                                variant="outline"
+                                class="hidden h-8 w-8 p-0 lg:flex"
+                                :disabled="!table.getCanNextPage() || isLoading"
+                                @click="goToLastPage"
+                            >
                                 <DoubleArrowRightIcon class="h-4 w-4" />
                             </Button>
                         </div>
-
                     </div>
                 </div>
+
+                <!-- Book Details Modal -->
+                <Dialog v-model:open="isDialogOpen">
+                    <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+                        <DialogHeader class="p-6 pb-0">
+                            <DialogTitle>Book Details</DialogTitle>
+                            <DialogDescription>
+                                Viewing book information.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
+                            <!-- Book Cover and Barcode -->
+                            <div class="flex flex-col items-center md:items-start gap-4">
+                                <!-- Book Cover Image -->
+                                <img
+                                    v-if="selectedBook?.cover_image"
+                                    :src="'/storage/book_covers/' + selectedBook.cover_image"
+                                    alt="Book Cover"
+                                    class="h-40 w-32 object-cover border shadow-md rounded"
+                                />
+                                <div
+                                    v-else
+                                    class="h-40 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md rounded"
+                                >
+                                    <span class="text-sm text-center">No Cover</span>
+                                </div>
+
+                                <!-- Barcode -->
+                                <div v-if="selectedBook?.barcode_path" class="flex flex-col items-center">
+                                    <img
+                                        :src="'/storage/' + selectedBook.barcode_path"
+                                        alt="Book Barcode"
+                                        class="h-16 w-auto border shadow-md"
+                                    />
+                                    <span class="text-xs text-muted-foreground mt-2">
+                                        Barcode: {{ selectedBook.accession_number }}
+                                    </span>
+                                </div>
+                                <div
+                                    v-else
+                                    class="h-16 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
+                                >
+                                    <span class="text-xs">No Barcode</span>
+                                </div>
+                            </div>
+
+                            <!-- Book Details -->
+                            <div class="md:col-span-2">
+                                <div v-if="selectedBook" class="grid gap-2 text-sm">
+                                    <p><strong>Accession No.:</strong> {{ selectedBook.accession_number }}</p>
+                                    <p><strong>Title:</strong> {{ selectedBook.title }}</p>
+                                    <p><strong>ISBN:</strong> {{ selectedBook.book?.isbn || 'N/A' }}</p>
+                                    <p><strong>Publisher:</strong> {{ selectedBook.book?.publisher || 'N/A' }}</p>
+                                    <p><strong>Publication Year:</strong> {{ selectedBook.book?.publication_year || 'N/A' }}</p>
+                                    <p><strong>Category:</strong> {{ selectedBook.book?.category?.name || 'N/A' }}</p>
+                                    <p><strong>Location:</strong> {{ selectedBook.book?.location || 'N/A' }}</p>
+                                    <p><strong>Subject:</strong> {{ selectedBook.subject || 'N/A' }}</p>
+                                    <p><strong>Status:</strong>
+                                        <span :class="{
+                                            'text-green-600': selectedBook.status === 'available',
+                                            'text-yellow-600': selectedBook.status === 'borrowed',
+                                            'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedBook.status)
+                                        }">
+                                            {{ selectedBook.status || 'N/A' }}
+                                        </span>
+                                    </p>
+                                    <p><strong>Date Received:</strong> {{ selectedBook.date_received ? new Date(selectedBook.date_received).toLocaleDateString() : 'N/A' }}</p>
+                                    <p><strong>Added:</strong> {{ selectedBook.created_at ? new Date(selectedBook.created_at).toLocaleDateString() : 'N/A' }}</p>
+                                </div>
+                                <div v-else class="text-muted-foreground">
+                                    <p>No book selected.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <DialogFooter class="p-6 pt-0">
+                            <div class="flex justify-between w-full">
+                                <Button variant="outline" @click="isDialogOpen = false">Close</Button>
+                                <Button @click="handleEdit(selectedBook?.id)">Edit Book Details</Button>
+                            </div>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
-            <DeleteDialog
-                v-model:open="showDeleteAlert"
-                :userId="selectedUserId"
-                @confirm-delete="handleDelete"
-            />
-        </RecordsLayout>
+        </Layout>
     </AppLayout>
 </template>
