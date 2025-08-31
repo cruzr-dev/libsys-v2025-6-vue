@@ -27,7 +27,7 @@ class RecordController extends Controller
     public function fetchAll(Request $request)
     {
         $query = Record::query()
-            ->whereNull('deleted_at'); // respect soft deletes
+            ->whereNull('deleted_at');
 
         // Handle search
         if ($request->filled('search')) {

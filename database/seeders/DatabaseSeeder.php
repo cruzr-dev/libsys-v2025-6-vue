@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\PhysicalLocation;
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -27,6 +25,7 @@ class DatabaseSeeder extends Seeder
         $this->call(StatusSeeder::class);
         $this->call(AcademicPeriodSeeder::class);
         $this->call(BookImportSeeder::class);
+        $this->call(DigitalResourceSeeder::class);
 
         // discarded
 //        $this->call(CoverTypeSeeder::class);
