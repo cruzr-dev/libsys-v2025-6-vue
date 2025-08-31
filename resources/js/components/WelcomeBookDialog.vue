@@ -7,10 +7,35 @@ const getCoverUrl = (path: string) => {
     return path ? `/storage/uploads/book-covers/${path}` : `/storage/placeholder_images/sample1.png`;
 };
 
-defineProps({
-    record: Object,
-});
-
+// Dummy record data for now
+const record = {
+    title: "Introduction to Algorithms",
+    accession_number: "A123456",
+    status: "Available",
+    copy_count: 3,
+    subject_headings: "Algorithms, Data Structures, Computer Science",
+    book: {
+        authors: "Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein",
+        editors: "John Doe",
+        isbn: "9780262033848",
+        publication_year: "2009",
+        call_number: "QA76.6 .I585",
+        publisher: "MIT Press",
+        status: "Available",
+        volume: "3rd Edition",
+        publication_place: "Cambridge, MA",
+        ddc_class_id: "005.1",
+        physical_location_id: "Shelf 3A",
+        cover_image: null, // keep null to test placeholder
+        table_of_contents: `1. Foundations
+2. Sorting and Order Statistics
+3. Data Structures
+4. Advanced Design and Analysis Techniques
+5. Advanced Data Structures
+6. Graph Algorithms
+7. Selected Topics`
+    }
+};
 </script>
 
 <template>
@@ -66,14 +91,13 @@ defineProps({
                     </div>
 
                     <!-- Book cover area -->
-                    <div class="flex w-32 items-center justify-center bg-gray-50 p-4 dark:bg-muted">
-                        <img
-                            class="h-auto max-h-40 w-full rounded-lg object-cover shadow-sm"
-                            :src="getCoverUrl(record?.book.cover_image)"
-                            :alt="`Cover of ${record?.title}`"
-                            @error="(e) => e?.target && (e.target.style.display = 'none')"
-                        />
+                    <div class="flex w-32 h-40 items-center justify-center bg-gray-200 dark:bg-muted rounded-lg shadow-sm">
+                        <svg class="w-12 h-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a4 4 0 014-4h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11h.01M12 16l-3-3 2-2 4 4 3-3" />
+                        </svg>
                     </div>
+
                 </div>
             </Card>
         </DialogTrigger>
