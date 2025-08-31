@@ -59,7 +59,7 @@ class RecordController extends Controller
 
     public function fetchAllWelcome(Request $request)
     {
-        $perPage = $request->get('per_page', 9);
+        $perPage = $request->get('per_page', 6);
 
         $records = Record::query()
             ->whereNull('deleted_at')
