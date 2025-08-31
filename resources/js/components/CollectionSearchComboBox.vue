@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Check, Search, User } from "lucide-vue-next"
+import { Check, Search, Book } from "lucide-vue-next"
 import {
     Combobox,
     ComboboxAnchor,
@@ -17,7 +17,7 @@ import { debounce } from 'lodash-es'
 const searchQuery = ref('')
 const searchResults = ref<any[]>([])
 const isLoading = ref(false)
-const selectedUser = ref(null)
+const selectedRecord = ref(null)
 
 // Debounced search function
 const debouncedSearch = debounce(async (query: string) => {
@@ -30,7 +30,7 @@ const debouncedSearch = debounce(async (query: string) => {
     isLoading.value = true
 
     try {
-        const response = await fetch(`/api/borrowings/users/search?q=${encodeURIComponent(query)}`, {
+        const response = await fetch(`/api/welcome/records/search?q=${encodeURIComponent(query)}`, {
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -39,13 +39,13 @@ const debouncedSearch = debounce(async (query: string) => {
 
         if (response.ok) {
             const data = await response.json()
-            searchResults.value = data.users || data || []
+            searchResults.value = data.records || data || []
         } else {
-            console.error('User search failed:', response.statusText)
+            console.error('Record search failed:', response.statusText)
             searchResults.value = []
         }
     } catch (error) {
-        console.error('User search error:', error)
+        console.error('Record search error:', error)
         searchResults.value = []
     } finally {
         isLoading.value = false
@@ -57,35 +57,44 @@ watch(searchQuery, (newQuery) => {
     debouncedSearch(newQuery)
 })
 
-// Handle user selection
-const handleUserSelect = (user: any) => {
-    selectedUser.value = user
+// Handle record selection
+const handleRecordSelect = (record: any) => {
+    selectedRecord.value = record
 }
 
-// Display function for selected user
-const displayValue = (user: any) => {
-    if (!user) return ''
-    const fullName = [user.first_name, user.middle_initial, user.last_name]
-        .filter(Boolean)
-        .join(' ')
-    return `${fullName} (${user.library_id})`
+// Display function for selected record
+const displayValue = (record: any) => {
+    if (!record) return ''
+    const title = record.title || 'Untitled'
+    const accessionNumber = record.accession_number || ''
+    return accessionNumber ? `${title} (${accessionNumber})` : title
 }
+
+// Get resource type display name
+const getResourceType = (record: any) => {
+    if (record.book) return 'Book'
+    if (record.digital_resource) return 'Multimedia'
+    if (record.periodical) return 'Periodical'
+    if (record.thesis) return 'Thesis'
+    return 'Collection'
+}
+
 </script>
 
 <template>
     <div class="grid space-y-4">
         <Combobox
-            v-model="selectedUser"
+            v-model="selectedRecord"
             by="id"
-            @update:model-value="handleUserSelect"
+            @update:model-value="handleRecordSelect"
         >
             <ComboboxAnchor class="w-full border-1 rounded-lg focus-within:ring-2 focus-within:ring-[var(--ring)]">
                 <div class="relative w-full items-center">
                     <ComboboxInput
                         v-model="searchQuery"
-                        class="pl-2 dark:text-muted-foreground"
+                        class="pl-2 pr-2 py-2 dark:text-muted-foreground"
                         :display-value="displayValue"
-                        placeholder="Search by name or library ID..."
+                        placeholder="Search by title, or accession number..."
                     />
                     <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
                         <Search
@@ -103,34 +112,40 @@ const displayValue = (user: any) => {
             <ComboboxList>
                 <ComboboxEmpty>
                     <div class="flex flex-col items-center p-4 text-center">
-                        <User class="size-8 text-muted-foreground mb-2" />
+                        <Book class="size-8 text-muted-foreground mb-2" />
                         <p class="text-sm text-muted-foreground">
-                            {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No users found' }}
+                            {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No records found' }}
                         </p>
                     </div>
                 </ComboboxEmpty>
 
                 <ComboboxGroup v-if="searchResults.length > 0">
                     <ComboboxItem
-                        v-for="user in searchResults"
-                        :key="user.id"
-                        :value="user"
+                        v-for="record in searchResults"
+                        :key="record.id"
+                        :value="record"
                         class="flex flex-col items-start py-3"
                     >
                         <div class="flex w-full items-center justify-between">
-                            <div class="flex flex-col">
-                                <span class="font-medium">
-                                    {{ user.first_name }} {{ user.middle_initial ? user.middle_initial + '.' : '' }} {{ user.last_name }}
-                                </span>
-                                <div class="flex flex-col text-sm text-muted-foreground">
-                                    <span v-if="user.library_id">
-                                        Library ID: {{ user.library_id }}
+                            <div class="flex flex-col flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-medium truncate">
+                                        {{ record.title || 'Untitled' }}
+                                    </span>
+                                    <span class="flex-shrink-0 inline-flex items-center px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md">
+                                        {{ getResourceType(record) }}
+                                    </span>
+                                </div>
+
+                                <div class="flex flex-col text-sm text-muted-foreground space-y-0.5">
+                                    <span v-if="record.accession_number">
+                                        Accession: {{ record.accession_number }}
                                     </span>
                                 </div>
                             </div>
 
                             <ComboboxItemIndicator>
-                                <Check class="ml-2 h-4 w-4" />
+                                <Check class="ml-2 h-4 w-4 flex-shrink-0" />
                             </ComboboxItemIndicator>
                         </div>
                     </ComboboxItem>

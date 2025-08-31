@@ -11,6 +11,7 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ThesisController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -24,8 +25,9 @@ Route::get('/sample', function () {
     ]);
 });
 
-Route::get('/borrowings/books/search', [BorrowingTransactionController::class, 'searchBook']);
+Route::get('/welcome/records/search', [WelcomeController::class, 'searchRecords']);
 
+Route::get('/borrowings/books/search', [BorrowingTransactionController::class, 'searchBook']);
 Route::get('/borrowings/users/search', [BorrowingTransactionController::class, 'searchUser']);
 
 Route::get('/users/', [UserController::class, 'fetchAll']);
