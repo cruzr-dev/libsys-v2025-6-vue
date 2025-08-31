@@ -172,14 +172,14 @@ class LibraryVisitController extends Controller
         try {
             // Validate the request
             $request->validate([
-                'card_number' => 'required|string|min:2'
+                'library_id' => 'required|string|min:2'
             ]);
 
-            $cardNumber = $request->input('card_number');
+            $cardNumber = $request->input('library_id');
 
             // Search for user with exact card number match
-            $user = User::where('card_number', $cardNumber)
-                ->select('id', 'first_name', 'last_name', 'email', 'card_number')
+            $user = User::where('library_id', $cardNumber)
+                ->select('id', 'first_name', 'last_name', 'email', 'library_id')
                 ->first();
 
             if ($user) {

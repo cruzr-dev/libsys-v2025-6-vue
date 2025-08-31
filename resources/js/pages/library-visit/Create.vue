@@ -17,6 +17,25 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
+/* -------------------- Types -------------------- */
+interface User {
+    first_name: string;
+    last_name?: string;
+    library_id: string;
+    email?: string;
+}
+
+interface Flash {
+    success?: string | null;
+    error?: string | null;
+}
+
+declare module '@inertiajs/core' {
+    interface PageProps {
+        flash: Flash;
+    }
+}
+
 /* -------------------- Props -------------------- */
 defineProps<{
     patron: object;
@@ -30,25 +49,29 @@ const page = usePage();
 const showAlert = ref(true);
 const searchQuery = ref('');
 const isLoading = ref(false);
-const foundUser = ref(null);
+const foundUser = ref<User | null>(null);
 const isDialogOpen = ref(false);
 
-/* -------------------- Search Logic -------------------- */
-const debouncedSearch = debounce(async (query: string) => {
+/* -------------------- Utility Functions -------------------- */
+const isExactNineDigits = (query: string): boolean => {
+    return /^\d{9}$/.test(query);
+};
+
+const buildSearchParams = (query: string): URLSearchParams => {
+    return new URLSearchParams({
+        library_id: query.trim()
+    });
+};
+
+/* -------------------- API Functions -------------------- */
+const searchUser = async (query: string): Promise<User | null> => {
     if (!query || query.length < 2) {
-        foundUser.value = null;
-        isLoading.value = false;
-        return;
+        return null;
     }
 
-    isLoading.value = true;
+    const params = buildSearchParams(query);
 
     try {
-        // Build query parameters
-        const params = new URLSearchParams({
-            card_number: query // Changed from 'q' to 'card_number' for exact match
-        });
-
         const response = await fetch(`/api/logger/patron/search?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
@@ -58,33 +81,99 @@ const debouncedSearch = debounce(async (query: string) => {
 
         if (response.ok) {
             const data = await response.json();
-
-            if (data.user) {
-                foundUser.value = data.user;
-                isDialogOpen.value = true; // Open dialog when user is found
-            } else {
-                foundUser.value = null;
-                // Optionally show a "no user found" message
-            }
+            return data.user || null;
         } else {
-            console.error('Record search failed:', response.statusText);
-            foundUser.value = null;
+            console.error('User search failed:', response.statusText);
+            return null;
         }
     } catch (error) {
-        console.error('Record search error:', error);
-        foundUser.value = null;
-    } finally {
-        isLoading.value = false;
+        console.error('User search error:', error);
+        return null;
     }
-}, 300);
-
-// Handle search input changes
-const handleSearchInput = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    searchQuery.value = target.value;
-    debouncedSearch(target.value);
 };
 
+/* -------------------- Search Logic -------------------- */
+const performSearch = async (query: string, showLoadingState = true): Promise<void> => {
+    if (showLoadingState) {
+        isLoading.value = true;
+    }
+
+    try {
+        const user = await searchUser(query);
+
+        if (user) {
+            foundUser.value = user;
+            isDialogOpen.value = true;
+        } else {
+            foundUser.value = null;
+        }
+    } finally {
+        if (showLoadingState) {
+            isLoading.value = false;
+        }
+    }
+};
+
+// Debounced search for 9-digit numbers only
+const debouncedSearch = debounce(async (query: string) => {
+    if (!isExactNineDigits(query)) {
+        foundUser.value = null;
+        isLoading.value = false;
+        return;
+    }
+
+    await performSearch(query, true);
+}, 300);
+
+// Manual search for non-9-digit inputs (triggered by Enter key)
+const performManualSearch = async (query: string): Promise<void> => {
+    if (!query || query.length < 2) {
+        foundUser.value = null;
+        return;
+    }
+
+    await performSearch(query, true);
+};
+
+/* -------------------- Event Handlers -------------------- */
+const handleSearchInput = (event: Event): void => {
+    const target = event.target as HTMLInputElement;
+    const query = target.value;
+
+    searchQuery.value = query;
+
+    if (isExactNineDigits(query)) {
+        // Auto-search for 9-digit numbers
+        debouncedSearch(query);
+    } else {
+        // Clear results for non-9-digit inputs
+        foundUser.value = null;
+        isLoading.value = false;
+    }
+};
+
+const handleKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Enter') {
+        const target = event.target as HTMLInputElement;
+        const query = target.value.trim();
+
+        // Only perform manual search for non-9-digit inputs
+        // 9-digit inputs are handled automatically by debounced search
+        if (query && !isExactNineDigits(query)) {
+            performManualSearch(query);
+        }
+    }
+};
+
+const closeDialog = (): void => {
+    isDialogOpen.value = false;
+};
+
+const dismissAlert = (): void => {
+    showAlert.value = false;
+};
+
+/* -------------------- Lifecycle -------------------- */
 onMounted(() => {
     if (page.props.flash.error) {
         setTimeout(() => {
@@ -92,18 +181,6 @@ onMounted(() => {
         }, 5000);
     }
 });
-
-/* -------------------- Types -------------------- */
-interface Flash {
-    success?: string | null;
-    error?: string | null;
-}
-
-declare module '@inertiajs/core' {
-    interface PageProps {
-        flash: Flash;
-    }
-}
 </script>
 
 <template>
@@ -111,12 +188,22 @@ declare module '@inertiajs/core' {
 
     <div class="flex min-h-screen flex-col items-center text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a]">
         <!-- Hidden redirect link -->
-        <Link :href="route('home')" class="fixed top-0 left-0 bg-red-500 opacity-0"> hi </Link>
+        <Link :href="route('home')" class="fixed top-0 left-0 bg-red-500 opacity-0">
+            hi
+        </Link>
 
         <!-- Error Alert -->
-        <Alert v-if="page.props.flash.error && showAlert" class="absolute top-5 right-5 w-fit pr-8" variant="destructive">
+        <Alert
+            v-if="page.props.flash.error && showAlert"
+            class="absolute top-5 right-5 w-fit pr-8"
+            variant="destructive"
+        >
             <AlertCircle class="h-4 w-4" />
-            <button @click="showAlert = false" class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-red-100">
+            <button
+                @click="dismissAlert"
+                class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-red-100"
+                aria-label="Close alert"
+            >
                 <X class="h-4 w-4" />
             </button>
             <AlertTitle>Error</AlertTitle>
@@ -126,9 +213,16 @@ declare module '@inertiajs/core' {
         </Alert>
 
         <!-- Success Alert -->
-        <Alert v-if="page.props.flash.success && showAlert" class="fixed top-5 right-5 z-30 w-fit max-w-md border-2 border-green-500 pr-8">
+        <Alert
+            v-if="page.props.flash.success && showAlert"
+            class="fixed top-5 right-5 z-30 w-fit max-w-md border-2 border-green-500 pr-8"
+        >
             <CircleCheckBig />
-            <button @click="showAlert = false" class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-red-100">
+            <button
+                @click="dismissAlert"
+                class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-green-100"
+                aria-label="Close alert"
+            >
                 <X class="h-4 w-4" />
             </button>
             <AlertTitle>Success</AlertTitle>
@@ -148,16 +242,26 @@ declare module '@inertiajs/core' {
                         class="p-6 pl-10 md:text-xl"
                         v-model="searchQuery"
                         @input="handleSearchInput"
+                        @keydown="handleKeyDown"
                         :disabled="isLoading"
+                        autocomplete="off"
                     />
                     <span class="absolute start-0 inset-y-0 flex items-center justify-center px-2">
                         <UserRound class="size-6 text-muted-foreground" />
                     </span>
                     <!-- Loading indicator -->
-                    <div v-if="isLoading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div
+                        v-if="isLoading"
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    >
                         <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
                     </div>
                 </div>
+
+                <!-- Search instruction -->
+                <p class="mt-4 text-sm text-gray-500 text-center max-w-sm">
+                    Enter a 9-digit card number for instant search, or press Enter for other formats
+                </p>
             </div>
         </div>
     </div>
@@ -180,18 +284,18 @@ declare module '@inertiajs/core' {
                         <span class="text-lg font-medium">{{ foundUser.last_name || '' }}</span>
                     </div>
 
-                    <div class="text-sm text-gray-600">
-                        <p><strong>Card Number:</strong> {{ foundUser.card_number }}</p>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <p><strong>Card Number:</strong> {{ foundUser.library_id }}</p>
                         <p v-if="foundUser.email"><strong>Email:</strong> {{ foundUser.email }}</p>
                     </div>
                 </div>
             </div>
 
             <DialogFooter class="p-6 pt-2">
-                <Button @click="isDialogOpen = false" variant="outline">
+                <Button @click="closeDialog" variant="outline">
                     Close
                 </Button>
-                <Button @click="isDialogOpen = false">
+                <Button @click="closeDialog">
                     Continue
                 </Button>
             </DialogFooter>
