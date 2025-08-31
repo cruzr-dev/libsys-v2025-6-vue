@@ -58,9 +58,6 @@ const lastPage = ref(1);
 const total = ref(0);
 const collectionsError = ref<string | null>(null);
 
-// Collection search state
-const selectedCollection = ref(null);
-
 // Updated filter state with all resource types
 const filterType = ref('all');
 const filterOptions = [
@@ -232,12 +229,6 @@ const handlePageSizeChange = (value: string) => {
     }
 };
 
-// Handle collection selection
-const handleCollectionSelected = (collection: any) => {
-    selectedCollection.value = collection;
-    // Handle navigation or other logic here
-};
-
 // Initialize from URL
 const initializeFromURL = () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -375,8 +366,6 @@ watch(() => window.location.search, () => {
                     <!-- Search Box -->
                     <div class="w-full max-w-md p-1 rounded-xl bg-background">
                         <CollectionSearchComboBox
-                            v-model:selectedUser="selectedCollection"
-                            @user-selected="handleCollectionSelected"
                             class="w-full rounded-lg"
                         />
                     </div>

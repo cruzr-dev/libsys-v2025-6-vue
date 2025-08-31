@@ -13,22 +13,11 @@ import {
 } from "@/components/ui/combobox"
 import { debounce } from 'lodash-es'
 
-// Props
-const props = defineProps<{
-    selectedUser?: any
-}>()
-
-// Emits
-const emit = defineEmits<{
-    'update:selectedUser': [user: any]
-    'userSelected': [user: any]
-}>()
-
 // Reactive state
 const searchQuery = ref('')
 const searchResults = ref<any[]>([])
 const isLoading = ref(false)
-const selectedUser = ref(props.selectedUser || null)
+const selectedUser = ref(null)
 
 // Debounced search function
 const debouncedSearch = debounce(async (query: string) => {
@@ -41,7 +30,6 @@ const debouncedSearch = debounce(async (query: string) => {
     isLoading.value = true
 
     try {
-        // Make request to your Laravel backend
         const response = await fetch(`/api/borrowings/users/search?q=${encodeURIComponent(query)}`, {
             headers: {
                 'Accept': 'application/json',
@@ -72,8 +60,6 @@ watch(searchQuery, (newQuery) => {
 // Handle user selection
 const handleUserSelect = (user: any) => {
     selectedUser.value = user
-    emit('update:selectedUser', user)
-    emit('userSelected', user)
 }
 
 // Display function for selected user
@@ -88,7 +74,6 @@ const displayValue = (user: any) => {
 
 <template>
     <div class="grid space-y-4">
-
         <Combobox
             v-model="selectedUser"
             by="id"
