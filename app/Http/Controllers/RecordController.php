@@ -59,13 +59,14 @@ class RecordController extends Controller
 
     public function fetchAllWelcome(Request $request)
     {
-        $query = Record::query()
-            ->whereNull('deleted_at');
-
-        // Pagination only
         $perPage = $request->get('per_page', 9);
-        $records = $query->paginate($perPage);
+
+        $records = Record::query()
+            ->whereNull('deleted_at')
+            ->latest()             // orders by `created_at DESC`
+            ->paginate($perPage);
 
         return $records;
     }
+
 }
