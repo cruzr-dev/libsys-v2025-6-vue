@@ -5,7 +5,7 @@ import { onMounted, ref } from 'vue';
 import { debounce } from 'lodash-es';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CircleCheckBig, X, UserRound } from 'lucide-vue-next';
+import { AlertCircle, X, UserRound } from 'lucide-vue-next';
 import { Input } from '@/components/ui/input';
 import {
     Dialog,
@@ -30,6 +30,12 @@ interface Flash {
     error?: string | null;
 }
 
+interface SearchResult {
+    user: User | null;
+    message: string;
+    success: boolean;
+}
+
 declare module '@inertiajs/core' {
     interface PageProps {
         flash: Flash;
@@ -51,6 +57,8 @@ const searchQuery = ref('');
 const isLoading = ref(false);
 const foundUser = ref<User | null>(null);
 const isDialogOpen = ref(false);
+const searchMessage = ref('');
+const showSearchFeedback = ref(false);
 
 /* -------------------- Utility Functions -------------------- */
 const isExactNineDigits = (query: string): boolean => {
@@ -64,9 +72,13 @@ const buildSearchParams = (query: string): URLSearchParams => {
 };
 
 /* -------------------- API Functions -------------------- */
-const searchUser = async (query: string): Promise<User | null> => {
+const searchUser = async (query: string): Promise<SearchResult> => {
     if (!query || query.length < 2) {
-        return null;
+        return {
+            user: null,
+            message: 'Please enter at least 2 characters',
+            success: false
+        };
     }
 
     const params = buildSearchParams(query);
@@ -79,16 +91,44 @@ const searchUser = async (query: string): Promise<User | null> => {
             }
         });
 
+        const data = await response.json();
+
         if (response.ok) {
-            const data = await response.json();
-            return data.user || null;
+            // Success case - user found
+            return {
+                user: data.user || null,
+                message: data.message || 'User found successfully',
+                success: true
+            };
+        } else if (response.status === 404) {
+            // Not found case
+            return {
+                user: null,
+                message: data.message || 'No user found with the provided library id',
+                success: false
+            };
+        } else if (response.status === 422) {
+            // Validation error
+            return {
+                user: null,
+                message: data.message || 'Invalid input provided',
+                success: false
+            };
         } else {
-            console.error('User search failed:', response.statusText);
-            return null;
+            // Other errors
+            return {
+                user: null,
+                message: data.message || 'An error occurred while searching',
+                success: false
+            };
         }
     } catch (error) {
         console.error('User search error:', error);
-        return null;
+        return {
+            user: null,
+            message: 'Network error occurred while searching',
+            success: false
+        };
     }
 };
 
@@ -98,14 +138,26 @@ const performSearch = async (query: string, showLoadingState = true): Promise<vo
         isLoading.value = true;
     }
 
-    try {
-        const user = await searchUser(query);
+    // Clear previous feedback
+    showSearchFeedback.value = false;
+    searchMessage.value = '';
 
-        if (user) {
-            foundUser.value = user;
+    try {
+        const result = await searchUser(query);
+
+        if (result.success && result.user) {
+            foundUser.value = result.user;
             isDialogOpen.value = true;
+            showSearchFeedback.value = false; // Don't show feedback when opening dialog
         } else {
             foundUser.value = null;
+            searchMessage.value = result.message;
+            showSearchFeedback.value = true;
+
+            // Auto-hide feedback after 4 seconds
+            setTimeout(() => {
+                showSearchFeedback.value = false;
+            }, 4000);
         }
     } finally {
         if (showLoadingState) {
@@ -119,6 +171,7 @@ const debouncedSearch = debounce(async (query: string) => {
     if (!isExactNineDigits(query)) {
         foundUser.value = null;
         isLoading.value = false;
+        showSearchFeedback.value = false;
         return;
     }
 
@@ -129,6 +182,8 @@ const debouncedSearch = debounce(async (query: string) => {
 const performManualSearch = async (query: string): Promise<void> => {
     if (!query || query.length < 2) {
         foundUser.value = null;
+        searchMessage.value = 'Please enter at least 2 characters';
+        showSearchFeedback.value = true;
         return;
     }
 
@@ -141,6 +196,11 @@ const handleSearchInput = (event: Event): void => {
     const query = target.value;
 
     searchQuery.value = query;
+
+    // Clear previous feedback when user starts typing
+    if (showSearchFeedback.value) {
+        showSearchFeedback.value = false;
+    }
 
     if (isExactNineDigits(query)) {
         // Auto-search for 9-digit numbers
@@ -173,6 +233,10 @@ const dismissAlert = (): void => {
     showAlert.value = false;
 };
 
+const dismissSearchFeedback = (): void => {
+    showSearchFeedback.value = false;
+};
+
 /* -------------------- Lifecycle -------------------- */
 onMounted(() => {
     if (page.props.flash.error) {
@@ -186,59 +250,40 @@ onMounted(() => {
 <template>
     <Head title="Patron Logger" />
 
-    <div class="flex min-h-screen flex-col items-center text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a]">
+    <div class="flex min-h-screen bg-green-100 flex-col items-center text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a]">
         <!-- Hidden redirect link -->
         <Link :href="route('home')" class="fixed top-0 left-0 bg-red-500 opacity-0">
             hi
         </Link>
 
-        <!-- Error Alert -->
+        <!-- Search Feedback Alert -->
         <Alert
-            v-if="page.props.flash.error && showAlert"
-            class="absolute top-5 right-5 w-fit pr-8"
+            v-if="showSearchFeedback && searchMessage"
+            class="fixed top-5 right-5 z-30 w-fit max-w-md pr-8"
             variant="destructive"
         >
             <AlertCircle class="h-4 w-4" />
             <button
-                @click="dismissAlert"
+                @click="dismissSearchFeedback"
                 class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-red-100"
                 aria-label="Close alert"
             >
                 <X class="h-4 w-4" />
             </button>
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>Search Result</AlertTitle>
             <AlertDescription>
-                {{ page.props.flash.error }}
-            </AlertDescription>
-        </Alert>
-
-        <!-- Success Alert -->
-        <Alert
-            v-if="page.props.flash.success && showAlert"
-            class="fixed top-5 right-5 z-30 w-fit max-w-md border-2 border-green-500 pr-8"
-        >
-            <CircleCheckBig />
-            <button
-                @click="dismissAlert"
-                class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-green-100"
-                aria-label="Close alert"
-            >
-                <X class="h-4 w-4" />
-            </button>
-            <AlertTitle>Success</AlertTitle>
-            <AlertDescription>
-                {{ page.props.flash.success }}
+                {{ searchMessage }}
             </AlertDescription>
         </Alert>
 
         <!-- Main Content -->
-        <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
+        <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0 bg-red-100">
             <div class="flex min-w-full flex-col items-center p-8">
                 <div class="relative w-full max-w-80 items-center">
                     <Input
                         id="search"
                         type="text"
-                        placeholder="Enter card number..."
+                        placeholder="e.g. 201900121"
                         class="p-4 pl-10 md:text-lg pr-10"
                         v-model="searchQuery"
                         @input="handleSearchInput"
@@ -254,7 +299,7 @@ onMounted(() => {
                         v-if="searchQuery"
                         variant="ghost"
                         class="absolute right-0 top-1/2 transform -translate-y-1/2 px-2"
-                        @click="searchQuery = ''; handleSearchInput()"
+                        @click="searchQuery = ''; foundUser = null; showSearchFeedback = false;"
                     >
                         <X class="size-5 text-muted-foreground" />
                     </Button>
@@ -269,7 +314,7 @@ onMounted(() => {
 
                 <!-- Search instruction -->
                 <p class="mt-4 text-sm text-gray-500 text-center max-w-sm">
-                    Enter a 9-digit card number for instant search, or press Enter for other formats
+                    Enter a 9-digit library id for instant search, or press Enter for other formats
                 </p>
             </div>
         </div>
@@ -294,7 +339,7 @@ onMounted(() => {
                     </div>
 
                     <div class="text-sm text-gray-600 space-y-1">
-                        <p><strong>Card Number:</strong> {{ foundUser.library_id }}</p>
+                        <p><strong>Libary ID:</strong> {{ foundUser.library_id }}</p>
                         <p v-if="foundUser.email"><strong>Email:</strong> {{ foundUser.email }}</p>
                     </div>
                 </div>
