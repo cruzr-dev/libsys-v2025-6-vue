@@ -31,7 +31,6 @@ class ThesisFactory extends Factory
             'lc_class_id' => null, // Nullable, assuming no LcClassification creation
             'call_number' => $this->faker->regexify('[A-Z]{2}[0-9]{4}'),
             'physical_location_id' => null, // Nullable, assuming no PhysicalLocation creation
-            'abstract' => $this->faker->paragraph(5),
             'created_at' => $this->faker->dateTimeThisYear(),
             'updated_at' => $this->faker->dateTimeThisYear(),
         ];
