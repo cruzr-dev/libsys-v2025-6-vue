@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Check, Search, Book } from "lucide-vue-next"
+import { Check, Search, X, Book } from "lucide-vue-next"
 import {
     Combobox,
     ComboboxAnchor,
@@ -11,6 +11,7 @@ import {
     ComboboxItemIndicator,
     ComboboxList
 } from "@/components/ui/combobox"
+import { Button } from "@/components/ui/button"
 import { debounce } from 'lodash-es'
 
 // Reactive state
@@ -62,6 +63,13 @@ const handleRecordSelect = (record: any) => {
     selectedRecord.value = record
 }
 
+// Clear search filter
+const clearFilter = () => {
+    searchQuery.value = ''
+    searchResults.value = []
+    selectedRecord.value = null
+}
+
 // Display function for selected record
 const displayValue = (record: any) => {
     if (!record) return ''
@@ -78,7 +86,6 @@ const getResourceType = (record: any) => {
     if (record.thesis) return 'Thesis'
     return 'Collection'
 }
-
 </script>
 
 <template>
@@ -89,23 +96,30 @@ const getResourceType = (record: any) => {
             @update:model-value="handleRecordSelect"
         >
             <ComboboxAnchor class="w-full border-1 rounded-lg focus-within:ring-2 focus-within:ring-[var(--ring)]">
-                <div class="relative w-full items-center">
+                <div class="relative w-full">
                     <ComboboxInput
                         v-model="searchQuery"
-                        class="pl-2 pr-2 py-2 dark:text-muted-foreground"
+                        class="w-full pl-3 pr-10 py-2 dark:text-muted-foreground"
                         :display-value="displayValue"
                         placeholder="Search by title, or accession number..."
                     />
-                    <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
-                        <Search
-                            v-if="!isLoading"
-                            class="size-4 text-muted-foreground"
-                        />
-                        <div
-                            v-else
-                            class="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
-                        />
-                    </span>
+
+                    <!-- Clear button always visible -->
+                    <Button
+                        variant="ghost"
+                        class="absolute top-0 right-0 h-full px-2"
+                        @click="clearFilter"
+                    >
+                        <X class="h-4 w-4" />
+                    </Button>
+
+                    <!-- Loading spinner -->
+                    <div
+                        v-if="isLoading"
+                        class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none"
+                    >
+                        <div class="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                    </div>
                 </div>
             </ComboboxAnchor>
 
