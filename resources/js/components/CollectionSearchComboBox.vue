@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Check, X, Book } from "lucide-vue-next"
+import { X, Book } from "lucide-vue-next"
 import {
     Combobox,
     ComboboxAnchor,
@@ -8,7 +8,6 @@ import {
     ComboboxGroup,
     ComboboxInput,
     ComboboxItem,
-    ComboboxItemIndicator,
     ComboboxList
 } from "@/components/ui/combobox"
 import {
@@ -25,7 +24,6 @@ import { debounce } from 'lodash-es'
 const searchQuery = ref('')
 const searchResults = ref<any[]>([])
 const isLoading = ref(false)
-const selectedRecord = ref(null)
 const selectedFilter = ref('all') // Default to "all records"
 
 // Filter options
@@ -92,25 +90,11 @@ watch(selectedFilter, () => {
     }
 })
 
-// Handle record selection
-const handleRecordSelect = (record: any) => {
-    selectedRecord.value = record
-}
-
-// Clear search filter
-const clearFilter = () => {
+// Clear search
+const clearSearch = () => {
     searchQuery.value = ''
     searchResults.value = []
-    selectedRecord.value = null
     selectedFilter.value = 'all'
-}
-
-// Display function for selected record
-const displayValue = (record: any) => {
-    if (!record) return ''
-    const title = record.title || 'Untitled'
-    const accessionNumber = record.accession_number || ''
-    return accessionNumber ? `${title} (${accessionNumber})` : title
 }
 
 // Get resource type display name
@@ -144,9 +128,7 @@ const getResourceType = (record: any) => {
 
             <!-- Search Combobox -->
             <Combobox
-                v-model="selectedRecord"
-                by="id"
-                @update:model-value="handleRecordSelect"
+                v-model="searchQuery"
                 class="flex-1"
             >
                 <ComboboxAnchor class="w-full border-1 rounded-lg focus-within:ring-2 focus-within:ring-[var(--ring)]">
@@ -154,15 +136,15 @@ const getResourceType = (record: any) => {
                         <ComboboxInput
                             v-model="searchQuery"
                             class="w-full pl-3 pr-10 py-2 dark:text-muted-foreground"
-                            :display-value="displayValue"
                             placeholder="Search by title, or accession number..."
                         />
 
-                        <!-- Clear button always visible -->
+                        <!-- Clear button -->
                         <Button
+                            v-if="searchQuery"
                             variant="ghost"
                             class="absolute top-0 right-0 h-full px-2"
-                            @click="clearFilter"
+                            @click="clearSearch"
                         >
                             <X class="h-4 w-4" />
                         </Button>
@@ -170,7 +152,7 @@ const getResourceType = (record: any) => {
                         <!-- Loading spinner -->
                         <div
                             v-if="isLoading"
-                            class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none"
+                            class="absolute top-0 right-8 h-full px-2 flex items-center justify-center pointer-events-none"
                         >
                             <div class="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                         </div>
@@ -191,7 +173,7 @@ const getResourceType = (record: any) => {
                         <ComboboxItem
                             v-for="record in searchResults"
                             :key="record.id"
-                            :value="record"
+                            :value="record.title"
                             class="flex flex-col items-start py-3"
                         >
                             <div class="flex w-full items-center justify-between">
@@ -211,10 +193,6 @@ const getResourceType = (record: any) => {
                                         </span>
                                     </div>
                                 </div>
-
-                                <ComboboxItemIndicator>
-                                    <Check class="ml-2 h-4 w-4 flex-shrink-0" />
-                                </ComboboxItemIndicator>
                             </div>
                         </ComboboxItem>
                     </ComboboxGroup>
