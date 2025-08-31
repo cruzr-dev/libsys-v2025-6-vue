@@ -35,6 +35,7 @@ class BookController extends Controller
     {
         $query = Record::query()
             ->whereNull('deleted_at') // respect soft deletes
+            ->whereHas('book')
             ->with(['book.authors', 'book.editors']); // Eager load book, authors, and editors relationships
 
         // Handle search

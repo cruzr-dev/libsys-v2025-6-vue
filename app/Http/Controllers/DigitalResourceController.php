@@ -25,6 +25,7 @@ class DigitalResourceController extends Controller
     {
         $query = Record::query()
             ->whereNull('deleted_at')
+            ->whereHas('digitalResource') // Only include records with a digitalResource
             ->with('digitalResource');
 
         // Handle search
