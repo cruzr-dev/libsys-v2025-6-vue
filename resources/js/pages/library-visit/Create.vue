@@ -3,10 +3,9 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 
-import LoggerPatronSearch from '@/components/LoggerPatronSearch.vue';
-
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CircleCheckBig, X } from 'lucide-vue-next';
+import { AlertCircle, CircleCheckBig, X, UserRound } from 'lucide-vue-next';
+import { Input } from '@/components/ui/input';
 
 /* -------------------- Props -------------------- */
 defineProps<{
@@ -75,7 +74,12 @@ declare module '@inertiajs/core' {
         <!-- Main Content -->
         <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
             <div class="flex min-w-full flex-col items-center p-8">
-                <LoggerPatronSearch :purposes="purposes" :patron="patron" :search_button="search_button" :is_logout="is_logout" />
+                <div class="relative w-full max-w-sm items-center">
+                    <Input id="search" type="text" placeholder="Search..." class="p-6 pl-10 md:text-xl" />
+                    <span class="absolute start-0 inset-y-0 flex items-center justify-center px-2">
+                      <UserRound class="size-6 text-muted-foreground" />
+                    </span>
+                </div>
             </div>
         </div>
     </div>
