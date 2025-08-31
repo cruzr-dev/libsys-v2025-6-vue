@@ -57,25 +57,46 @@ class RecordController extends Controller
             $query->latest('created_at');
         }
 
+        // Handle column visibility (optional - for server-side optimization)
+        $showAuthors = !$request->has('hide_authors_list') || $request->get('show_authors_list') === '1';
+        $showEditors = !$request->has('hide_editors_list') || $request->get('show_editors_list') === '1';
+
+        // Conditionally load relationships based on visibility
+        if (!$showAuthors && !$showEditors) {
+            // Don't load any author/editor relationships if both are hidden
+            $query->with(['book']);
+        } elseif (!$showAuthors) {
+            // Only load editors if authors are hidden
+            $query->with(['book.editors']);
+        } elseif (!$showEditors) {
+            // Only load authors if editors are hidden
+            $query->with(['book.authors']);
+        }
+        // If both are visible (default), the original with() at the top handles it
+
         // Pagination
         $perPage = $request->get('per_page', 10);
 
         $records = $query->paginate($perPage);
 
         // Transform the data to include author and editor information
-        $records->getCollection()->transform(function ($record) {
-            // Transform authors
-            if ($record->book && $record->book->authors && $record->book->authors->count() > 0) {
-                $record->authors_list = $record->book->authors->pluck('name')->join(', ');
-            } else {
-                $record->authors_list = null;
+        $records->getCollection()->transform(function ($record) use ($showAuthors, $showEditors) {
+            // Transform authors only if visible
+            if ($showAuthors) {
+                if ($record->book && $record->book->authors && $record->book->authors->count() > 0) {
+                    $record->authors_list = $record->book->authors->pluck('name')->join(', ');
+                } else {
+                    $record->authors_list = null;
+                }
             }
 
-            // Transform editors
-            if ($record->book && $record->book->editors && $record->book->editors->count() > 0) {
-                $record->editors_list = $record->book->editors->pluck('name')->join(', ');
-            } else {
-                $record->editors_list = null;
+            // Transform editors only if visible
+            if ($showEditors) {
+                if ($record->book && $record->book->editors && $record->book->editors->count() > 0) {
+                    $record->editors_list = $record->book->editors->pluck('name')->join(', ');
+                } else {
+                    $record->editors_list = null;
+                }
             }
 
             return $record;

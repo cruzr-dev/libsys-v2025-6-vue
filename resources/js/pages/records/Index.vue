@@ -9,8 +9,10 @@ import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import { ArrowUpDown, Search, X, Loader2, Eye } from 'lucide-vue-next';
+import { ArrowUpDown, Search, X, Loader2, Eye, ChevronDown } from 'lucide-vue-next';
+import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
+import type { ColumnDef, VisibilityState, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
 import {
     FlexRender,
     getCoreRowModel,
@@ -42,7 +44,7 @@ interface ApiResponse {
     total: number;
 }
 
-// reactive state
+// Reactive state
 const data = ref<any[]>([]);
 const isLoading = ref(false);
 const currentPage = ref(1);
@@ -50,18 +52,21 @@ const lastPage = ref(1);
 const total = ref(0);
 const error = ref<string | null>(null);
 
-const sorting = ref([]);
-const columnFilters = ref([]);
+const sorting = ref<SortingState>([]);
+const columnFilters = ref<ColumnFiltersState>([]);
+const columnVisibility = ref<VisibilityState>({
+    editors_list: false, // Hide editors column by default
+});
 
-// --- Modal dialog state ---
+// Modal dialog state
 const isDialogOpen = ref(false);
 const selectedBook = ref<any | null>(null);
 
-// --- Search functionality state ---
+// Search functionality state
 const filterInput = ref<string>('');
 const searchInputRef = ref(null);
 
-// --- Pagination state ---
+// Pagination state
 const pageSizes = [5, 10, 20, 30, 40, 50];
 const pagination = ref({
     pageIndex: 0,
@@ -69,15 +74,18 @@ const pagination = ref({
 });
 
 // Scroll position tracking
-let scrollPosition = 0;
+const scrollPosition = ref(0);
 
 const saveScrollPosition = () => {
-    scrollPosition = window.scrollY;
+    scrollPosition.value = window.pageYOffset || document.documentElement.scrollTop;
 };
 
 const restoreScrollPosition = () => {
     nextTick(() => {
-        window.scrollTo(0, scrollPosition);
+        window.scrollTo({
+            top: scrollPosition.value,
+            behavior: 'instant'
+        });
     });
 };
 
@@ -91,10 +99,16 @@ const handleEdit = (id: string | number) => {
     router.get(route('records.books.edit', id));
 };
 
-console.log(data)
+// Sorting helper
+function cycleSort(column: any) {
+    const currentSort = column.getIsSorted();
+    if (currentSort === false) column.toggleSorting(false);
+    else if (currentSort === 'asc') column.toggleSorting(true);
+    else column.clearSorting();
+}
 
-// Columns with authors and editors columns
-const columns = [
+// Columns definition with visibility support
+const columns: ColumnDef<any>[] = [
     {
         accessorKey: 'accession_number',
         header: ({ column }) =>
@@ -102,6 +116,7 @@ const columns = [
                 'Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
             ]),
         cell: ({ row }) => h('div', row.getValue('accession_number')),
+        enableHiding: false, // Always show accession number
     },
     {
         accessorKey: 'title',
@@ -110,6 +125,7 @@ const columns = [
                 'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
             ]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
+        enableHiding: false, // Always show title
     },
     {
         accessorKey: 'authors_list',
@@ -118,8 +134,8 @@ const columns = [
             const authorsList = row.getValue('authors_list');
             return h('div', { class: 'truncate max-w-xs' }, authorsList || 'No authors');
         },
+        enableHiding: true,
     },
-    // New Editors column
     {
         accessorKey: 'editors_list',
         header: () => h('div', 'Editors'),
@@ -127,6 +143,7 @@ const columns = [
             const editorsList = row.getValue('editors_list');
             return h('div', { class: 'truncate max-w-xs' }, editorsList || 'No editors');
         },
+        enableHiding: true,
     },
     {
         id: 'action',
@@ -148,35 +165,20 @@ const columns = [
     }
 ];
 
-// sort helper
-function cycleSort(column) {
-    const currentSort = column.getIsSorted();
-    if (currentSort === false) column.toggleSorting(false);
-    else if (currentSort === 'asc') column.toggleSorting(true);
-    else column.clearSorting();
-}
-
 // Apply search filter
 const applyFilter = () => {
     const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
     if (filterInput.value.trim()) {
         newFilters.push({ id: 'search', value: filterInput.value.trim() });
     }
-    columnFilters.value = newFilters;
-    // Reset to first page when searching
-    currentPage.value = 1;
-    pagination.value.pageIndex = 0;
-    fetchData();
+    table.setColumnFilters(newFilters);
 };
 
 // Clear search filter
 const clearFilter = () => {
     filterInput.value = '';
     const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-    columnFilters.value = newFilters;
-    currentPage.value = 1;
-    pagination.value.pageIndex = 0;
-    fetchData();
+    table.setColumnFilters(newFilters);
 };
 
 // Debounced search
@@ -197,71 +199,114 @@ watch(filterInput, (newValue, oldValue) => {
     }
 });
 
-// fetch data with search support and sorting
+// Fetch data with all parameters
 const fetchData = async () => {
     isLoading.value = true;
     error.value = null;
+
     try {
-        const searchFilter = columnFilters.value.find(f => f.id === 'search');
-        const searchQuery = searchFilter ? searchFilter.value : '';
+        // Build query parameters
+        const params = new URLSearchParams();
 
-        // Get current sorting state
-        const sortState = sorting.value[0];
-        let sortField = '';
-        let sortDirection = 'asc';
+        // Pagination
+        params.append('page', (pagination.value.pageIndex + 1).toString());
+        params.append('per_page', pagination.value.pageSize.toString());
 
-        if (sortState) {
-            sortField = sortState.id;
-            sortDirection = sortState.desc ? 'desc' : 'asc';
+        // Sorting
+        if (sorting.value.length > 0) {
+            params.append('sort_field', sorting.value[0].id);
+            params.append('sort_direction', sorting.value[0].desc ? 'desc' : 'asc');
         }
 
-        let url = `/api/records?page=${currentPage.value}&per_page=${pagination.value.pageSize}`;
-        if (searchQuery) {
-            url += `&search=${encodeURIComponent(searchQuery)}`;
-        }
-        if (sortField) {
-            url += `&sort_field=${sortField}&sort_direction=${sortDirection}`;
+        // Filters
+        columnFilters.value.forEach(filter => {
+            if (Array.isArray(filter.value) && filter.value.length > 0) {
+                params.append(filter.id, filter.value.join(','));
+            } else if (filter.value !== '' && filter.value !== null && filter.value !== undefined) {
+                params.append(filter.id, filter.value.toString());
+            }
+        });
+
+        // Column visibility
+        Object.entries(columnVisibility.value).forEach(([key, value]) => {
+            if (value === true) {
+                params.append(`show_${key}`, '1');
+            } else {
+                params.append(`hide_${key}`, '1');
+            }
+        });
+
+        // Make API request
+        const response = await fetch(`/api/records?${params.toString()}`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const response = await fetch(url);
         const result: ApiResponse = await response.json();
-        data.value = result.data;
-        currentPage.value = result.current_page;
-        lastPage.value = result.last_page;
-        total.value = result.total;
 
-        // Update pagination state to match server response
-        pagination.value.pageIndex = result.current_page - 1;
+        // Update reactive data
+        data.value = result.data || [];
+        currentPage.value = result.current_page || 1;
+        lastPage.value = result.last_page || 1;
+        total.value = result.total || 0;
+
+        // Update pagination state to match API response
+        pagination.value.pageIndex = (result.current_page || 1) - 1;
+        pagination.value.pageSize = result.per_page || 10;
+
     } catch (err) {
-        error.value = 'Failed to load data.';
+        console.error('API fetch error:', err);
+        error.value = err instanceof Error ? err.message : 'An error occurred while fetching data';
+        data.value = [];
     } finally {
         isLoading.value = false;
     }
 };
 
-// Watch for sorting changes
-watch(sorting, () => {
-    currentPage.value = 1;
-    pagination.value.pageIndex = 0;
-    fetchData();
-}, { deep: true });
+// Debounced fetch for immediate UI feedback
+const debouncedFetch = debounce(fetchData, 300);
 
-// Pagination handlers
-function handlePaginationChange(updater) {
+// Enhanced event handlers
+function handlePaginationChange(updater: any) {
     saveScrollPosition();
     pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater;
-    currentPage.value = pagination.value.pageIndex + 1;
-    fetchData().then(() => restoreScrollPosition());
+    fetchData().then(() => {
+        restoreScrollPosition();
+    });
 }
 
-// Pagination navigation functions
+function handleSortingChange(updaterOrValue: any) {
+    sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue;
+    pagination.value.pageIndex = 0;
+    fetchData();
+}
+
+function handleFilterChange(updaterOrValue: any) {
+    columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue;
+    pagination.value.pageIndex = 0;
+    debouncedFetch();
+}
+
+function handleColumnVisibilityChange(updaterOrValue: any) {
+    columnVisibility.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility.value) : updaterOrValue;
+    fetchData();
+}
+
+// Pagination navigation functions with scroll preservation
 const goToFirstPage = () => {
     if (table.getCanPreviousPage() && !isLoading.value) {
         saveScrollPosition();
         table.setPageIndex(0);
-        currentPage.value = 1;
-        pagination.value.pageIndex = 0;
-        fetchData().then(() => restoreScrollPosition());
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
     }
 };
 
@@ -269,8 +314,9 @@ const goToPreviousPage = () => {
     if (table.getCanPreviousPage() && !isLoading.value) {
         saveScrollPosition();
         table.previousPage();
-        currentPage.value = pagination.value.pageIndex + 1;
-        fetchData().then(() => restoreScrollPosition());
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
     }
 };
 
@@ -278,18 +324,19 @@ const goToNextPage = () => {
     if (table.getCanNextPage() && !isLoading.value) {
         saveScrollPosition();
         table.nextPage();
-        currentPage.value = pagination.value.pageIndex + 1;
-        fetchData().then(() => restoreScrollPosition());
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
     }
 };
 
 const goToLastPage = () => {
     if (table.getCanNextPage() && !isLoading.value) {
         saveScrollPosition();
-        table.setPageIndex(lastPage.value - 1);
-        currentPage.value = lastPage.value;
-        pagination.value.pageIndex = lastPage.value - 1;
-        fetchData().then(() => restoreScrollPosition());
+        table.setPageIndex(table.getPageCount() - 1);
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
     }
 };
 
@@ -297,25 +344,49 @@ const handlePageSizeChange = (value: string) => {
     if (!isLoading.value) {
         saveScrollPosition();
         table.setPageSize(Number(value));
-        pagination.value.pageSize = Number(value);
-        // Reset to first page when changing page size
-        currentPage.value = 1;
-        pagination.value.pageIndex = 0;
-        fetchData().then(() => restoreScrollPosition());
+        fetchData().then(() => {
+            restoreScrollPosition();
+        });
     }
 };
 
-// Initialize from URL (search param)
+// Initialize from URL
 const initializeFromURL = () => {
     const urlParams = new URLSearchParams(window.location.search);
+
+    // Initialize pagination
+    const page = parseInt(urlParams.get('page') || '1');
+    const perPageParam = parseInt(urlParams.get('per_page') || '10');
+    pagination.value.pageIndex = page - 1;
+    pagination.value.pageSize = perPageParam;
+
+    // Initialize sorting
+    const sortField = urlParams.get('sort_field');
+    const sortDirection = urlParams.get('sort_direction');
+    if (sortField) {
+        sorting.value = [{ id: sortField, desc: sortDirection === 'desc' }];
+    }
+
+    // Initialize search filter
     const searchParam = urlParams.get('search');
     if (searchParam) {
         filterInput.value = searchParam;
         columnFilters.value = [{ id: 'search', value: searchParam }];
     }
+
+    // Initialize column visibility
+    urlParams.forEach((value, key) => {
+        if (key.startsWith('show_')) {
+            const columnKey = key.replace('show_', '');
+            columnVisibility.value[columnKey] = value === '1';
+        } else if (key.startsWith('hide_')) {
+            const columnKey = key.replace('hide_', '');
+            columnVisibility.value[columnKey] = value !== '1';
+        }
+    });
 };
 
-// table instance
+// Table instance
 const table = useVueTable({
     get data() { return data.value; },
     columns,
@@ -327,11 +398,12 @@ const table = useVueTable({
         return lastPage.value;
     },
     manualPagination: true,
-    manualSorting: true, // Enable manual sorting for server-side sorting
+    manualSorting: true,
+    manualFiltering: true,
     onPaginationChange: handlePaginationChange,
-    onSortingChange: (updater) => {
-        sorting.value = typeof updater === 'function' ? updater(sorting.value) : updater;
-    },
+    onSortingChange: handleSortingChange,
+    onColumnFiltersChange: handleFilterChange,
+    onColumnVisibilityChange: handleColumnVisibilityChange,
     state: {
         get pagination() {
             return pagination.value;
@@ -339,17 +411,28 @@ const table = useVueTable({
         get sorting() {
             return sorting.value;
         },
-        columnFilters: columnFilters.value,
+        get columnFilters() {
+            return columnFilters.value;
+        },
+        get columnVisibility() {
+            return columnVisibility.value;
+        },
     },
 });
 
-// lifecycle
+// Lifecycle
 onMounted(() => {
     initializeFromURL();
     fetchData();
 });
 
-// breadcrumbs
+// Watch for external changes
+watch(() => window.location.search, () => {
+    initializeFromURL();
+    fetchData();
+});
+
+// Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Records', href: '/records' },
     { title: 'Books', href: '/records/books' },
@@ -361,8 +444,16 @@ const breadcrumbs: BreadcrumbItem[] = [
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
             <div class="w-full">
-                <!-- Search -->
-                <div class="flex items-center gap-2 py-4">
+                <!-- Error message -->
+                <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                    <p>{{ error }}</p>
+                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2">
+                        Retry
+                    </Button>
+                </div>
+
+                <!-- Search and Controls -->
+                <div class="flex items-center justify-between gap-2 py-4">
                     <div class="relative">
                         <Input
                             ref="searchInputRef"
@@ -385,6 +476,32 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <Search class="h-4 w-4 text-foreground" />
                         </div>
                     </div>
+
+                    <!-- Column Visibility Dropdown -->
+                    <DropdownMenuRoot>
+                        <DropdownMenuTrigger as-child>
+                            <Button variant="outline" class="ml-auto" :disabled="isLoading">
+                                Columns
+                                <ChevronDown class="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" class="z-50 min-w-[220px] rounded-md border border-gray-200 bg-white p-1 shadow-lg">
+                            <DropdownMenuCheckboxItem
+                                v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
+                                :key="column.id"
+                                :checked="column.getIsVisible()"
+                                @update:checked="(value) => column.toggleVisibility(!!value)"
+                                class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
+                            >
+                                <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                                    <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </span>
+                                {{ column.id.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                            </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                    </DropdownMenuRoot>
                 </div>
 
                 <!-- Table -->
@@ -407,7 +524,10 @@ const breadcrumbs: BreadcrumbItem[] = [
                             </template>
                             <TableRow v-else-if="isLoading">
                                 <TableCell :colspan="columns.length" class="h-24 text-center">
-                                    <Loader2 class="h-4 w-4 animate-spin mr-2 inline" /> Loading...
+                                    <div class="flex justify-center items-center">
+                                        <Loader2 class="h-4 w-4 animate-spin mr-2" />
+                                        Loading...
+                                    </div>
                                 </TableCell>
                             </TableRow>
                             <TableRow v-else>
@@ -477,7 +597,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </div>
                 </div>
 
-                <!-- Book Details Modal with Authors and Editors -->
+                <!-- Book Details Modal -->
                 <Dialog v-model:open="isDialogOpen">
                     <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                         <DialogHeader class="p-6 pb-0">
