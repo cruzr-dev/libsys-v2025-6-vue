@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 
 defineProps<{
     user: Object,
@@ -26,6 +26,7 @@ onMounted(() => {
 
         if (newProgress <= 0) {
             clearInterval(interval);
+            emit('update:open', false); // Close the dialog when progress reaches 0
         }
     }, 16); // ~60fps
 });
@@ -39,6 +40,12 @@ const onOpenChange = (value: boolean) => {
 const onTriggerClick = () => {
     emit('trigger');
 };
+
+watch(() => open, (newValue) => {
+    if (newValue) {
+        progress.value = 100; // Reset progress when dialog opens
+    }
+});
 </script>
 
 <template>
@@ -83,7 +90,7 @@ const onTriggerClick = () => {
                 <div class="p-6 pt-10 space-y-6 overflow-y-auto">
                     <h2 class="text-2xl font-bold">{{ user?.first_name }}</h2>
                     <div class="flex my-4 gap-2">
-                        <p class="text-muted-foreground">{{ user?.email }}</p>
+                        <p class="text-muted-foreground">{{ user?.last_name }}</p>
                     </div>
 
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -92,6 +99,5 @@ const onTriggerClick = () => {
                 </div>
             </div>
         </DialogContent>
-
     </Dialog>
 </template>
