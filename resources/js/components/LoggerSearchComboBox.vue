@@ -4,8 +4,7 @@ import { X, Book } from "lucide-vue-next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { debounce } from 'lodash-es'
-import WelcomeSearchDialog from '@/components/WelcomeSearchDialog.vue';
-import LoggerSearchDialog from '@/components/LoggerSearchDialog.vue';
+import LoggerSearchDialog from '@/components/LoggerSearchDialog.vue'
 
 // Reactive state
 const searchQuery = ref('')
@@ -14,7 +13,17 @@ const isLoading = ref(false)
 
 // Debounced search function
 const debouncedSearch = debounce(async (query: string) => {
-    if (!query || query.length < 2) {
+    // Only allow search when query starts with `--`
+    if (!query.startsWith('--')) {
+        searchResults.value = []
+        isLoading.value = false
+        return
+    }
+
+    // Remove the `--` prefix for the actual search
+    const actualQuery = query.slice(2).trim()
+
+    if (!actualQuery || actualQuery.length < 2) {
         searchResults.value = []
         isLoading.value = false
         return
@@ -23,10 +32,7 @@ const debouncedSearch = debounce(async (query: string) => {
     isLoading.value = true
 
     try {
-        // Build query parameters
-        const params = new URLSearchParams({
-            q: query
-        })
+        const params = new URLSearchParams({ q: actualQuery })
 
         const response = await fetch(`/api/logger/patron/search-by-name?${params.toString()}`, {
             headers: {
@@ -60,7 +66,6 @@ const clearSearch = () => {
     searchQuery.value = ''
     searchResults.value = []
 }
-
 </script>
 
 <template>
@@ -105,7 +110,7 @@ const clearSearch = () => {
                 >
                     <Book class="size-8 text-muted-foreground mb-2" />
                     <p class="text-sm text-muted-foreground">
-                        {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No users found' }}
+                        No results found
                     </p>
                 </div>
 
