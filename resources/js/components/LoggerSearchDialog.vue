@@ -48,7 +48,7 @@ const onTriggerClick = () => {
             </div>
         </DialogTrigger>
 
-        <DialogContent class="grid gap-6 h-full max-h-[90%] sm:grid-cols-2 sm:max-w-6xl justify-between">
+        <DialogContent class="grid gap-6 h-full max-h-[60%] sm:grid-cols-2 sm:max-w-xl justify-between">
             <div class="flex items-center justify-center">
                 image
             </div>
