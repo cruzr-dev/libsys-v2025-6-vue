@@ -181,20 +181,41 @@ class LibraryVisitController extends Controller
         }
     }
 
-    public function searchByName(Request $request) {
-        $query = $request->input('query');
-        if (strlen($query) < 2) {
-            return response()->json(['message' => 'Please enter at least 2 characters'], 422);
+    public function searchByName(Request $request): JsonResponse
+    {
+        try {
+            // Validate the request
+            $request->validate([
+                'query' => 'required|string|min:2'
+            ]);
+
+            $query = $request->input('query');
+
+            $users = User::where('first_name', 'LIKE', "%$query%")
+                ->orWhere('last_name', 'LIKE', "%$query%")
+                ->orWhere('email', 'LIKE', "%$query%")
+                ->take(5) // Limit to 20 results
+                ->get(['first_name', 'last_name', 'library_id', 'email']);
+
+            return response()->json([
+                'users' => $users,
+                'message' => $users->isEmpty() ? 'No users found' : 'Users found',
+                'success' => true // Add success field for consistency
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'users' => [],
+                'message' => 'Invalid input provided',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'users' => [],
+                'message' => 'An error occurred while searching',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
         }
-
-        $users = User::where('first_name', 'LIKE', "%$query%")
-            ->orWhere('last_name', 'LIKE', "%$query%")
-            ->orWhere('email', 'LIKE', "%$query%")
-            ->get(['first_name', 'last_name', 'library_id', 'email']);
-
-        return response()->json([
-            'users' => $users,
-            'message' => $users->isEmpty() ? 'No users found' : 'Users found'
-        ]);
     }
 }

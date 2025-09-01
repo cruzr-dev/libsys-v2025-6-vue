@@ -90,14 +90,6 @@ const clearSearch = () => {
     // Remove this line to preserve the filter: selectedFilter.value = 'all'
 }
 
-// Get resource type display name
-const getResourceType = (record: any) => {
-    if (record.book) return 'Book'
-    if (record.digital_resource) return 'Multimedia'
-    if (record.periodical) return 'Periodical'
-    if (record.thesis) return 'Thesis'
-    return 'Collection'
-}
 </script>
 
 <template>
