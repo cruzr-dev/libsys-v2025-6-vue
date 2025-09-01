@@ -65,9 +65,25 @@ const isExactNineDigits = (query: string): boolean => {
     return /^\d{9}$/.test(query);
 };
 
+const isValidDashFormat = (query: string): boolean => {
+    return /^\d{4}-\d{5}$/.test(query);
+};
+
+const isInstantSearchFormat = (query: string): boolean => {
+    return isExactNineDigits(query) || isValidDashFormat(query);
+};
+
+const normalizeDashFormat = (query: string): string => {
+    // Remove dash from 0000-00000 format to make it 000000000
+    return query.replace('-', '');
+};
+
 const buildSearchParams = (query: string): URLSearchParams => {
+    // Normalize the query for API call
+    const normalizedQuery = isValidDashFormat(query) ? normalizeDashFormat(query) : query;
+
     return new URLSearchParams({
-        library_id: query.trim()
+        library_id: normalizedQuery.trim()
     });
 };
 
@@ -167,9 +183,9 @@ const performSearch = async (query: string, showLoadingState = true): Promise<vo
     }
 };
 
-// Debounced search for 9-digit numbers only
+// Debounced search for both 9-digit numbers and 0000-00000 format
 const debouncedSearch = debounce(async (query: string) => {
-    if (!isExactNineDigits(query)) {
+    if (!isInstantSearchFormat(query)) {
         foundUser.value = null;
         isLoading.value = false;
         showSearchFeedback.value = false;
@@ -179,7 +195,7 @@ const debouncedSearch = debounce(async (query: string) => {
     await performSearch(query, true);
 }, 300);
 
-// Manual search for non-9-digit inputs (triggered by Enter key)
+// Manual search for other formats (triggered by Enter key)
 const performManualSearch = async (query: string): Promise<void> => {
     if (!query || query.length < 2) {
         foundUser.value = null;
@@ -203,11 +219,11 @@ const handleSearchInput = (event: Event): void => {
         showSearchFeedback.value = false;
     }
 
-    if (isExactNineDigits(query)) {
-        // Auto-search for 9-digit numbers
+    if (isInstantSearchFormat(query)) {
+        // Auto-search for both 9-digit numbers and 0000-00000 format
         debouncedSearch(query);
     } else {
-        // Clear results for non-9-digit inputs
+        // Clear results for formats that don't trigger instant search
         foundUser.value = null;
         isLoading.value = false;
     }
@@ -218,9 +234,8 @@ const handleKeyDown = (event: KeyboardEvent): void => {
         const target = event.target as HTMLInputElement;
         const query = target.value.trim();
 
-        // Only perform manual search for non-9-digit inputs
-        // 9-digit inputs are handled automatically by debounced search
-        if (query && !isExactNineDigits(query)) {
+        // Only perform manual search for formats that don't trigger instant search
+        if (query && !isInstantSearchFormat(query)) {
             performManualSearch(query);
         }
     }
@@ -284,7 +299,7 @@ onMounted(() => {
                     <Input
                         id="search"
                         type="text"
-                        placeholder="e.g. 201900121"
+                        placeholder="Enter Library ID"
                         class="p-4 pl-10 md:text-lg pr-10"
                         v-model="searchQuery"
                         @input="handleSearchInput"
@@ -315,7 +330,7 @@ onMounted(() => {
 
                 <!-- Search instruction -->
                 <p class="mt-4 text-sm text-gray-500 text-center max-w-sm">
-                    Enter a 9-digit library id for instant search, or press Enter for other formats
+                    Enter a 9-digit library id (000000000) or dash format (0000-00000) for instant search, or press Enter for other formats
                 </p>
             </div>
         </div>
