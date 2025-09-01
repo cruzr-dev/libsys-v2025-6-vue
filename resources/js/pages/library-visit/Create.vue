@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 /* -------------------- Imports -------------------- */
 import { Head, Link } from '@inertiajs/vue3';
@@ -8,7 +9,8 @@ import LoggerSearchComboBox from '@/components/LoggerSearchComboBox.vue';
     <Head title="Patron Logger" />
 
     <div
-        class="flex min-h-screen flex-col items-center text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a]"
+        class="flex min-h-screen max-h-screen flex-col items-center text-[#1b1b18] lg:justify-center
+        dark:bg-[#0a0a0a] bg-[url(/storage/system_images/lib1.jpg)] bg-cover bg-center"
     >
         <!-- Hidden redirect link -->
         <Link
@@ -20,20 +22,16 @@ import LoggerSearchComboBox from '@/components/LoggerSearchComboBox.vue';
 
         <!-- Main Content -->
         <div
-            class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0 bg-[url(/storage/system_images/eagle.jpg)] bg-cover bg-center"
+            class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0"
         >
-            <!--
-              Alternative: To apply the background to the entire page, move the background classes to the outermost div:
-              class="flex min-h-screen flex-col items-center text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a] bg-[url(/storage/system_images/eagle.jpg)] bg-cover bg-center"
-              and remove them from this grid div.
-            -->
             <div class="px-4">
                 <div
-                    class="relative flex h-[360px] max-w-5xl mx-auto flex-col items-center justify-center rounded-2xl bg-white/10 dark:bg-gray-500/30 backdrop-blur-md border border-white/20 shadow-lg"
+                    class="relative flex h-[360px] max-w-xl mx-auto flex-col items-center justify-center rounded-2xl
+                    bg-white/10 dark:bg-gray-500/30 backdrop-blur-md border border-white/20 shadow-lg"
                 >
                     <!-- Heading + Sub-heading -->
                     <div
-                        class="absolute top-12 left-1/2 -translate-x-1/2 text-center text-primary-foreground dark:text-muted-foreground"
+                        class="absolute w-full top-12 left-1/2 -translate-x-1/2 text-center text-primary-foreground dark:text-muted-foreground"
                     >
                         <h1 class="text-4xl font-bold drop-shadow">ULRC Tagum-Mabini</h1>
                         <p class="mt-2 text-lg font-medium">Patron Logger System</p>
@@ -41,7 +39,7 @@ import LoggerSearchComboBox from '@/components/LoggerSearchComboBox.vue';
 
                     <!-- Search Box -->
                     <div
-                        class="w-full max-w-xl p-2 mt-28 rounded-xl bg-background/95 shadow-md backdrop-blur-sm"
+                        class="w-full max-w-sm p-1 mt-28 rounded-xl bg-background/95 shadow-md backdrop-blur-sm"
                     >
                         <LoggerSearchComboBox class="w-full rounded-lg" />
                     </div>
