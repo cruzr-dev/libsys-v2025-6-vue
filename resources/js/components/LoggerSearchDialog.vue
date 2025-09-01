@@ -15,15 +15,27 @@ defineProps({
 <template>
     <Dialog class="">
         <DialogTrigger as-child>
-            <div class="flex gap-4 w-full">
-                <div class="items-center flex">
-                    <div class="font-medium leading-tight">{{ user?.first_name }}</div>
+            <div class="flex w-full items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition">
+                <!-- First Name -->
+                <div class="text-sm font-medium text-muted-foreground">
+                    {{ user?.first_name }}
                 </div>
-                <div class="record-content w-full">
-                    <div class="text-md font-semibold leading-tight truncate w-sm  0">{{ user?.last_name }}</div>
+
+                <!-- Last Name -->
+                <div class="flex-1">
+                    <div class="text-base font-semibold truncate">
+                        {{ user?.last_name }}
+                    </div>
+                </div>
+
+                <!-- Library Number -->
+                <div class="text-xs font-mono text-muted-foreground">
+                    {{ user?.library_id }}
                 </div>
             </div>
+
         </DialogTrigger>
+
         <DialogContent class="grid gap-6 h-full max-h-9/10 sm:grid-cols-2 sm:max-w-6xl justify-between">
             <div class="flex items-center justify-center">
                 image

@@ -76,7 +76,7 @@ const clearSearch = () => {
                 <Input
                     v-model="searchQuery"
                     class="pr-10"
-                    placeholder="Search by title, or accession number..."
+                    placeholder="Enter Library ID, e.g. 000088888 or 0000-88888"
                 />
 
                 <!-- Clear button -->
@@ -119,7 +119,7 @@ const clearSearch = () => {
                     <div
                         v-for="user in searchResults"
                         :key="user.id"
-                        class="flex flex-col items-start py-3 px-3 hover:bg-accent rounded-sm cursor-pointer"
+                        class="flex flex-col items-start hover:bg-accent rounded-sm cursor-pointer"
                     >
                         <div class="flex w-full items-center justify-between">
                             <LoggerSearchDialog :user="user"/>
