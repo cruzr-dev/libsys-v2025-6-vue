@@ -13,8 +13,14 @@ const isLoading = ref(false)
 const selectedUser = ref<any | null>(null)
 const dialogOpen = ref(false)
 
-// Allow: 000088888  OR  0000-88888
+// For auto-search: 000088888 OR 0000-88888 (must be exactly 9 digits)
 const isLibraryIdQuery = (query: string) => {
+    const trimmed = query.trim()
+    return /^\d{9}$/.test(trimmed) || /^\d{4}-\d{5}$/.test(trimmed)
+}
+
+// For ENTER-based search: any numeric format
+const isNumericQuery = (query: string) => {
     const trimmed = query.trim()
     return /^\d+$/.test(trimmed) || /^\d{4}-\d{5}$/.test(trimmed)
 }
@@ -104,23 +110,41 @@ const searchByLibraryNumber = async (query: string) => {
     }
 }
 
-// Watch for search query changes for name-based search
+// Debounced library ID search for automatic triggering
+const debouncedLibrarySearch = debounce(async (query: string) => {
+    if (isLibraryIdQuery(query)) {
+        // Keep the full format but remove dash if present for API call
+        const formattedQuery = query.includes('-') ? query.replace('-', '') : query
+        await searchByLibraryNumber(formattedQuery)
+    }
+}, 500) // Slightly longer delay to avoid too many API calls while typing
+
+// Watch for search query changes
 watch(searchQuery, (newQuery) => {
     if (newQuery.startsWith('--')) {
+        // Name-based search
         debouncedSearch(newQuery)
+    } else if (isLibraryIdQuery(newQuery)) {
+        // Auto-trigger library ID search
+        searchResults.value = [] // Clear any previous name search results
+        debouncedLibrarySearch(newQuery)
     } else {
+        // Clear results for invalid queries
         searchResults.value = []
+        selectedUser.value = null
+        dialogOpen.value = false
     }
 })
 
-// Handle enter key for numeric queries
+// Handle enter key for any numeric queries (keeping existing functionality)
 const handleKeydown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' && isLibraryIdQuery(searchQuery.value)) {
-        // Remove dash if present, otherwise use the value as-is
-        const formattedQuery = searchQuery.value.replace('-', '');
-        searchByLibraryNumber(formattedQuery);
+    if (event.key === 'Enter' && isNumericQuery(searchQuery.value)) {
+        // Cancel any pending debounced search and search immediately
+        debouncedLibrarySearch.cancel()
+        const formattedQuery = searchQuery.value.includes('-') ? searchQuery.value.replace('-', '') : searchQuery.value
+        searchByLibraryNumber(formattedQuery)
     }
-};
+}
 
 // Handle user selection from name search results
 const handleUserSelect = (user: any) => {
@@ -134,6 +158,9 @@ const clearSearch = () => {
     searchResults.value = []
     selectedUser.value = null
     dialogOpen.value = false
+    // Cancel any pending searches
+    debouncedSearch.cancel()
+    debouncedLibrarySearch.cancel()
 }
 </script>
 
@@ -145,7 +172,7 @@ const clearSearch = () => {
                 <Input
                     v-model="searchQuery"
                     class="pr-10"
-                    placeholder="Enter Library ID 000088888 or 0000-88888"
+                    placeholder="Library ID: 000088888 or 0000-88888 (auto) | Any digits + ENTER"
                     @keydown="handleKeydown"
                 />
 
