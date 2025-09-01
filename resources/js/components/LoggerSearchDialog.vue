@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { ref, onMounted } from 'vue';
 
 defineProps<{
     user: Object,
@@ -10,6 +11,24 @@ const emit = defineEmits<{
     (e: 'update:open', value: boolean): void,
     (e: 'trigger'): void, // New event for explicit trigger
 }>();
+
+// Progress bar state
+const progress = ref(100);
+
+// Animate progress bar
+onMounted(() => {
+    const duration = 2000; // 2 seconds
+    const start = Date.now();
+    const interval = setInterval(() => {
+        const elapsed = Date.now() - start;
+        const newProgress = Math.max(100 - (elapsed / duration) * 100, 0);
+        progress.value = newProgress;
+
+        if (newProgress <= 0) {
+            clearInterval(interval);
+        }
+    }, 16); // ~60fps
+});
 
 // Handle dialog open/close to emit update:open event
 const onOpenChange = (value: boolean) => {
@@ -48,20 +67,31 @@ const onTriggerClick = () => {
             </div>
         </DialogTrigger>
 
-        <DialogContent class="grid gap-6 h-full max-h-[60%] sm:grid-cols-2 sm:max-w-xl justify-between">
-            <div class="flex items-center justify-center">
-                image
-            </div>
-
-            <div class="space-y-6 overflow-y-auto">
-                <h2 class="text-2xl font-bold">{{ user?.first_name }}</h2>
-                <div class="flex my-4 gap-2">
-                    <p class="text-muted-foreground">{{ user?.email }}</p>
+        <DialogContent class="h-full max-h-[60%] sm:max-w-xl p-0 overflow-clip">
+            <div class="relative">
+                <!-- Progress Bar fixed to top -->
+                <div class="absolute top-0 left-0 w-full">
+                    <div class="w-full bg-gray-200 h-2.5">
+                        <div
+                            class="bg-accent h-2.5 transition-all duration-200 ease-linear"
+                            :style="{ width: `${progress}%` }"
+                        ></div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <!-- Content below progress bar -->
+                <div class="p-6 pt-10 space-y-6 overflow-y-auto">
+                    <h2 class="text-2xl font-bold">{{ user?.first_name }}</h2>
+                    <div class="flex my-4 gap-2">
+                        <p class="text-muted-foreground">{{ user?.email }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <!-- More content here -->
+                    </div>
                 </div>
             </div>
         </DialogContent>
+
     </Dialog>
 </template>
