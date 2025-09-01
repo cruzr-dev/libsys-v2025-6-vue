@@ -83,39 +83,7 @@ class LibraryVisitController extends Controller
      */
     public function create(Request $request)
     {
-        $patron = null;
-        $purposes = null;
-        $user_entry = null;
-        $is_logout = false;
-
-
-        if ($request->search_button) {
-
-            try {
-
-                $patron = User::where('library_id', $request->search)->first();
-
-                if ($patron) {
-                    $purposes = VisitPurpose::all()->sortBy('sort_order');
-
-                    $user_entry = LibraryVisit::where('user_id', $patron->id)->whereNull('exit_time')->first();
-                    if ($user_entry) {
-                        $is_logout = true;
-                    }
-                } else {
-                    session()->flash('error', 'User not found');
-                }
-
-            } catch (ModelNotFoundException $e) {
-                \Log::error('Error: ' . $e->getMessage());
-            }
-        }
-
         return Inertia::render('library-visit/Create', [
-            'patron' => $patron,
-            'purposes' => $purposes,
-            'search_button' => (boolean)$request->search_button,
-            'is_logout' => $is_logout,
         ]);
     }
 
@@ -211,5 +179,22 @@ class LibraryVisitController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
+    }
+
+    public function searchByName(Request $request) {
+        $query = $request->input('query');
+        if (strlen($query) < 2) {
+            return response()->json(['message' => 'Please enter at least 2 characters'], 422);
+        }
+
+        $users = User::where('first_name', 'LIKE', "%$query%")
+            ->orWhere('last_name', 'LIKE', "%$query%")
+            ->orWhere('email', 'LIKE', "%$query%")
+            ->get(['first_name', 'last_name', 'library_id', 'email']);
+
+        return response()->json([
+            'users' => $users,
+            'message' => $users->isEmpty() ? 'No users found' : 'Users found'
+        ]);
     }
 }

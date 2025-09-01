@@ -27,6 +27,7 @@ Route::get('/sample', function () {
 });
 
 Route::get('/logger/patron/search', [LibraryVisitController::class, 'search']);
+Route::get('/logger/patron/search-by-name', [LibraryVisitController::class, 'searchByName']);
 Route::get('/welcome/records/search', [WelcomeController::class, 'searchRecords']);
 
 Route::get('/borrowings/books/search', [BorrowingTransactionController::class, 'searchBook']);

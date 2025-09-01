@@ -32,6 +32,7 @@ interface Flash {
 
 interface SearchResult {
     user: User | null;
+    users?: User[]; // Added for list of users in secret pass search
     message: string;
     success: boolean;
 }
@@ -56,7 +57,9 @@ const showAlert = ref(true);
 const searchQuery = ref('');
 const isLoading = ref(false);
 const foundUser = ref<User | null>(null);
+const foundUsers = ref<User[]>([]); // New state for list of users
 const isDialogOpen = ref(false);
+const isUsersListDialogOpen = ref(false); // New state for users list dialog
 const searchMessage = ref('');
 const showSearchFeedback = ref(false);
 
@@ -73,34 +76,44 @@ const isInstantSearchFormat = (query: string): boolean => {
     return isExactNineDigits(query) || isValidDashFormat(query);
 };
 
+const isSecretPassFormat = (query: string): boolean => {
+    return query.startsWith('--');
+};
+
 const normalizeDashFormat = (query: string): string => {
-    // Remove dash from 0000-00000 format to make it 000000000
     return query.replace('-', '');
 };
 
-const buildSearchParams = (query: string): URLSearchParams => {
-    // Normalize the query for API call
+const buildSearchParams = (query: string, isSecretPass: boolean = false): URLSearchParams => {
+    if (isSecretPass) {
+        // For secret pass, search by name or other fields
+        return new URLSearchParams({
+            query: query.replace('--', '').trim()
+        });
+    }
+    // Normalize for library ID search
     const normalizedQuery = isValidDashFormat(query) ? normalizeDashFormat(query) : query;
-
     return new URLSearchParams({
         library_id: normalizedQuery.trim()
     });
 };
 
 /* -------------------- API Functions -------------------- */
-const searchUser = async (query: string): Promise<SearchResult> => {
+const searchUser = async (query: string, isSecretPass: boolean = false): Promise<SearchResult> => {
     if (!query || query.length < 2) {
         return {
             user: null,
+            users: [],
             message: 'Please enter at least 2 characters',
             success: false
         };
     }
 
-    const params = buildSearchParams(query);
+    const params = buildSearchParams(query, isSecretPass);
+    const endpoint = isSecretPass ? '/api/logger/patron/search-by-name' : '/api/logger/patron/search';
 
     try {
-        const response = await fetch(`/api/logger/patron/search?${params.toString()}`, {
+        const response = await fetch(`${endpoint}?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -110,30 +123,40 @@ const searchUser = async (query: string): Promise<SearchResult> => {
         const data = await response.json();
 
         if (response.ok) {
-            // Success case - user found
+            if (isSecretPass) {
+                // Secret pass returns a list of users
+                return {
+                    user: null,
+                    users: data.users || [],
+                    message: data.users?.length ? 'Users found' : 'No users found',
+                    success: true
+                };
+            }
+            // Regular search returns a single user
             return {
                 user: data.user || null,
+                users: [],
                 message: data.message || 'User found successfully',
                 success: true
             };
         } else if (response.status === 404) {
-            // Not found case
             return {
                 user: null,
-                message: data.message || 'No user found with the provided library id',
+                users: [],
+                message: data.message || 'No user found with the provided query',
                 success: false
             };
         } else if (response.status === 422) {
-            // Validation error
             return {
                 user: null,
+                users: [],
                 message: data.message || 'Invalid input provided',
                 success: false
             };
         } else {
-            // Other errors
             return {
                 user: null,
+                users: [],
                 message: data.message || 'An error occurred while searching',
                 success: false
             };
@@ -142,6 +165,7 @@ const searchUser = async (query: string): Promise<SearchResult> => {
         console.error('User search error:', error);
         return {
             user: null,
+            users: [],
             message: 'Network error occurred while searching',
             success: false
         };
@@ -154,24 +178,29 @@ const performSearch = async (query: string, showLoadingState = true): Promise<vo
         isLoading.value = true;
     }
 
-    // Clear previous feedback
     showSearchFeedback.value = false;
     searchMessage.value = '';
 
     try {
-        const result = await searchUser(query);
+        const isSecretPass = isSecretPassFormat(query);
+        const result = await searchUser(query, isSecretPass);
 
-        if (result.success && result.user) {
+        if (isSecretPass && result.success && result.users?.length) {
+            foundUsers.value = result.users;
+            isUsersListDialogOpen.value = true;
+            showSearchFeedback.value = false;
+            searchQuery.value = '';
+        } else if (!isSecretPass && result.success && result.user) {
             foundUser.value = result.user;
             isDialogOpen.value = true;
-            showSearchFeedback.value = false; // Don't show feedback when opening dialog
-            searchQuery.value = ''; // Clear the search box on successful search
+            showSearchFeedback.value = false;
+            searchQuery.value = '';
         } else {
             foundUser.value = null;
+            foundUsers.value = [];
             searchMessage.value = result.message;
             showSearchFeedback.value = true;
 
-            // Auto-hide feedback after 4 seconds
             setTimeout(() => {
                 showSearchFeedback.value = false;
             }, 4000);
@@ -183,10 +212,11 @@ const performSearch = async (query: string, showLoadingState = true): Promise<vo
     }
 };
 
-// Debounced search for both 9-digit numbers and 0000-00000 format
+// Debounced search for both instant and secret pass searches
 const debouncedSearch = debounce(async (query: string) => {
-    if (!isInstantSearchFormat(query)) {
+    if (!isInstantSearchFormat(query) && !isSecretPassFormat(query)) {
         foundUser.value = null;
+        foundUsers.value = [];
         isLoading.value = false;
         showSearchFeedback.value = false;
         return;
@@ -195,10 +225,11 @@ const debouncedSearch = debounce(async (query: string) => {
     await performSearch(query, true);
 }, 300);
 
-// Manual search for other formats (triggered by Enter key)
+// Manual search for other formats
 const performManualSearch = async (query: string): Promise<void> => {
     if (!query || query.length < 2) {
         foundUser.value = null;
+        foundUsers.value = [];
         searchMessage.value = 'Please enter at least 2 characters';
         showSearchFeedback.value = true;
         return;
@@ -214,17 +245,15 @@ const handleSearchInput = (event: Event): void => {
 
     searchQuery.value = query;
 
-    // Clear previous feedback when user starts typing
     if (showSearchFeedback.value) {
         showSearchFeedback.value = false;
     }
 
-    if (isInstantSearchFormat(query)) {
-        // Auto-search for both 9-digit numbers and 0000-00000 format
+    if (isInstantSearchFormat(query) || isSecretPassFormat(query)) {
         debouncedSearch(query);
     } else {
-        // Clear results for formats that don't trigger instant search
         foundUser.value = null;
+        foundUsers.value = [];
         isLoading.value = false;
     }
 };
@@ -234,8 +263,7 @@ const handleKeyDown = (event: KeyboardEvent): void => {
         const target = event.target as HTMLInputElement;
         const query = target.value.trim();
 
-        // Only perform manual search for formats that don't trigger instant search
-        if (query && !isInstantSearchFormat(query)) {
+        if (query && !isInstantSearchFormat(query) && !isSecretPassFormat(query)) {
             performManualSearch(query);
         }
     }
@@ -243,6 +271,17 @@ const handleKeyDown = (event: KeyboardEvent): void => {
 
 const closeDialog = (): void => {
     isDialogOpen.value = false;
+};
+
+const closeUsersListDialog = (): void => {
+    isUsersListDialogOpen.value = false;
+    foundUsers.value = [];
+};
+
+const selectUser = (user: User): void => {
+    foundUser.value = user;
+    isUsersListDialogOpen.value = false;
+    isDialogOpen.value = true;
 };
 
 const dismissAlert = (): void => {
@@ -315,7 +354,7 @@ onMounted(() => {
                         v-if="searchQuery"
                         variant="ghost"
                         class="absolute right-0 top-1/2 transform -translate-y-1/2 px-2"
-                        @click="searchQuery = ''; foundUser = null; showSearchFeedback = false;"
+                        @click="searchQuery = ''; foundUser = null; foundUsers = []; showSearchFeedback = false;"
                     >
                         <X class="size-5 text-muted-foreground" />
                     </Button>
@@ -330,7 +369,7 @@ onMounted(() => {
 
                 <!-- Search instruction -->
                 <p class="mt-4 text-sm text-gray-500 text-center max-w-sm">
-                    Enter a 9-digit library id (000000000) or dash format (0000-00000) for instant search, or press Enter for other formats
+                    Enter a 9-digit library id (000000000), dash format (0000-00000)
                 </p>
             </div>
         </div>
@@ -355,7 +394,7 @@ onMounted(() => {
                     </div>
 
                     <div class="text-sm text-gray-600 space-y-1">
-                        <p><strong>Libary ID:</strong> {{ foundUser.library_id }}</p>
+                        <p><strong>Library ID:</strong> {{ foundUser.library_id }}</p>
                         <p v-if="foundUser.email"><strong>Email:</strong> {{ foundUser.email }}</p>
                     </div>
                 </div>
@@ -367,6 +406,43 @@ onMounted(() => {
                 </Button>
                 <Button @click="closeDialog">
                     Continue
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- Users List Dialog -->
+    <Dialog v-model:open="isUsersListDialogOpen">
+        <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+            <DialogHeader class="p-6 pb-2">
+                <DialogTitle class="text-xl font-semibold">Select User</DialogTitle>
+                <DialogDescription>
+                    Choose a user from the list below
+                </DialogDescription>
+            </DialogHeader>
+
+            <div class="p-6 pt-2 overflow-y-auto max-h-[60dvh]">
+                <div v-if="foundUsers.length" class="space-y-2">
+                    <Button
+                        v-for="user in foundUsers"
+                        :key="user.library_id"
+                        variant="ghost"
+                        class="w-full text-left justify-start p-4 hover:bg-gray-100"
+                        @click="selectUser(user)"
+                    >
+                        <div class="flex items-center space-x-2">
+                            <UserRound class="h-5 w-5 text-gray-500" />
+                            <span>{{ user.first_name }} {{ user.last_name || '' }}</span>
+                            <span class="text-sm text-gray-500">({{ user.library_id }})</span>
+                        </div>
+                    </Button>
+                </div>
+                <p v-else class="text-sm text-gray-500">No users found</p>
+            </div>
+
+            <DialogFooter class="p-6 pt-2">
+                <Button @click="closeUsersListDialog" variant="outline">
+                    Close
                 </Button>
             </DialogFooter>
         </DialogContent>
