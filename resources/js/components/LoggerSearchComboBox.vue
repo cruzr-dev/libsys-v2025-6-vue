@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { debounce } from 'lodash-es'
 import WelcomeSearchDialog from '@/components/WelcomeSearchDialog.vue';
+import LoggerSearchDialog from '@/components/LoggerSearchDialog.vue';
 
 // Reactive state
 const searchQuery = ref('')
@@ -116,7 +117,7 @@ const clearSearch = () => {
                         class="flex flex-col items-start py-3 px-3 hover:bg-accent rounded-sm cursor-pointer"
                     >
                         <div class="flex w-full items-center justify-between">
-                            <WelcomeSearchDialog :user="user"/>
+                            <LoggerSearchDialog :user="user"/>
                         </div>
                     </div>
                 </div>
