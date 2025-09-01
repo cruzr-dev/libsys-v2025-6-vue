@@ -20,11 +20,16 @@ import LoggerSearchComboBox from '@/components/LoggerSearchComboBox.vue';
 
         <!-- Main Content -->
         <div
-            class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0"
+            class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0 bg-[url(/storage/system_images/eagle.jpg)] bg-cover bg-center"
         >
+            <!--
+              Alternative: To apply the background to the entire page, move the background classes to the outermost div:
+              class="flex min-h-screen flex-col items-center text-[#1b1b18] lg:justify-center dark:bg-[#0a0a0a] bg-[url(/storage/system_images/eagle.jpg)] bg-cover bg-center"
+              and remove them from this grid div.
+            -->
             <div class="px-4">
                 <div
-                    class="relative flex h-[360px] max-w-5xl mx-auto flex-col items-center justify-center rounded-2xl bg-[url(/storage/system_images/eagle.jpg)] bg-cover bg-center shadow-lg"
+                    class="relative flex h-[360px] max-w-5xl mx-auto flex-col items-center justify-center rounded-2xl bg-white/10 dark:bg-gray-500/30 backdrop-blur-md border border-white/20 shadow-lg"
                 >
                     <!-- Heading + Sub-heading -->
                     <div
