@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { X, Book } from "lucide-vue-next"
+import { X, UserRoundX } from "lucide-vue-next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { debounce } from 'lodash-es'
@@ -210,7 +210,7 @@ const handleDialogClose = () => {
                     v-if="!searchResults.length && !isLoading"
                     class="flex flex-col items-center p-4 text-center"
                 >
-                    <Book class="size-8 text-muted-foreground mb-2" />
+                    <UserRoundX class="size-8 text-muted-foreground mb-2" />
                     <p class="text-sm text-muted-foreground">
                         No results found
                     </p>

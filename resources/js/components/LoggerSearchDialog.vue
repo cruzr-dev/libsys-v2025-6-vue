@@ -85,7 +85,7 @@ watch(() => open, (newValue) => {
                 <div class="absolute top-0 left-0 w-full">
                     <div class="w-full bg-gray-200 h-2.5">
                         <div
-                            class="bg-accent h-2.5 transition-all duration-200 ease-linear"
+                            class="bg-primary h-2.5 transition-all duration-200 ease-linear"
                             :style="{ width: `${progress}%` }"
                         ></div>
                     </div>
