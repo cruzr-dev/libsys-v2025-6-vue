@@ -32,7 +32,7 @@ interface Flash {
 
 interface SearchResult {
     user: User | null;
-    users?: User[]; // Added for list of users in secret pass search
+    users?: User[];
     message: string;
     success: boolean;
 }
@@ -57,11 +57,9 @@ const showAlert = ref(true);
 const searchQuery = ref('');
 const isLoading = ref(false);
 const foundUser = ref<User | null>(null);
-const foundUsers = ref<User[]>([]); // New state for list of users
+const foundUsers = ref<User[]>([]);
 const isDialogOpen = ref(false);
-const isUsersListDialogOpen = ref(false); // New state for users list dialog
 const searchMessage = ref('');
-const showSearchFeedback = ref(false);
 
 /* -------------------- Utility Functions -------------------- */
 const isExactNineDigits = (query: string): boolean => {
@@ -86,12 +84,10 @@ const normalizeDashFormat = (query: string): string => {
 
 const buildSearchParams = (query: string, isSecretPass: boolean = false): URLSearchParams => {
     if (isSecretPass) {
-        // For secret pass, search by name or other fields
         return new URLSearchParams({
             query: query.replace('--', '').trim()
         });
     }
-    // Normalize for library ID search
     const normalizedQuery = isValidDashFormat(query) ? normalizeDashFormat(query) : query;
     return new URLSearchParams({
         library_id: normalizedQuery.trim()
@@ -124,7 +120,6 @@ const searchUser = async (query: string, isSecretPass: boolean = false): Promise
 
         if (response.ok) {
             if (isSecretPass) {
-                // Secret pass returns a list of users
                 return {
                     user: null,
                     users: data.users || [],
@@ -132,7 +127,6 @@ const searchUser = async (query: string, isSecretPass: boolean = false): Promise
                     success: true
                 };
             }
-            // Regular search returns a single user
             return {
                 user: data.user || null,
                 users: [],
@@ -143,21 +137,21 @@ const searchUser = async (query: string, isSecretPass: boolean = false): Promise
             return {
                 user: null,
                 users: [],
-                message: data.message || 'No user found with the provided query',
+                message: 'No user found with the provided query',
                 success: false
             };
         } else if (response.status === 422) {
             return {
                 user: null,
                 users: [],
-                message: data.message || 'Invalid input provided',
+                message: 'Invalid input provided',
                 success: false
             };
         } else {
             return {
                 user: null,
                 users: [],
-                message: data.message || 'An error occurred while searching',
+                message: 'An error occurred while searching',
                 success: false
             };
         }
@@ -178,32 +172,24 @@ const performSearch = async (query: string, showLoadingState = true): Promise<vo
         isLoading.value = true;
     }
 
-    showSearchFeedback.value = false;
-    searchMessage.value = '';
-
     try {
         const isSecretPass = isSecretPassFormat(query);
         const result = await searchUser(query, isSecretPass);
 
-        if (isSecretPass && result.success && result.users?.length) {
-            foundUsers.value = result.users;
-            isUsersListDialogOpen.value = true;
-            showSearchFeedback.value = false;
-            searchQuery.value = '';
-        } else if (!isSecretPass && result.success && result.user) {
+        if (isSecretPass) {
+            foundUsers.value = result.users || [];
+            searchMessage.value = result.message;
+            searchQuery.value = ''; // Clear input after search
+        } else if (result.success && result.user) {
             foundUser.value = result.user;
             isDialogOpen.value = true;
-            showSearchFeedback.value = false;
+            foundUsers.value = [];
+            searchMessage.value = '';
             searchQuery.value = '';
         } else {
             foundUser.value = null;
             foundUsers.value = [];
             searchMessage.value = result.message;
-            showSearchFeedback.value = true;
-
-            setTimeout(() => {
-                showSearchFeedback.value = false;
-            }, 4000);
         }
     } finally {
         if (showLoadingState) {
@@ -212,26 +198,23 @@ const performSearch = async (query: string, showLoadingState = true): Promise<vo
     }
 };
 
-// Debounced search for both instant and secret pass searches
 const debouncedSearch = debounce(async (query: string) => {
     if (!isInstantSearchFormat(query) && !isSecretPassFormat(query)) {
         foundUser.value = null;
         foundUsers.value = [];
         isLoading.value = false;
-        showSearchFeedback.value = false;
+        searchMessage.value = '';
         return;
     }
 
     await performSearch(query, true);
 }, 300);
 
-// Manual search for other formats
 const performManualSearch = async (query: string): Promise<void> => {
     if (!query || query.length < 2) {
         foundUser.value = null;
         foundUsers.value = [];
         searchMessage.value = 'Please enter at least 2 characters';
-        showSearchFeedback.value = true;
         return;
     }
 
@@ -244,10 +227,7 @@ const handleSearchInput = (event: Event): void => {
     const query = target.value;
 
     searchQuery.value = query;
-
-    if (showSearchFeedback.value) {
-        showSearchFeedback.value = false;
-    }
+    searchMessage.value = '';
 
     if (isInstantSearchFormat(query) || isSecretPassFormat(query)) {
         debouncedSearch(query);
@@ -273,23 +253,13 @@ const closeDialog = (): void => {
     isDialogOpen.value = false;
 };
 
-const closeUsersListDialog = (): void => {
-    isUsersListDialogOpen.value = false;
-    foundUsers.value = [];
-};
-
 const selectUser = (user: User): void => {
     foundUser.value = user;
-    isUsersListDialogOpen.value = false;
     isDialogOpen.value = true;
 };
 
 const dismissAlert = (): void => {
     showAlert.value = false;
-};
-
-const dismissSearchFeedback = (): void => {
-    showSearchFeedback.value = false;
 };
 
 /* -------------------- Lifecycle -------------------- */
@@ -311,23 +281,23 @@ onMounted(() => {
             hi
         </Link>
 
-        <!-- Search Feedback Alert -->
+        <!-- Flash Alert -->
         <Alert
-            v-if="showSearchFeedback && searchMessage"
+            v-if="showAlert && page.props.flash.error"
             class="fixed top-5 right-5 z-30 w-fit max-w-md pr-8"
             variant="destructive"
         >
             <AlertCircle class="h-4 w-4" />
             <button
-                @click="dismissSearchFeedback"
+                @click="dismissAlert"
                 class="absolute top-2 right-2 rounded-full p-1 transition-colors hover:bg-red-100"
                 aria-label="Close alert"
             >
                 <X class="h-4 w-4" />
             </button>
-            <AlertTitle>Search Result</AlertTitle>
+            <AlertTitle>Error</AlertTitle>
             <AlertDescription>
-                {{ searchMessage }}
+                {{ page.props.flash.error }}
             </AlertDescription>
         </Alert>
 
@@ -338,7 +308,7 @@ onMounted(() => {
                     <Input
                         id="search"
                         type="text"
-                        placeholder="Enter Library ID"
+                        placeholder="Enter Library ID or -- for name search"
                         class="p-4 pl-10 md:text-lg pr-10"
                         v-model="searchQuery"
                         @input="handleSearchInput"
@@ -354,7 +324,7 @@ onMounted(() => {
                         v-if="searchQuery"
                         variant="ghost"
                         class="absolute right-0 top-1/2 transform -translate-y-1/2 px-2"
-                        @click="searchQuery = ''; foundUser = null; foundUsers = []; showSearchFeedback = false;"
+                        @click="searchQuery = ''; foundUser = null; foundUsers = []; searchMessage = '';"
                     >
                         <X class="size-5 text-muted-foreground" />
                     </Button>
@@ -369,8 +339,28 @@ onMounted(() => {
 
                 <!-- Search instruction -->
                 <p class="mt-4 text-sm text-gray-500 text-center max-w-sm">
-                    Enter a 9-digit library id (000000000), dash format (0000-00000)
+                    Enter a 9-digit library id (000000000), dash format (0000-00000), or start with -- for name search
                 </p>
+
+                <!-- Search Results -->
+                <div v-if="foundUsers.length || searchMessage" class="mt-4 w-full max-w-80">
+                    <div v-if="foundUsers.length" class="space-y-2">
+                        <Button
+                            v-for="user in foundUsers"
+                            :key="user.library_id"
+                            variant="ghost"
+                            class="w-full text-left justify-start p-4 hover:bg-gray-100"
+                            @click="selectUser(user)"
+                        >
+                            <div class="flex items-center space-x-2">
+                                <UserRound class="h-5 w-5 text-gray-500" />
+                                <span>{{ user.first_name }} {{ user.last_name || '' }}</span>
+                                <span class="text-sm text-gray-500">({{ user.library_id }})</span>
+                            </div>
+                        </Button>
+                    </div>
+                    <p v-else class="text-sm text-gray-500 text-center">{{ searchMessage }}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -406,43 +396,6 @@ onMounted(() => {
                 </Button>
                 <Button @click="closeDialog">
                     Continue
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-    <!-- Users List Dialog -->
-    <Dialog v-model:open="isUsersListDialogOpen">
-        <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
-            <DialogHeader class="p-6 pb-2">
-                <DialogTitle class="text-xl font-semibold">Select User</DialogTitle>
-                <DialogDescription>
-                    Choose a user from the list below
-                </DialogDescription>
-            </DialogHeader>
-
-            <div class="p-6 pt-2 overflow-y-auto max-h-[60dvh]">
-                <div v-if="foundUsers.length" class="space-y-2">
-                    <Button
-                        v-for="user in foundUsers"
-                        :key="user.library_id"
-                        variant="ghost"
-                        class="w-full text-left justify-start p-4 hover:bg-gray-100"
-                        @click="selectUser(user)"
-                    >
-                        <div class="flex items-center space-x-2">
-                            <UserRound class="h-5 w-5 text-gray-500" />
-                            <span>{{ user.first_name }} {{ user.last_name || '' }}</span>
-                            <span class="text-sm text-gray-500">({{ user.library_id }})</span>
-                        </div>
-                    </Button>
-                </div>
-                <p v-else class="text-sm text-gray-500">No users found</p>
-            </div>
-
-            <DialogFooter class="p-6 pt-2">
-                <Button @click="closeUsersListDialog" variant="outline">
-                    Close
                 </Button>
             </DialogFooter>
         </DialogContent>
