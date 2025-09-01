@@ -13,8 +13,11 @@ const isLoading = ref(false)
 const selectedUser = ref<any | null>(null)
 const dialogOpen = ref(false)
 
-// Check if query is exclusively numeric
-const isNumericQuery = (query: string) => /^\d+$/.test(query.trim())
+// Allow: 000088888  OR  0000-88888
+const isLibraryIdQuery = (query: string) => {
+    const trimmed = query.trim()
+    return /^\d+$/.test(trimmed) || /^\d{4}-\d{5}$/.test(trimmed)
+}
 
 // Debounced search function for name search
 const debouncedSearch = debounce(async (query: string) => {
@@ -112,10 +115,12 @@ watch(searchQuery, (newQuery) => {
 
 // Handle enter key for numeric queries
 const handleKeydown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' && isNumericQuery(searchQuery.value)) {
-        searchByLibraryNumber(searchQuery.value)
+    if (event.key === 'Enter' && isLibraryIdQuery(searchQuery.value)) {
+        // Remove dash if present, otherwise use the value as-is
+        const formattedQuery = searchQuery.value.replace('-', '');
+        searchByLibraryNumber(formattedQuery);
     }
-}
+};
 
 // Handle user selection from name search results
 const handleUserSelect = (user: any) => {
@@ -140,7 +145,7 @@ const clearSearch = () => {
                 <Input
                     v-model="searchQuery"
                     class="pr-10"
-                    placeholder="Enter Library ID (numeric) or --name"
+                    placeholder="Enter Library ID 000088888 or 0000-88888"
                     @keydown="handleKeydown"
                 />
 
