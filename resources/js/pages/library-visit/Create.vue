@@ -75,7 +75,8 @@ const isInstantSearchFormat = (query: string): boolean => {
 };
 
 const isSecretPassFormat = (query: string): boolean => {
-    return query.startsWith('--');
+    // Only consider it a secret pass if there's content after '--'
+    return query.startsWith('--') && query.length > 2;
 };
 
 const normalizeDashFormat = (query: string): string => {
@@ -227,7 +228,11 @@ const handleSearchInput = (event: Event): void => {
     const query = target.value;
 
     searchQuery.value = query;
-    searchMessage.value = '';
+
+    // Clear search message only if we're not in the middle of typing a secret pass
+    if (!query.startsWith('--') || isSecretPassFormat(query)) {
+        searchMessage.value = '';
+    }
 
     if (isInstantSearchFormat(query) || isSecretPassFormat(query)) {
         debouncedSearch(query);
@@ -235,6 +240,10 @@ const handleSearchInput = (event: Event): void => {
         foundUser.value = null;
         foundUsers.value = [];
         isLoading.value = false;
+        // Only clear search message if not typing '--'
+        if (!query.startsWith('--')) {
+            searchMessage.value = '';
+        }
     }
 };
 
