@@ -27,7 +27,7 @@ const debouncedSearch = debounce(async (query: string) => {
             q: query
         })
 
-        const response = await fetch(`/api/welcome/records/search?${params.toString()}`, {
+        const response = await fetch(`/api/logger/patron/search-by-name?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -36,13 +36,13 @@ const debouncedSearch = debounce(async (query: string) => {
 
         if (response.ok) {
             const data = await response.json()
-            searchResults.value = data.records || data || []
+            searchResults.value = data.users || data || []
         } else {
-            console.error('Record search failed:', response.statusText)
+            console.error('user search failed:', response.statusText)
             searchResults.value = []
         }
     } catch (error) {
-        console.error('Record search error:', error)
+        console.error('user search error:', error)
         searchResults.value = []
     } finally {
         isLoading.value = false
@@ -104,19 +104,19 @@ const clearSearch = () => {
                 >
                     <Book class="size-8 text-muted-foreground mb-2" />
                     <p class="text-sm text-muted-foreground">
-                        {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No records found' }}
+                        {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No users found' }}
                     </p>
                 </div>
 
                 <!-- Search Results -->
                 <div v-if="searchResults.length > 0" class="p-1">
                     <div
-                        v-for="record in searchResults"
-                        :key="record.id"
+                        v-for="user in searchResults"
+                        :key="user.id"
                         class="flex flex-col items-start py-3 px-3 hover:bg-accent rounded-sm cursor-pointer"
                     >
                         <div class="flex w-full items-center justify-between">
-                            <WelcomeSearchDialog :record="record"/>
+                            <WelcomeSearchDialog :user="user"/>
                         </div>
                     </div>
                 </div>

@@ -181,40 +181,41 @@ class LibraryVisitController extends Controller
         }
     }
 
-    public function searchByName(Request $request): JsonResponse
+    public function searchByName(Request $request): ?JsonResponse
     {
+        // Validate the search query
+        $request->validate([
+            'q' => 'required|string|min:2|max:255'
+        ]);
+
+        $searchQuery = $request->get('q');
+        $limit = $request->get('limit', 5); // Limit results to prevent overwhelming UI
+
         try {
-            // Validate the request
-            $request->validate([
-                'query' => 'required|string|min:2'
-            ]);
+            $query = User::query()
+                ->where(function ($query) use ($searchQuery) {
+                    $query->where('first_name', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('last_name', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('email', 'LIKE', "%{$searchQuery}%");
+                });
 
-            $query = $request->input('query');
-
-            $users = User::where('first_name', 'LIKE', "%$query%")
-                ->orWhere('last_name', 'LIKE', "%$query%")
-                ->orWhere('email', 'LIKE', "%$query%")
-                ->take(5) // Limit to 20 results
+            $users = $query
+                ->orderBy('first_name', 'asc')
+                ->limit($limit)
                 ->get(['first_name', 'last_name', 'library_id', 'email']);
 
             return response()->json([
+                'success' => true,
                 'users' => $users,
-                'message' => $users->isEmpty() ? 'No users found' : 'Users found',
-                'success' => true // Add success field for consistency
+                'count' => $users->count(),
+                'query' => $searchQuery
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'users' => [],
-                'message' => 'Invalid input provided',
-                'errors' => $e->errors()
-            ], 422);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'users' => [],
-                'message' => 'An error occurred while searching',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+                'message' => 'Search failed',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
