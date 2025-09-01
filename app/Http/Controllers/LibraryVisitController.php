@@ -193,6 +193,9 @@ class LibraryVisitController extends Controller
 
         try {
             $query = User::query()
+                ->whereHas('userType', function ($q) {
+                    $q->where('name', 'faculty');
+                })
                 ->where(function ($query) use ($searchQuery) {
                     $query->where('first_name', 'LIKE', "%{$searchQuery}%")
                         ->orWhere('last_name', 'LIKE', "%{$searchQuery}%")
@@ -219,4 +222,5 @@ class LibraryVisitController extends Controller
             ], 500);
         }
     }
+
 }
