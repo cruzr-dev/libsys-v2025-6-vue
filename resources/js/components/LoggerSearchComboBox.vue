@@ -10,10 +10,19 @@ import LoggerSearchDialog from '@/components/LoggerSearchDialog.vue'
 const searchQuery = ref('')
 const searchResults = ref<any[]>([])
 const isLoading = ref(false)
+const selectedUser = ref<any | null>(null)
+const dialogOpen = ref(false)
 
-// Debounced search function
+// Check if query is exclusively numeric
+const isNumericQuery = (query: string) => /^\d+$/.test(query.trim())
+
+// Debounced search function for name search
 const debouncedSearch = debounce(async (query: string) => {
-    // Only allow search when query starts with `--`
+    // Reset selected user and dialog
+    selectedUser.value = null
+    dialogOpen.value = false
+
+    // Only allow search when query starts with `--` for name search
     if (!query.startsWith('--')) {
         searchResults.value = []
         isLoading.value = false
@@ -56,15 +65,70 @@ const debouncedSearch = debounce(async (query: string) => {
     }
 }, 300)
 
-// Watch for search query changes
+// Search by library number
+const searchByLibraryNumber = async (query: string) => {
+    isLoading.value = true
+    searchResults.value = []
+
+    try {
+        const params = new URLSearchParams({ library_id: query })
+
+        const response = await fetch(`/api/logger/patron/search-by-id?${params.toString()}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+
+        if (response.ok) {
+            const data = await response.json()
+            if (data.user) {
+                selectedUser.value = data.user
+                dialogOpen.value = true
+            } else {
+                selectedUser.value = null
+                dialogOpen.value = false
+            }
+        } else {
+            console.error('library number search failed:', response.statusText)
+            selectedUser.value = null
+        }
+    } catch (error) {
+        console.error('library number search error:', error)
+        selectedUser.value = null
+    } finally {
+        isLoading.value = false
+    }
+}
+
+// Watch for search query changes for name-based search
 watch(searchQuery, (newQuery) => {
-    debouncedSearch(newQuery)
+    if (newQuery.startsWith('--')) {
+        debouncedSearch(newQuery)
+    } else {
+        searchResults.value = []
+    }
 })
+
+// Handle enter key for numeric queries
+const handleKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' && isNumericQuery(searchQuery.value)) {
+        searchByLibraryNumber(searchQuery.value)
+    }
+}
+
+// Handle user selection from name search results
+const handleUserSelect = (user: any) => {
+    selectedUser.value = user
+    dialogOpen.value = true
+}
 
 // Clear search
 const clearSearch = () => {
     searchQuery.value = ''
     searchResults.value = []
+    selectedUser.value = null
+    dialogOpen.value = false
 }
 </script>
 
@@ -76,7 +140,8 @@ const clearSearch = () => {
                 <Input
                     v-model="searchQuery"
                     class="pr-10"
-                    placeholder="Enter Library ID, e.g. 000088888 or 0000-88888"
+                    placeholder="Enter Library ID (numeric) or --name"
+                    @keydown="handleKeydown"
                 />
 
                 <!-- Clear button -->
@@ -100,7 +165,7 @@ const clearSearch = () => {
 
             <!-- Search Results Dropdown -->
             <div
-                v-if="searchQuery"
+                v-if="searchQuery && !selectedUser"
                 class="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-lg max-h-96 overflow-y-auto"
             >
                 <!-- Empty state -->
@@ -121,12 +186,20 @@ const clearSearch = () => {
                         :key="user.id"
                         class="flex flex-col items-start hover:bg-accent rounded-sm cursor-pointer"
                     >
-                        <div class="flex w-full items-center justify-between">
-                            <LoggerSearchDialog :user="user"/>
-                        </div>
+                        <LoggerSearchDialog
+                            :user="user"
+                            @trigger="handleUserSelect(user)"
+                        />
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Auto-opened dialog for numeric search -->
+        <LoggerSearchDialog
+            v-if="selectedUser"
+            :user="selectedUser"
+            v-model:open="dialogOpen"
+        />
     </div>
 </template>

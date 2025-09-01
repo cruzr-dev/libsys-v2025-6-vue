@@ -135,48 +135,37 @@ class LibraryVisitController extends Controller
 
     }
 
-    public function search(Request $request): JsonResponse
+    public function searchById(Request $request): JsonResponse
     {
+        // Validate the library_id query
+        $request->validate([
+            'library_id' => 'required|numeric'
+        ]);
+
+        $libraryId = $request->get('library_id');
+
         try {
-            // Validate the request
-            $request->validate([
-                'library_id' => 'required|string|min:2'
-            ]);
-
-            $cardNumber = $request->input('library_id');
-
-            // Search for user with exact card number match
-            $user = User::where('library_id', $cardNumber)
-                ->select('id', 'first_name', 'last_name', 'email', 'library_id')
-                ->first();
+            $user = User::query()
+                ->where('library_id', $libraryId)
+                ->first(['first_name', 'last_name', 'library_id', 'email']);
 
             if ($user) {
                 return response()->json([
                     'success' => true,
-                    'user' => $user,
-                    'message' => 'User found successfully'
+                    'user' => $user
                 ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'user' => null,
-                    'message' => 'No user found with the provided card number'
-                ], 404);
             }
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'user' => null,
-                'message' => 'Invalid card number provided',
-                'errors' => $e->errors()
-            ], 422);
+                'message' => 'No user found with this library number'
+            ], 404);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'user' => null,
-                'message' => 'An error occurred while searching for the user',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+                'message' => 'Search failed',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
