@@ -226,7 +226,6 @@ const handleDialogClose = () => {
                         <LoggerSearchDialog
                             :user="user"
                             @trigger="handleUserSelect(user)"
-                            @close="handleDialogClose"
                         />
                     </div>
                 </div>
