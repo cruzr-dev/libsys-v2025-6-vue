@@ -162,6 +162,11 @@ const clearSearch = () => {
     debouncedSearch.cancel()
     debouncedLibrarySearch.cancel()
 }
+
+// Handle dialog close
+const handleDialogClose = () => {
+    clearSearch()
+}
 </script>
 
 <template>
@@ -221,6 +226,7 @@ const clearSearch = () => {
                         <LoggerSearchDialog
                             :user="user"
                             @trigger="handleUserSelect(user)"
+                            @close="handleDialogClose"
                         />
                     </div>
                 </div>
@@ -232,6 +238,7 @@ const clearSearch = () => {
             v-if="selectedUser"
             :user="selectedUser"
             v-model:open="dialogOpen"
+            @close="handleDialogClose"
         />
     </div>
 </template>

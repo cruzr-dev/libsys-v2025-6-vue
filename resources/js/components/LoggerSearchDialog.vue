@@ -9,7 +9,8 @@ defineProps<{
 
 const emit = defineEmits<{
     (e: 'update:open', value: boolean): void,
-    (e: 'trigger'): void, // New event for explicit trigger
+    (e: 'trigger'): void, // Existing event for explicit trigger
+    (e: 'close'): void,   // New event for dialog close
 }>();
 
 // Progress bar state
@@ -27,6 +28,7 @@ onMounted(() => {
         if (newProgress <= 0) {
             clearInterval(interval);
             emit('update:open', false); // Close the dialog when progress reaches 0
+            emit('close'); // Emit close event
         }
     }, 16); // ~60fps
 });
@@ -34,6 +36,9 @@ onMounted(() => {
 // Handle dialog open/close to emit update:open event
 const onOpenChange = (value: boolean) => {
     emit('update:open', value);
+    if (!value) {
+        emit('close'); // Emit close event when dialog is closed
+    }
 };
 
 // Handle click on trigger to emit trigger event
