@@ -91,22 +91,26 @@ watch(() => open, (newValue) => {
                     </div>
                 </div>
 
-                <!-- Content below progress bar -->
                 <div class="p-6 pt-10 space-y-6 overflow-y-auto">
+
+                    <!-- Conditional message based on transaction_type -->
+                    <div v-if="user?.transaction_type === 'login'" class="text-lg font-semibold text-secondary">
+                        You are entering the library
+                    </div>
+                    <div v-else-if="user?.transaction_type === 'logout'" class="text-lg font-semibold text-destructive">
+                        You are now leaving the library
+                    </div>
+
                     <h2 class="text-2xl font-bold">{{ user?.first_name }}</h2>
                     <div class="flex my-4 gap-2">
                         <p class="text-muted-foreground">{{ user?.last_name }}</p>
-                    </div>
-
-
-                    <div class="text-xs font-mono text-muted-foreground">
-                        {{ user?.transaction_type }}
                     </div>
 
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <!-- More content here -->
                     </div>
                 </div>
+
             </div>
         </DialogContent>
     </Dialog>
