@@ -96,18 +96,15 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
 
 // Debounced search function for name search
 const debouncedSearch = debounce(async (query: string) => {
-    // Reset selected user and dialog
     selectedUser.value = null
     dialogOpen.value = false
 
-    // Only allow search when query starts with `--` for name search
     if (!query.startsWith('--')) {
         searchResults.value = []
         isLoading.value = false
         return
     }
 
-    // Remove the `--` prefix for the actual search
     const actualQuery = query.slice(2).trim()
 
     if (!actualQuery || actualQuery.length < 2) {
@@ -117,6 +114,7 @@ const debouncedSearch = debounce(async (query: string) => {
     }
 
     isLoading.value = true
+    hasSearched.value = true // Set flag for name-based search
 
     try {
         const params = new URLSearchParams({ q: actualQuery })
@@ -143,10 +141,14 @@ const debouncedSearch = debounce(async (query: string) => {
     }
 }, 300)
 
-// Search by library number (manual input)
+// Add a new reactive variable to track if an API call was made for numeric searches
+const hasSearched = ref(false)
+
+// Update the searchByLibraryNumber function to set hasSearched
 const searchByLibraryNumber = async (query: string) => {
     isLoading.value = true
     searchResults.value = []
+    hasSearched.value = true // Set flag to indicate API call was made
 
     try {
         const params = new URLSearchParams({ library_id: query })
@@ -227,7 +229,7 @@ const clearSearch = () => {
     searchResults.value = []
     selectedUser.value = null
     dialogOpen.value = false
-    // Cancel any pending searches
+    hasSearched.value = false // Reset API call flag
     debouncedSearch.cancel()
     debouncedLibrarySearch.cancel()
 }
@@ -296,9 +298,19 @@ onUnmounted(() => {
                 v-if="searchQuery && !selectedUser"
                 class="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-lg max-h-96 overflow-y-auto"
             >
-                <!-- Empty state -->
+                <!-- Numeric query: Show "Hit Enter" message before API call -->
                 <div
-                    v-if="!searchResults.length && !isLoading"
+                    v-if="isNumericQuery(searchQuery) && !hasSearched && !isLoading"
+                    class="flex flex-col items-center p-4 text-center"
+                >
+                    <p class="text-sm text-muted-foreground">
+                        Hit Enter for instant search
+                    </p>
+                </div>
+
+                <!-- Empty state: Show only after API call -->
+                <div
+                    v-else-if="!searchResults.length && !isLoading && hasSearched"
                     class="flex flex-col items-center p-4 text-center"
                 >
                     <UserRoundX class="size-8 text-muted-foreground mb-2" />
