@@ -227,12 +227,59 @@ class LibraryVisitController extends Controller
             $users = $query
                 ->orderBy('first_name', 'asc')
                 ->limit($limit)
-                ->get(['first_name', 'last_name', 'library_id', 'email']);
+                ->get(['id', 'first_name', 'last_name', 'library_id', 'email']);
+
+            // Get today's date range
+            $today = now()->startOfDay();
+            $todayEnd = now()->endOfDay();
+
+            // Get user IDs for batch query
+            $userIds = $users->pluck('id');
+
+            // Batch query for today's visits to avoid N+1 problem
+            $todayVisits = LibraryVisit::query()
+                ->whereIn('user_id', $userIds)
+                ->whereBetween('entry_time', [$today, $todayEnd])
+                ->orderBy('user_id')
+                ->orderBy('entry_time', 'desc')
+                ->get(['user_id', 'entry_time', 'exit_time'])
+                ->groupBy('user_id')
+                ->map(function ($visits) {
+                    // Get the most recent visit for each user
+                    return $visits->first();
+                });
+
+            // Transform users data and add transaction_type
+            $usersData = $users->map(function ($user) use ($todayVisits) {
+                $todayVisit = $todayVisits->get($user->id);
+
+                // Determine transaction type based on visit record
+                $transactionType = 'login'; // Default for no record today
+
+                if ($todayVisit) {
+                    // User has a record today
+                    if (is_null($todayVisit->exit_time)) {
+                        // Has entry but no exit - next action should be logout
+                        $transactionType = 'logout';
+                    } else {
+                        // Has both entry and exit - next action should be login
+                        $transactionType = 'login';
+                    }
+                }
+
+                return [
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'library_id' => $user->library_id,
+                    'email' => $user->email,
+                    'transaction_type' => $transactionType
+                ];
+            });
 
             return response()->json([
                 'success' => true,
-                'users' => $users,
-                'count' => $users->count(),
+                'users' => $usersData,
+                'count' => $usersData->count(),
                 'query' => $searchQuery
             ]);
 
