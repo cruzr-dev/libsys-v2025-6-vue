@@ -135,7 +135,7 @@ class LibraryVisitController extends Controller
 
     }
 
-    public function storeTransaction(Request $request)
+    public function storeTransaction(Request $request): ?JsonResponse
     {
         try
         {
@@ -147,7 +147,7 @@ class LibraryVisitController extends Controller
                 ]);
             } elseif ($request->transaction_type === 'login') {
                 LibraryVisit::create([
-                    'user_id' => $request->id,
+                    'user_id' => $request->user_id,
                     'entry_time' => now(),
                 ]);
             }
