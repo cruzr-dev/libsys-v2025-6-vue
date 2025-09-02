@@ -98,6 +98,11 @@ watch(() => open, (newValue) => {
                         <p class="text-muted-foreground">{{ user?.last_name }}</p>
                     </div>
 
+
+                    <div class="text-xs font-mono text-muted-foreground">
+                        {{ user?.transaction_type }}
+                    </div>
+
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <!-- More content here -->
                     </div>
