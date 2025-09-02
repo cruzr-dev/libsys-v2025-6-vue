@@ -137,7 +137,33 @@ class LibraryVisitController extends Controller
 
     public function storeTransaction(Request $request)
     {
-        return response()->json($request->all());
+        try
+        {
+            if ($request->transaction_type === 'logout') {
+                $user_entry = LibraryVisit::where('user_id', $request->user_id)->whereNull('exit_time')->first();
+
+                $user_entry->update([
+                    'exit_time' => now(),
+                ]);
+            } elseif ($request->transaction_type === 'login') {
+                LibraryVisit::create([
+                    'user_id' => $request->id,
+                    'entry_time' => now(),
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
     }
 
     public function searchById(Request $request): JsonResponse

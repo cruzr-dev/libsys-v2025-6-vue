@@ -261,7 +261,7 @@ onUnmounted(() => {
                     ref="studentIdInputRef"
                     v-model="searchQuery"
                     class="pr-10"
-                    placeholder="Library ID: 000088888 or 0000-88888, Name: --john doe"
+                    placeholder="Library ID: 000088888 or 0000-88888"
                     @keydown="handleKeydown"
                 />
 
