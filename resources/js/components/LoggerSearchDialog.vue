@@ -17,18 +17,18 @@ const emit = defineEmits<{
     (e: 'update:open', value: boolean): void,
     (e: 'trigger'): void, // Existing event for explicit trigger
     (e: 'close'): void,   // New event for dialog close
-    (e: 'apiSuccess', data: any): void, // New event for successful API call
-    (e: 'apiError', error: any): void,  // New event for API errors
 }>();
 
 // Progress bar state
 const progress = ref(100);
-const isLoading = ref(false);
 
 // API call function
 const logPatronTransaction = async (userId: string | number, transactionType: string) => {
     try {
-        isLoading.value = true;
+
+        // Get CSRF token from meta tag or cookie
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+            getCsrfTokenFromCookie();
 
         const response = await fetch('/api/logger/patron/transaction', {
             method: 'POST',
@@ -36,7 +36,9 @@ const logPatronTransaction = async (userId: string | number, transactionType: st
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': token, // Add CSRF token here
             },
+            credentials: 'same-origin', // Include cookies for session
             body: JSON.stringify({
                 user_id: userId,
                 transaction_type: transactionType
@@ -48,14 +50,22 @@ const logPatronTransaction = async (userId: string | number, transactionType: st
         }
 
         const data = await response.json();
-        emit('apiSuccess', data);
+        console.log(data);
 
     } catch (error) {
         console.error('Failed to log patron transaction:', error);
-        emit('apiError', error);
-    } finally {
-        isLoading.value = false;
     }
+};
+
+// Helper function to get CSRF token from cookie (if using cookie-based CSRF)
+const getCsrfTokenFromCookie = () => {
+    const name = 'XSRF-TOKEN';
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        return decodeURIComponent(parts.pop()?.split(';').shift() || '');
+    }
+    return null;
 };
 
 // Animate progress bar
@@ -96,7 +106,7 @@ onMounted(() => {
 
 // Handle dialog open/close to emit update:open event
 const onOpenChange = (value: boolean) => {
-    emit('update:open', value);
+     ('update:open', value);
     if (!value) {
         emit('close'); // Emit close event when dialog is closed
     }
@@ -149,17 +159,11 @@ watch(() => props.open, (newValue) => {
                         <div
                             class="bg-primary h-2.5 transition-all duration-200 ease-linear"
                             :style="{ width: `${progress}%` }"
-                            :class="{ 'animate-pulse': isLoading }"
                         ></div>
                     </div>
                 </div>
 
                 <div class="p-6 pt-10 space-y-6 overflow-y-auto">
-                    <!-- Loading indicator -->
-                    <div v-if="isLoading" class="text-sm text-muted-foreground flex items-center gap-2">
-                        <div class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        Logging transaction...
-                    </div>
 
                     <!-- Conditional message based on transaction_type -->
                     <div v-if="user?.transaction_type === 'login'" class="text-lg font-semibold text-secondary">

@@ -137,8 +137,9 @@ class LibraryVisitController extends Controller
 
     public function storeTransaction(Request $request)
     {
-        dd($request->all());
+        return response()->json($request->all());
     }
+
     public function searchById(Request $request): JsonResponse
     {
         // Validate the library_id query
