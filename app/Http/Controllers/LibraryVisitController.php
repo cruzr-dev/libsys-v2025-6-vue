@@ -135,6 +135,10 @@ class LibraryVisitController extends Controller
 
     }
 
+    public function storeTransaction(Request $request)
+    {
+        dd($request->all());
+    }
     public function searchById(Request $request): JsonResponse
     {
         // Validate the library_id query
@@ -182,7 +186,7 @@ class LibraryVisitController extends Controller
 
             // Prepare user data without the internal id
             $userData = [
-                'user_id' => $user->id,
+                'id' => $user->id,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'library_id' => $user->library_id,
@@ -269,7 +273,7 @@ class LibraryVisitController extends Controller
                 }
 
                 return [
-                    'user_id' => $user->id,
+                    'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'library_id' => $user->library_id,

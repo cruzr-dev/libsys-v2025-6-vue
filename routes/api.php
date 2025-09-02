@@ -28,6 +28,8 @@ Route::get('/sample', function () {
 
 Route::get('/logger/patron/search-by-id', [LibraryVisitController::class, 'searchById']);
 Route::get('/logger/patron/search-by-name', [LibraryVisitController::class, 'searchByName']);
+Route::post('/logger/patron/transaction', [LibraryVisitController::class, 'storeTransaction']);
+
 Route::get('/welcome/records/search', [WelcomeController::class, 'searchRecords']);
 
 Route::get('/borrowings/books/search', [BorrowingTransactionController::class, 'searchBook']);

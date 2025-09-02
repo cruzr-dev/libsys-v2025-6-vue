@@ -2,8 +2,14 @@
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { ref, onMounted, watch } from 'vue';
 
-defineProps<{
-    user: Object,
+const props = defineProps<{
+    user: {
+        id: string | number,
+        first_name: string,
+        last_name: string,
+        library_id: string,
+        transaction_type: 'login' | 'logout'
+    },
     open?: boolean, // Make open prop optional
 }>();
 
@@ -11,15 +17,54 @@ const emit = defineEmits<{
     (e: 'update:open', value: boolean): void,
     (e: 'trigger'): void, // Existing event for explicit trigger
     (e: 'close'): void,   // New event for dialog close
+    (e: 'apiSuccess', data: any): void, // New event for successful API call
+    (e: 'apiError', error: any): void,  // New event for API errors
 }>();
 
 // Progress bar state
 const progress = ref(100);
+const isLoading = ref(false);
+
+// API call function
+const logPatronTransaction = async (userId: string | number, transactionType: string) => {
+    try {
+        isLoading.value = true;
+
+        const response = await fetch('/api/logger/patron/transaction', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                transaction_type: transactionType
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        emit('apiSuccess', data);
+
+    } catch (error) {
+        console.error('Failed to log patron transaction:', error);
+        emit('apiError', error);
+    } finally {
+        isLoading.value = false;
+    }
+};
 
 // Animate progress bar
-onMounted(() => {
-    const duration = 3000; // 2 seconds
+const startProgressAnimation = () => {
+    progress.value = 100; // Reset progress
+
+    const duration = 3000; // 3 seconds
     const start = Date.now();
+
     const interval = setInterval(() => {
         const elapsed = Date.now() - start;
         const newProgress = Math.max(100 - (elapsed / duration) * 100, 0);
@@ -27,10 +72,26 @@ onMounted(() => {
 
         if (newProgress <= 0) {
             clearInterval(interval);
-            emit('update:open', false); // Close the dialog when progress reaches 0
-            emit('close'); // Emit close event
+
+            // Make API call after progress bar completes
+            if (props.user?.id && props.user?.transaction_type) {
+                logPatronTransaction(props.user.id, props.user.transaction_type);
+            }
+
+            // Close the dialog after a short delay to allow API call
+            setTimeout(() => {
+                emit('update:open', false);
+                emit('close');
+            }, 500);
         }
     }, 16); // ~60fps
+};
+
+// Start animation when component mounts and dialog is open
+onMounted(() => {
+    if (props.open) {
+        startProgressAnimation();
+    }
 });
 
 // Handle dialog open/close to emit update:open event
@@ -46,9 +107,10 @@ const onTriggerClick = () => {
     emit('trigger');
 };
 
-watch(() => open, (newValue) => {
+// Watch for dialog opening to start progress animation
+watch(() => props.open, (newValue) => {
     if (newValue) {
-        progress.value = 100; // Reset progress when dialog opens
+        startProgressAnimation();
     }
 });
 </script>
@@ -87,11 +149,17 @@ watch(() => open, (newValue) => {
                         <div
                             class="bg-primary h-2.5 transition-all duration-200 ease-linear"
                             :style="{ width: `${progress}%` }"
+                            :class="{ 'animate-pulse': isLoading }"
                         ></div>
                     </div>
                 </div>
 
                 <div class="p-6 pt-10 space-y-6 overflow-y-auto">
+                    <!-- Loading indicator -->
+                    <div v-if="isLoading" class="text-sm text-muted-foreground flex items-center gap-2">
+                        <div class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        Logging transaction...
+                    </div>
 
                     <!-- Conditional message based on transaction_type -->
                     <div v-if="user?.transaction_type === 'login'" class="text-lg font-semibold text-secondary">
@@ -110,7 +178,6 @@ watch(() => open, (newValue) => {
                         <!-- More content here -->
                     </div>
                 </div>
-
             </div>
         </DialogContent>
     </Dialog>
