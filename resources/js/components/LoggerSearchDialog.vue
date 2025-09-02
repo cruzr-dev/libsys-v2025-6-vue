@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { ref, onMounted, watch } from 'vue';
+import { CircleUser } from 'lucide-vue-next';
 
 const props = defineProps<{
     user: {
@@ -69,7 +70,7 @@ const getCsrfTokenFromCookie = () => {
 // Animate progress bar
 const startProgressAnimation = () => {
     progress.value = 100;
-    const duration = 2000;
+    const duration = 200000;
     const start = Date.now();
 
     const interval = setInterval(() => {
@@ -170,19 +171,29 @@ const maskName = (name: string): string => {
                     </div>
                 </div>
                 <div class="p-6 pt-10 space-y-6 overflow-y-auto">
-                    <div v-if="user?.transaction_type === 'login'" class="text-lg font-semibold text-secondary">
-                        You are entering the library
+                    <div class="flex flex-col items-center text-center max-w-md mx-auto space-y-6">
+                        <!-- Status Message -->
+                        <div v-if="user?.transaction_type === 'login'" class="text-lg font-semibold text-secondary">
+                            You are entering the library
+                        </div>
+                        <div v-else-if="user?.transaction_type === 'logout'" class="text-lg font-semibold text-destructive">
+                            You are now leaving the library
+                        </div>
+
+                        <!-- User Icon -->
+                        <div class="flex justify-center">
+                            <CircleUser class="w-16 h-16 text-muted-foreground" />
+                        </div>
+
+                        <!-- User Name -->
+                        <h2 class="text-2xl font-bold">{{ maskName(user?.first_name) }}</h2>
+
+                        <!-- Last Name -->
+                        <div class="flex justify-center">
+                            <p class="text-muted-foreground">{{ maskName(user?.last_name) }}</p>
+                        </div>
                     </div>
-                    <div v-else-if="user?.transaction_type === 'logout'" class="text-lg font-semibold text-destructive">
-                        You are now leaving the library
-                    </div>
-                    <h2 class="text-2xl font-bold">{{ maskName(user?.first_name) }}</h2>
-                    <div class="flex my-4 gap-2">
-                        <p class="text-muted-foreground">{{ maskName(user?.last_name) }}</p>
-                    </div>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <!-- More content here -->
-                    </div>
+
                 </div>
             </div>
         </DialogContent>
