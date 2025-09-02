@@ -18,7 +18,7 @@ const progress = ref(100);
 
 // Animate progress bar
 onMounted(() => {
-    const duration = 2000; // 2 seconds
+    const duration = 3000; // 2 seconds
     const start = Date.now();
     const interval = setInterval(() => {
         const elapsed = Date.now() - start;
