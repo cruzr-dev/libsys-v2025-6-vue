@@ -116,6 +116,25 @@ watch(() => props.open, (newValue) => {
         startProgressAnimation();
     }
 });
+
+// Utility function to mask names
+const maskName = (name: string): string => {
+    if (!name) return '';
+    if (name.length <= 2) return name;
+
+    // Always keep first and last character, alternate masking in the middle starting with mask
+    return name
+        .split('')
+        .map((char, index) => {
+            // Keep first and last character
+            if (index === 0 || index === name.length - 1) return char;
+            // In the middle section, start masking from position 1, then alternate
+            const middleIndex = index - 1; // Adjust index for middle section
+            return (middleIndex % 2 === 0) ? '*' : char;
+        })
+        .join('');
+};
+
 </script>
 
 <template>
@@ -157,9 +176,9 @@ watch(() => props.open, (newValue) => {
                     <div v-else-if="user?.transaction_type === 'logout'" class="text-lg font-semibold text-destructive">
                         You are now leaving the library
                     </div>
-                    <h2 class="text-2xl font-bold">{{ user?.first_name }}</h2>
+                    <h2 class="text-2xl font-bold">{{ maskName(user?.first_name) }}</h2>
                     <div class="flex my-4 gap-2">
-                        <p class="text-muted-foreground">{{ user?.last_name }}</p>
+                        <p class="text-muted-foreground">{{ maskName(user?.last_name) }}</p>
                     </div>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <!-- More content here -->
