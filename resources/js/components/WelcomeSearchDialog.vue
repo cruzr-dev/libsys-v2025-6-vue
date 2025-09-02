@@ -16,7 +16,7 @@ defineProps({
     <Dialog class="">
         <DialogTrigger as-child>
             <div class="flex gap-4 w-full">
-                <div class="items-center flex">
+                <div class="items-center p-2 flex">
                     <div class="font-medium leading-tight">{{ record?.accession_number }}</div>
                 </div>
                 <div class="record-content w-full">
