@@ -209,6 +209,75 @@ class LibraryVisitController extends Controller
         }
     }
 
+    public function scannerLookup(Request $request)
+    {
+        // Validate the library_id query
+        $request->validate([
+            'scanned_id' => 'required|numeric'
+        ]);
+
+        $scannedId = $request->get('scanned_id');
+
+        try {
+            $user = User::query()
+                ->where('card_number', $scannedId)
+                ->first(['id', 'first_name', 'last_name', 'library_id', 'email']);
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No user found with this library number'
+                ], 404);
+            }
+
+            // Check for today's library visit record
+            $today = now()->startOfDay();
+            $todayEnd = now()->endOfDay();
+
+            $todayVisit = LibraryVisit::query()
+                ->where('user_id', $user->id)
+                ->whereBetween('entry_time', [$today, $todayEnd])
+                ->orderBy('entry_time', 'desc')
+                ->first(['entry_time', 'exit_time']);
+
+            // Determine transaction type based on visit record
+            $transactionType = 'login'; // Default for no record today
+
+            if ($todayVisit) {
+                // User has a record today
+                if (is_null($todayVisit->exit_time)) {
+                    // Has entry but no exit - next action should be logout
+                    $transactionType = 'logout';
+                } else {
+                    // Has both entry and exit - next action should be login
+                    $transactionType = 'login';
+                }
+            }
+
+            // Prepare user data without the internal id
+            $userData = [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'library_id' => $user->library_id,
+                'email' => $user->email,
+                'transaction_type' => $transactionType
+            ];
+
+            return response()->json([
+                'success' => true,
+                'user' => $userData
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function searchByName(Request $request): ?JsonResponse
     {
         // Validate the search query
