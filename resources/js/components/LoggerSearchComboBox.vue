@@ -92,8 +92,8 @@ const searchByLibraryNumber = async (query: string) => {
         if (response.ok) {
             const data = await response.json()
             if (data.user) {
-                selectedUser.value = data.user
                 dialogOpen.value = true
+                selectedUser.value = data.user
             } else {
                 selectedUser.value = null
                 dialogOpen.value = false
@@ -117,7 +117,7 @@ const debouncedLibrarySearch = debounce(async (query: string) => {
         const formattedQuery = query.includes('-') ? query.replace('-', '') : query
         await searchByLibraryNumber(formattedQuery)
     }
-}, 500) // Slightly longer delay to avoid too many API calls while typing
+}, 5) // I made it faster from 500
 
 // Watch for search query changes
 watch(searchQuery, (newQuery) => {
@@ -236,6 +236,7 @@ const handleDialogClose = () => {
         <LoggerSearchDialog
             v-if="selectedUser"
             :user="selectedUser"
+            :isNumericSearch="true"
             v-model:open="dialogOpen"
             @close="handleDialogClose"
         />
