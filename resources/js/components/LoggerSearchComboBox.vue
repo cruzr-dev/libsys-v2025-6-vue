@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { X, UserRoundX } from "lucide-vue-next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,12 @@ const isLoading = ref(false)
 const selectedUser = ref<any | null>(null)
 const dialogOpen = ref(false)
 
+// Scanner state
+const scannerInputRef = ref<HTMLInputElement | null>(null)
+const studentIdInputRef = ref<HTMLInputElement | null>(null)
+let scannerBuffer = ''
+let scannerTimeout: ReturnType<typeof setTimeout>
+
 // For auto-search: 000088888 OR 0000-88888 (must be exactly 9 digits)
 const isLibraryIdQuery = (query: string) => {
     const trimmed = query.trim()
@@ -23,6 +29,69 @@ const isLibraryIdQuery = (query: string) => {
 const isNumericQuery = (query: string) => {
     const trimmed = query.trim()
     return /^\d+$/.test(trimmed) || /^\d{4}-\d{5}$/.test(trimmed)
+}
+
+// Process scanned ID (for both RFID and barcode scanners)
+const processScannedId = async (scannedId: string) => {
+    // Clear any existing search state
+    searchQuery.value = ''
+    searchResults.value = []
+    selectedUser.value = null
+    dialogOpen.value = false
+
+    isLoading.value = true
+
+    try {
+        // Route to scanner-specific API endpoint
+        const params = new URLSearchParams({ scanned_id: scannedId })
+
+        const response = await fetch(`/api/logger/patron/scanner-lookup?${params.toString()}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+
+        if (response.ok) {
+            const data = await response.json()
+            if (data.user) {
+                selectedUser.value = data.user
+                dialogOpen.value = true
+            } else {
+                console.log('No user found for scanned ID:', scannedId)
+            }
+        } else {
+            console.error('Scanner lookup failed:', response.statusText)
+        }
+    } catch (error) {
+        console.error('Scanner lookup error:', error)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+// Scanner input handler (for hidden input method)
+const onScannerInput = (e: Event) => {
+    const val = (e.target as HTMLInputElement).value
+    if (val) {
+        processScannedId(val)
+        ;(e.target as HTMLInputElement).value = ''
+    }
+}
+
+// Global keydown handler for barcode scanner support
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+    // Only capture scanner input if main search input is empty
+    if (studentIdInputRef.value.value === '' && e.key.length === 1) {
+        scannerBuffer += e.key
+        clearTimeout(scannerTimeout)
+        scannerTimeout = setTimeout(() => {
+            if (scannerBuffer.length > 0) {
+                processScannedId(scannerBuffer)
+                scannerBuffer = ''
+            }
+        }, 100)
+    }
 }
 
 // Debounced search function for name search
@@ -74,7 +143,7 @@ const debouncedSearch = debounce(async (query: string) => {
     }
 }, 300)
 
-// Search by library number
+// Search by library number (manual input)
 const searchByLibraryNumber = async (query: string) => {
     isLoading.value = true
     searchResults.value = []
@@ -167,6 +236,20 @@ const clearSearch = () => {
 const handleDialogClose = () => {
     clearSearch()
 }
+
+// Lifecycle hooks for scanner support
+onMounted(() => {
+    // Add global keydown listener for barcode scanner
+    window.addEventListener('keydown', handleGlobalKeydown)
+})
+
+onUnmounted(() => {
+    // Clean up event listeners and timeouts
+    window.removeEventListener('keydown', handleGlobalKeydown)
+    clearTimeout(scannerTimeout)
+    debouncedSearch.cancel()
+    debouncedLibrarySearch.cancel()
+})
 </script>
 
 <template>
@@ -175,10 +258,18 @@ const handleDialogClose = () => {
         <div class="relative">
             <div class="relative">
                 <Input
+                    ref="studentIdInputRef"
                     v-model="searchQuery"
                     class="pr-10"
-                    placeholder="Library ID: 000088888 or 0000-88888"
+                    placeholder="Library ID: 000088888 or 0000-88888, Name: --john doe"
                     @keydown="handleKeydown"
+                />
+
+                <!-- Hidden input for RFID scanner support -->
+                <input
+                    ref="scannerInputRef"
+                    class="absolute opacity-0 h-0 w-0"
+                    @input="onScannerInput"
                 />
 
                 <!-- Clear button -->
