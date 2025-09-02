@@ -21,7 +21,6 @@ return new class extends Migration
 
             $table->index(['user_id', 'entry_time']);
             $table->index(['entry_time', 'exit_time']);
-            $table->index('visit_purpose_id');
             $table->index(['created_at']); // For daily/monthly reports
         });
     }
