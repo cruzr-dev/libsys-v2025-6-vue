@@ -70,7 +70,7 @@ const getCsrfTokenFromCookie = () => {
 // Animate progress bar
 const startProgressAnimation = () => {
     progress.value = 100;
-    const duration = 200000;
+    const duration = 2000;
     const start = Date.now();
 
     const interval = setInterval(() => {
@@ -161,7 +161,8 @@ const maskName = (name: string): string => {
         </DialogTrigger>
 
         <DialogContent class="h-full max-h-[60%] sm:max-w-xl p-0 overflow-clip">
-            <div class="relative">
+            <div class="relative flex flex-col min-h-[400px] w-full max-w-2xl mx-auto">
+                <!-- Progress Bar -->
                 <div class="absolute top-0 left-0 w-full">
                     <div class="w-full bg-gray-200 h-2.5">
                         <div
@@ -170,30 +171,30 @@ const maskName = (name: string): string => {
                         ></div>
                     </div>
                 </div>
-                <div class="p-6 pt-10 space-y-6 overflow-y-auto">
-                    <div class="flex flex-col items-center text-center max-w-md mx-auto space-y-6">
-                        <!-- Status Message -->
-                        <div v-if="user?.transaction_type === 'login'" class="text-lg font-semibold text-secondary">
-                            You are entering the library
-                        </div>
-                        <div v-else-if="user?.transaction_type === 'logout'" class="text-lg font-semibold text-destructive">
-                            You are now leaving the library
-                        </div>
 
+                <!-- Content Container -->
+                <div class="flex flex-col items-center justify-center flex-grow p-6 pt-12 space-y-8">
+                    <!-- Status Message -->
+                    <div v-if="user?.transaction_type === 'login'" class="text-2xl font-semibold text-secondary text-center">
+                        You are entering the library
+                    </div>
+                    <div v-else-if="user?.transaction_type === 'logout'" class="text-2xl font-semibold text-destructive text-center">
+                        You are now leaving the library
+                    </div>
+
+                    <!-- User Info Section -->
+                    <div class="flex flex-col items-center text-center space-y-4">
                         <!-- User Icon -->
                         <div class="flex justify-center">
-                            <CircleUser class="w-16 h-16 text-muted-foreground" />
+                            <CircleUser class="w-24 h-24 text-muted-foreground" />
                         </div>
 
                         <!-- User Name -->
                         <h2 class="text-2xl font-bold">{{ maskName(user?.first_name) }}</h2>
 
                         <!-- Last Name -->
-                        <div class="flex justify-center">
-                            <p class="text-muted-foreground">{{ maskName(user?.last_name) }}</p>
-                        </div>
+                        <p class="text-xl text-muted-foreground">{{ maskName(user?.last_name) }}</p>
                     </div>
-
                 </div>
             </div>
         </DialogContent>
