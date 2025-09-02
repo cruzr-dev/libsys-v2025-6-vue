@@ -15,10 +15,14 @@ class RecordFactory extends Factory
      *
      * @return array<string, mixed>
      */
+
+    private static int $accessionCounter = 100000;
+
     public function definition(): array
     {
+
         return [
-            'accession_number' => $this->faker->unique()->regexify('[A-Z]{2}[0-9]{6}'),
+            'accession_number' => fake()->numberBetween(100000, 999999),
             'title' => $this->faker->sentence(3, true),
             'date_received' => $this->faker->dateTimeBetween('-5 years', 'now'),
             'status' => $this->faker->randomElement(['available', 'damaged', 'missing', 'borrowed', 'discarded']),
