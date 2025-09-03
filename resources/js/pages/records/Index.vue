@@ -526,7 +526,6 @@ const getRecordSpecificData = (record: any) => {
     }
 };
 
-console.log(data);
 </script>
 
 <template>

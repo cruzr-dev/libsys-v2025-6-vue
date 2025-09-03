@@ -56,6 +56,7 @@ const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({
     editors_list: false, // Hide editors column by default
+    publication_year: true
 });
 
 // Modal dialog state
@@ -142,6 +143,18 @@ const columns: ColumnDef<any>[] = [
         cell: ({ row }) => {
             const editorsList = row.getValue('editors_list');
             return h('div', { class: 'truncate max-w-xs' }, editorsList || 'No editors');
+        },
+        enableHiding: true,
+    },
+    {
+        id: 'publication_year', // use id instead of accessorKey since it's nested
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Year', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => {
+            const year = row.original.book?.publication_year;
+            return h('div', year || 'N/A');
         },
         enableHiding: true,
     },
