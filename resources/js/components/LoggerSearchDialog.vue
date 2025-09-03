@@ -70,7 +70,7 @@ const getCsrfTokenFromCookie = () => {
 // Animate progress bar
 const startProgressAnimation = () => {
     progress.value = 100;
-    const duration = 2000;
+    const duration = 2500;
     const start = Date.now();
 
     const interval = setInterval(() => {
@@ -189,12 +189,19 @@ const maskName = (name: string): string => {
                             <CircleUser class="w-24 h-24 text-muted-foreground" />
                         </div>
 
+                        <!-- Library ID -->
+                        <div class="text-center">
+                            <span class="text-sm font-medium text-muted-foreground">Library ID: </span>
+                            <span class="text-lg font-semibold">{{ user?.library_id }}</span>
+                        </div>
+
                         <!-- User Name -->
                         <h2 class="text-2xl font-bold">{{ maskName(user?.first_name) }}</h2>
 
                         <!-- Last Name -->
                         <p class="text-xl text-muted-foreground">{{ maskName(user?.last_name) }}</p>
                     </div>
+
                 </div>
             </div>
         </DialogContent>
