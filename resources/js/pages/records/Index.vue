@@ -4,12 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import { ArrowUpDown, Search, X, Loader2, Eye } from 'lucide-vue-next';
+import { ArrowUpDown, Search, X, Loader2, Eye, Filter } from 'lucide-vue-next';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import type { ColumnDef, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
 import {
@@ -43,6 +44,18 @@ interface ApiResponse {
     total: number;
 }
 
+// Record type definitions
+const recordTypes = [
+    { value: 'book', label: 'Book', color: 'bg-blue-100 text-blue-800' },
+    { value: 'digitalResource', label: 'Multimedia', color: 'bg-green-100 text-green-800' },
+    { value: 'periodical', label: 'Periodical/Magazine', color: 'bg-purple-100 text-purple-800' },
+    { value: 'thesis', label: 'Thesis/Dissertation', color: 'bg-orange-100 text-orange-800' },
+];
+
+const getRecordTypeInfo = (type: string) => {
+    return recordTypes.find(rt => rt.value === type) || { value: type, label: type, color: 'bg-gray-100 text-gray-800' };
+};
+
 // Reactive state
 const data = ref<any[]>([]);
 const isLoading = ref(false);
@@ -56,11 +69,14 @@ const columnFilters = ref<ColumnFiltersState>([]);
 
 // Modal dialog state
 const isDialogOpen = ref(false);
-const selectedBook = ref<any | null>(null);
+const selectedRecord = ref<any | null>(null);
 
 // Search functionality state
 const filterInput = ref<string>('');
 const searchInputRef = ref(null);
+
+// Record type filter state
+const recordTypeFilter = ref<string>('');
 
 // Pagination state
 const pageSizes = [5, 10, 20, 30, 40, 50];
@@ -86,13 +102,22 @@ const restoreScrollPosition = () => {
 };
 
 // Modal handlers
-const handleShow = (book: any) => {
-    selectedBook.value = book;
+const handleShow = (record: any) => {
+    selectedRecord.value = record;
     isDialogOpen.value = true;
 };
 
-const handleEdit = (id: string | number) => {
-    router.get(route('records.books.edit', id));
+const handleEdit = (id: string | number, recordType: string) => {
+    // Route to appropriate edit page based on record type
+    const routes = {
+        book: 'records.books.edit',
+        digitalResource: 'records.digital-resources.edit',
+        periodical: 'records.periodicals.edit',
+        thesis: 'records.theses.edit'
+    };
+
+    const routeName = routes[recordType as keyof typeof routes] || 'records.books.edit';
+    router.get(route(routeName, id));
 };
 
 // Sorting helper
@@ -122,6 +147,21 @@ const columns: ColumnDef<any>[] = [
             ]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
         enableHiding: false,
+    },
+    {
+        accessorKey: 'record_type',
+        header: 'Type',
+        cell: ({ row }) => {
+            const recordType = row.getValue('record_type') as string;
+            const typeInfo = getRecordTypeInfo(recordType);
+            return h(Badge, {
+                class: `${typeInfo.color} border-0 font-medium text-xs px-2 py-1`
+            }, () => typeInfo.label);
+        },
+        enableHiding: false,
+        filterFn: (row, id, value) => {
+            return value === '' || row.getValue(id) === value;
+        },
     },
     {
         id: 'action',
@@ -156,6 +196,23 @@ const applyFilter = () => {
 const clearFilter = () => {
     filterInput.value = '';
     const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
+    table.setColumnFilters(newFilters);
+};
+
+// Handle record type filter
+const handleRecordTypeFilter = (value: string) => {
+    recordTypeFilter.value = value;
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'record_type');
+    if (value && value !== '') {
+        newFilters.push({ id: 'record_type', value });
+    }
+    table.setColumnFilters(newFilters);
+};
+
+// Clear record type filter
+const clearRecordTypeFilter = () => {
+    recordTypeFilter.value = '';
+    const newFilters = columnFilters.value.filter((f) => f.id !== 'record_type');
     table.setColumnFilters(newFilters);
 };
 
@@ -337,6 +394,14 @@ const initializeFromURL = () => {
         filterInput.value = searchParam;
         columnFilters.value = [{ id: 'search', value: searchParam }];
     }
+
+    // Initialize record type filter
+    const recordTypeParam = urlParams.get('record_type');
+    if (recordTypeParam) {
+        recordTypeFilter.value = recordTypeParam;
+        const existingFilters = columnFilters.value.filter((f) => f.id !== 'record_type');
+        columnFilters.value = [...existingFilters, { id: 'record_type', value: recordTypeParam }];
+    }
 };
 
 // Table instance
@@ -384,12 +449,59 @@ watch(() => window.location.search, () => {
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Records', href: '/records' },
-    { title: 'Books', href: '/records/books' },
+    { title: 'All Records', href: '/records/all' },
 ];
+
+// Helper function to get record type specific data
+const getRecordSpecificData = (record: any) => {
+    if (!record || !record.record_type) return {};
+
+    const typeKey = record.record_type;
+    const typeData = record[typeKey];
+
+    if (!typeData) return {};
+
+    switch (typeKey) {
+        case 'book':
+            return {
+                isbn: typeData.isbn,
+                publisher: typeData.publisher,
+                publication_year: typeData.publication_year,
+                category: typeData.category?.name,
+                location: typeData.location,
+                cover_image: typeData.cover_image,
+                authors: typeData.authors?.map((a: any) => a.name).join(', ')
+            };
+        case 'digitalResource':
+            return {
+                url: typeData.url,
+                file_format: typeData.file_format,
+                file_size: typeData.file_size,
+                access_type: typeData.access_type
+            };
+        case 'periodical':
+            return {
+                issn: typeData.issn,
+                volume: typeData.volume,
+                issue: typeData.issue,
+                publication_date: typeData.publication_date,
+                frequency: typeData.frequency
+            };
+        case 'thesis':
+            return {
+                degree_program: typeData.degree_program,
+                advisor: typeData.advisor,
+                year_submitted: typeData.year_submitted,
+                department: typeData.department
+            };
+        default:
+            return {};
+    }
+};
 </script>
 
 <template>
-    <Head title="Books" />
+    <Head title="All Records" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
             <div class="w-full">
@@ -401,8 +513,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </Button>
                 </div>
 
-                <!-- Search -->
-                <div class="flex items-center justify-between gap-2 py-4">
+                <!-- Filters -->
+                <div class="flex items-center justify-between gap-4 py-4">
+                    <!-- Search -->
                     <div class="relative">
                         <Input
                             ref="searchInputRef"
@@ -424,6 +537,41 @@ const breadcrumbs: BreadcrumbItem[] = [
                         >
                             <Search class="h-4 w-4 text-foreground" />
                         </div>
+                    </div>
+
+                    <!-- Record Type Filter -->
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2">
+                            <Filter class="h-4 w-4 text-muted-foreground" />
+                            <span class="text-sm font-medium">Type:</span>
+                        </div>
+                        <Select
+                            :model-value="recordTypeFilter"
+                            @update:model-value="handleRecordTypeFilter"
+                        >
+                            <SelectTrigger class="w-[180px]">
+                                <SelectValue placeholder="All Types" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">All Types</SelectItem>
+                                <SelectItem
+                                    v-for="type in recordTypes"
+                                    :key="type.value"
+                                    :value="type.value"
+                                >
+                                    {{ type.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button
+                            v-if="recordTypeFilter"
+                            variant="ghost"
+                            size="sm"
+                            @click="clearRecordTypeFilter"
+                            class="px-2"
+                        >
+                            <X class="h-4 w-4" />
+                        </Button>
                     </div>
                 </div>
 
@@ -520,42 +668,60 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </div>
                 </div>
 
-                <!-- Book Details Modal -->
+                <!-- Record Details Modal -->
                 <Dialog v-model:open="isDialogOpen">
-                    <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+                    <DialogContent class="sm:max-w-4xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                         <DialogHeader class="p-6 pb-0">
-                            <DialogTitle>Book Details</DialogTitle>
+                            <DialogTitle class="flex items-center gap-3">
+                                Record Details
+                                <Badge
+                                    v-if="selectedRecord?.record_type"
+                                    :class="getRecordTypeInfo(selectedRecord.record_type).color + ' border-0'"
+                                >
+                                    {{ getRecordTypeInfo(selectedRecord.record_type).label }}
+                                </Badge>
+                            </DialogTitle>
                             <DialogDescription>
-                                Viewing book information.
+                                Viewing {{ selectedRecord?.record_type || 'record' }} information.
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
-                            <!-- Book Cover and Barcode -->
-                            <div class="flex flex-col items-center md:items-start gap-4">
-                                <!-- Book Cover Image -->
-                                <img
-                                    v-if="selectedBook?.cover_image"
-                                    :src="'/storage/book_covers/' + selectedBook.cover_image"
-                                    alt="Book Cover"
-                                    class="h-40 w-32 object-cover border shadow-md rounded"
-                                />
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 py-4 px-6 overflow-y-auto">
+                            <!-- Cover/Image and Barcode -->
+                            <div class="flex flex-col items-center lg:items-start gap-4">
+                                <!-- Cover Image (mainly for books) -->
+                                <template v-if="selectedRecord?.record_type === 'book'">
+                                    <img
+                                        v-if="getRecordSpecificData(selectedRecord).cover_image"
+                                        :src="'/storage/book_covers/' + getRecordSpecificData(selectedRecord).cover_image"
+                                        alt="Book Cover"
+                                        class="h-40 w-32 object-cover border shadow-md rounded"
+                                    />
+                                    <div
+                                        v-else
+                                        class="h-40 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md rounded"
+                                    >
+                                        <span class="text-sm text-center">No Cover</span>
+                                    </div>
+                                </template>
+
+                                <!-- Generic placeholder for other types -->
                                 <div
                                     v-else
                                     class="h-40 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md rounded"
                                 >
-                                    <span class="text-sm text-center">No Cover</span>
+                                    <span class="text-sm text-center">{{ getRecordTypeInfo(selectedRecord?.record_type || '').label }}</span>
                                 </div>
 
                                 <!-- Barcode -->
-                                <div v-if="selectedBook?.barcode_path" class="flex flex-col items-center">
+                                <div v-if="selectedRecord?.barcode_path" class="flex flex-col items-center">
                                     <img
-                                        :src="'/storage/' + selectedBook.barcode_path"
-                                        alt="Book Barcode"
+                                        :src="'/storage/' + selectedRecord.barcode_path"
+                                        alt="Barcode"
                                         class="h-16 w-auto border shadow-md"
                                     />
                                     <span class="text-xs text-muted-foreground mt-2">
-                                        Barcode: {{ selectedBook.accession_number }}
+                                        Barcode: {{ selectedRecord.accession_number }}
                                     </span>
                                 </div>
                                 <div
@@ -566,31 +732,78 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 </div>
                             </div>
 
-                            <!-- Book Details -->
-                            <div class="md:col-span-2">
-                                <div v-if="selectedBook" class="grid gap-2 text-sm">
-                                    <p><strong>Accession No.:</strong> {{ selectedBook.accession_number }}</p>
-                                    <p><strong>Title:</strong> {{ selectedBook.title }}</p>
-                                    <p><strong>ISBN:</strong> {{ selectedBook.book?.isbn || 'N/A' }}</p>
-                                    <p><strong>Publisher:</strong> {{ selectedBook.book?.publisher || 'N/A' }}</p>
-                                    <p><strong>Publication Year:</strong> {{ selectedBook.book?.publication_year || 'N/A' }}</p>
-                                    <p><strong>Category:</strong> {{ selectedBook.book?.category?.name || 'N/A' }}</p>
-                                    <p><strong>Location:</strong> {{ selectedBook.book?.location || 'N/A' }}</p>
-                                    <p><strong>Subject:</strong> {{ selectedBook.subject || 'N/A' }}</p>
-                                    <p><strong>Status:</strong>
-                                        <span :class="{
-                                            'text-green-600': selectedBook.status === 'available',
-                                            'text-yellow-600': selectedBook.status === 'borrowed',
-                                            'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedBook.status)
-                                        }">
-                                            {{ selectedBook.status || 'N/A' }}
-                                        </span>
-                                    </p>
-                                    <p><strong>Date Received:</strong> {{ selectedBook.date_received ? new Date(selectedBook.date_received).toLocaleDateString() : 'N/A' }}</p>
-                                    <p><strong>Added:</strong> {{ selectedBook.created_at ? new Date(selectedBook.created_at).toLocaleDateString() : 'N/A' }}</p>
+                            <!-- Record Details -->
+                            <div class="lg:col-span-3">
+                                <div v-if="selectedRecord" class="grid gap-4">
+                                    <!-- Common Fields -->
+                                    <div class="grid gap-2 text-sm">
+                                        <h3 class="font-semibold text-base mb-2">General Information</h3>
+                                        <p><strong>Accession No.:</strong> {{ selectedRecord.accession_number }}</p>
+                                        <p><strong>Title:</strong> {{ selectedRecord.title }}</p>
+                                        <p><strong>Subject:</strong> {{ selectedRecord.subject || 'N/A' }}</p>
+                                        <p><strong>Status:</strong>
+                                            <span :class="{
+                                                'text-green-600': selectedRecord.status === 'available',
+                                                'text-yellow-600': selectedRecord.status === 'borrowed',
+                                                'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedRecord.status)
+                                            }">
+                                                {{ selectedRecord.status || 'N/A' }}
+                                            </span>
+                                        </p>
+                                        <p><strong>Date Received:</strong> {{ selectedRecord.date_received ? new Date(selectedRecord.date_received).toLocaleDateString() : 'N/A' }}</p>
+                                        <p><strong>Added:</strong> {{ selectedRecord.created_at ? new Date(selectedRecord.created_at).toLocaleDateString() : 'N/A' }}</p>
+                                    </div>
+
+                                    <!-- Type-specific Fields -->
+                                    <div class="grid gap-2 text-sm" v-if="selectedRecord.record_type">
+                                        <h3 class="font-semibold text-base mb-2">{{ getRecordTypeInfo(selectedRecord.record_type).label }} Details</h3>
+
+                                        <!-- Book specific fields -->
+                                        <template v-if="selectedRecord.record_type === 'book'">
+                                            <p><strong>ISBN:</strong> {{ getRecordSpecificData(selectedRecord).isbn || 'N/A' }}</p>
+                                            <p><strong>Authors:</strong> {{ getRecordSpecificData(selectedRecord).authors || 'N/A' }}</p>
+                                            <p><strong>Publisher:</strong> {{ getRecordSpecificData(selectedRecord).publisher || 'N/A' }}</p>
+                                            <p><strong>Publication Year:</strong> {{ getRecordSpecificData(selectedRecord).publication_year || 'N/A' }}</p>
+                                            <p><strong>Category:</strong> {{ getRecordSpecificData(selectedRecord).category || 'N/A' }}</p>
+                                            <p><strong>Location:</strong> {{ getRecordSpecificData(selectedRecord).location || 'N/A' }}</p>
+                                        </template>
+
+                                        <!-- Digital Resource specific fields -->
+                                        <template v-else-if="selectedRecord.record_type === 'digitalResource'">
+                                            <p><strong>URL:</strong>
+                                                <a v-if="getRecordSpecificData(selectedRecord).url"
+                                                   :href="getRecordSpecificData(selectedRecord).url"
+                                                   target="_blank"
+                                                   class="text-blue-600 hover:underline break-all">
+                                                    {{ getRecordSpecificData(selectedRecord).url }}
+                                                </a>
+                                                <span v-else>N/A</span>
+                                            </p>
+                                            <p><strong>File Format:</strong> {{ getRecordSpecificData(selectedRecord).file_format || 'N/A' }}</p>
+                                            <p><strong>File Size:</strong> {{ getRecordSpecificData(selectedRecord).file_size || 'N/A' }}</p>
+                                            <p><strong>Access Type:</strong> {{ getRecordSpecificData(selectedRecord).access_type || 'N/A' }}</p>
+                                        </template>
+
+                                        <!-- Periodical specific fields -->
+                                        <template v-else-if="selectedRecord.record_type === 'periodical'">
+                                            <p><strong>ISSN:</strong> {{ getRecordSpecificData(selectedRecord).issn || 'N/A' }}</p>
+                                            <p><strong>Volume:</strong> {{ getRecordSpecificData(selectedRecord).volume || 'N/A' }}</p>
+                                            <p><strong>Issue:</strong> {{ getRecordSpecificData(selectedRecord).issue || 'N/A' }}</p>
+                                            <p><strong>Publication Date:</strong> {{ getRecordSpecificData(selectedRecord).publication_date ? new Date(getRecordSpecificData(selectedRecord).publication_date).toLocaleDateString() : 'N/A' }}</p>
+                                            <p><strong>Frequency:</strong> {{ getRecordSpecificData(selectedRecord).frequency || 'N/A' }}</p>
+                                        </template>
+
+                                        <!-- Thesis specific fields -->
+                                        <template v-else-if="selectedRecord.record_type === 'thesis'">
+                                            <p><strong>Degree Program:</strong> {{ getRecordSpecificData(selectedRecord).degree_program || 'N/A' }}</p>
+                                            <p><strong>Advisor:</strong> {{ getRecordSpecificData(selectedRecord).advisor || 'N/A' }}</p>
+                                            <p><strong>Department:</strong> {{ getRecordSpecificData(selectedRecord).department || 'N/A' }}</p>
+                                            <p><strong>Year Submitted:</strong> {{ getRecordSpecificData(selectedRecord).year_submitted || 'N/A' }}</p>
+                                        </template>
+                                    </div>
                                 </div>
                                 <div v-else class="text-muted-foreground">
-                                    <p>No book selected.</p>
+                                    <p>No record selected.</p>
                                 </div>
                             </div>
                         </div>
@@ -598,7 +811,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <DialogFooter class="p-6 pt-0">
                             <div class="flex justify-between w-full">
                                 <Button variant="outline" @click="isDialogOpen = false">Close</Button>
-                                <Button @click="handleEdit(selectedBook?.id)">Edit Book Details</Button>
+                                <Button @click="handleEdit(selectedRecord?.id, selectedRecord?.record_type)">
+                                    Edit {{ getRecordTypeInfo(selectedRecord?.record_type || '').label }} Details
+                                </Button>
                             </div>
                         </DialogFooter>
                     </DialogContent>

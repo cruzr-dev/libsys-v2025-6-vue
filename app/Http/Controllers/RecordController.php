@@ -26,8 +26,13 @@ class RecordController extends Controller
 
     public function fetchAll(Request $request)
     {
+        // Define valid relations for record types
+        $validRelations = ['book', 'digitalResource', 'periodical', 'thesis'];
+
         $query = Record::query()
-            ->whereNull('deleted_at');
+            ->whereNull('deleted_at')
+            // Eager load all possible record type relations
+            ->with($validRelations);
 
         // Handle search
         if ($request->filled('search')) {
@@ -36,6 +41,14 @@ class RecordController extends Controller
                 $q->where('accession_number', 'like', "%{$searchTerm}%")
                     ->orWhere('title', 'like', "%{$searchTerm}%");
             });
+        }
+
+        // Handle record type filtering
+        if ($request->filled('record_type')) {
+            $recordType = $request->get('record_type');
+            if (in_array($recordType, $validRelations)) {
+                $query->whereHas($recordType);
+            }
         }
 
         // Handle sorting (only accession_number & title allowed)
@@ -53,6 +66,19 @@ class RecordController extends Controller
         // Pagination
         $perPage = $request->get('per_page', 10);
         $records = $query->paginate($perPage);
+
+        // Transform the collection to include record_type information
+        $records->getCollection()->transform(function ($record) use ($validRelations) {
+            // Determine the record type based on which relation exists
+            foreach ($validRelations as $relation) {
+                if ($record->relationLoaded($relation) && $record->$relation) {
+                    $record->record_type = $relation;
+                    break;
+                }
+            }
+
+            return $record;
+        });
 
         return $records;
     }
