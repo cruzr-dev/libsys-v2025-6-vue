@@ -9,7 +9,7 @@ import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import { ArrowUpDown, Search, X, Loader2, Eye, ChevronDown } from 'lucide-vue-next';
+import { ArrowUpDown, Search, X, Loader2, Eye, ChevronDown, Plus } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import type { ColumnDef, VisibilityState, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
@@ -504,30 +504,35 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </div>
 
                     <!-- Column Visibility Dropdown -->
-                    <DropdownMenuRoot>
-                        <DropdownMenuTrigger as-child>
-                            <Button variant="outline" class="ml-auto" :disabled="isLoading">
-                                Columns
-                                <ChevronDown class="ml-2 h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="z-50 min-w-[220px] rounded-md border border-gray-200 bg-white p-1 shadow-lg">
-                            <DropdownMenuCheckboxItem
-                                v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
-                                :key="column.id"
-                                :checked="column.getIsVisible()"
-                                @update:checked="(value) => column.toggleVisibility(!!value)"
-                                class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
-                            >
+                    <div class="flex gap-2">
+                        <Button variant="secondary">
+                            <Plus class="w-4 h-4" /> Add Book
+                        </Button>
+                        <DropdownMenuRoot>
+                            <DropdownMenuTrigger as-child>
+                                <Button variant="outline" class="ml-auto" :disabled="isLoading">
+                                    Columns
+                                    <ChevronDown class="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" class="z-50 min-w-[220px] rounded-md border border-gray-200 bg-white p-1 shadow-lg">
+                                <DropdownMenuCheckboxItem
+                                    v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
+                                    :key="column.id"
+                                    :checked="column.getIsVisible()"
+                                    @update:checked="(value) => column.toggleVisibility(!!value)"
+                                    class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
+                                >
                                 <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
                                     <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </span>
-                                {{ column.id.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
-                            </DropdownMenuCheckboxItem>
-                        </DropdownMenuContent>
-                    </DropdownMenuRoot>
+                                    {{ column.id.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                                </DropdownMenuCheckboxItem>
+                            </DropdownMenuContent>
+                        </DropdownMenuRoot>
+                    </div>
                 </div>
 
                 <!-- Table -->
