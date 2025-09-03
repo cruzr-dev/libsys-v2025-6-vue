@@ -19,6 +19,7 @@ class StatusSeeder extends Seeder
             ['key' => 'missing', 'name' => 'Missing'],
             ['key' => 'borrowed', 'name' => 'Borrowed'],
             ['key' => 'discarded', 'name' => 'Discarded'],
+            ['key' => 'transferred', 'name' => 'Transferred'],
         ];
 
         foreach ($statuses as $status) {

@@ -19,7 +19,7 @@ const localValue = computed({
 
 <template>
     <TagsInput v-model="localValue">
-        <TagsInputItem v-for="item in localValue" :key="item" :value="item">
+        <TagsInputItem class="bg-accent" v-for="item in localValue" :key="item" :value="item">
             <TagsInputItemText />
             <TagsInputItemDelete />
         </TagsInputItem>
