@@ -62,6 +62,7 @@ const columnVisibility = ref<VisibilityState>({
     volume: false,
     edition: false,
     publisher: false,
+    ddc_classification: true,
 });
 
 
@@ -120,7 +121,7 @@ const columns: ColumnDef<any>[] = [
         accessorKey: 'accession_number',
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+                'Acc. #', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
             ]),
         cell: ({ row }) => h('div', row.getValue('accession_number')),
         enableHiding: false, // Always show accession number
@@ -131,7 +132,7 @@ const columns: ColumnDef<any>[] = [
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
                 'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
             ]),
-        cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
+        cell: ({ row }) => h('div', { class: 'truncate max-w-80' }, row.getValue('title')),
         enableHiding: false, // Always show title
     },
     {
@@ -191,6 +192,18 @@ const columns: ColumnDef<any>[] = [
         cell: ({ row }) => {
             const callNumber = row.original.book?.call_number;
             return h('div', callNumber || 'N/A');
+        },
+        enableHiding: true,
+    },
+    {
+        id: 'ddc_classification',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'DDC', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => {
+            const ddc = row.original.ddc_classification;
+            return h('div', ddc || 'N/A');
         },
         enableHiding: true,
     },
@@ -516,6 +529,8 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Records', href: '/records' },
     { title: 'Books', href: '/records/books' },
 ];
+
+console.log(data);
 </script>
 
 <template>

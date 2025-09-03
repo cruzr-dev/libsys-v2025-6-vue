@@ -36,7 +36,7 @@ class BookController extends Controller
         $query = Record::query()
             ->whereNull('deleted_at') // respect soft deletes
             ->whereHas('book')
-            ->with(['book.authors', 'book.editors']); // Eager load book, authors, and editors relationships
+            ->with(['book.authors', 'book.editors', 'book.ddcClassification']);
 
         // Handle search
         if ($request->filled('search')) {
@@ -68,6 +68,7 @@ class BookController extends Controller
         // Handle column visibility (optional - for server-side optimization)
         $showAuthors = !$request->has('hide_authors_list') || $request->get('show_authors_list') === '1';
         $showEditors = !$request->has('hide_editors_list') || $request->get('show_editors_list') === '1';
+        $showDDC = !$request->has('hide_ddc_classification') || $request->get('show_ddc_classification') === '1';
 
         // Conditionally load relationships based on visibility
         if (!$showAuthors && !$showEditors) {
@@ -88,23 +89,23 @@ class BookController extends Controller
         $records = $query->paginate($perPage);
 
         // Transform the data to include author and editor information
-        $records->getCollection()->transform(function ($record) use ($showAuthors, $showEditors) {
-            // Transform authors only if visible
+        $records->getCollection()->transform(function ($record) use ($showAuthors, $showEditors, $showDDC) {
             if ($showAuthors) {
-                if ($record->book && $record->book->authors && $record->book->authors->count() > 0) {
-                    $record->authors_list = $record->book->authors->pluck('name')->join(', ');
-                } else {
-                    $record->authors_list = null;
-                }
+                $record->authors_list = $record->book && $record->book->authors->count() > 0
+                    ? $record->book->authors->pluck('name')->join(', ')
+                    : null;
             }
 
-            // Transform editors only if visible
             if ($showEditors) {
-                if ($record->book && $record->book->editors && $record->book->editors->count() > 0) {
-                    $record->editors_list = $record->book->editors->pluck('name')->join(', ');
-                } else {
-                    $record->editors_list = null;
-                }
+                $record->editors_list = $record->book && $record->book->editors->count() > 0
+                    ? $record->book->editors->pluck('name')->join(', ')
+                    : null;
+            }
+
+            if ($showDDC) {
+                $record->ddc_classification = $record->book && $record->book->ddcClassification
+                    ? $record->book->ddcClassification->title
+                    : null;
             }
 
             return $record;
