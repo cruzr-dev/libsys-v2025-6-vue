@@ -60,44 +60,21 @@ const form = useForm({
     status: 'available',
 });
 
-// Create a mapping of call number prefixes to location symbols
-const callNumberToLocationMapping: Record<string, string> = {
-    'GR': 'Gr',      // General References
-    'FIC': 'Fic',    // Fiction
-    'FIL': 'Fil',    // Filipiniana
-    'CIR': 'Cir',    // Circulation
-    'RES': 'Res',    // Reserve
-    'GS': 'Gs',      // Graduate School
-    // Note: 'Gs/Fil' and PCARRD (null symbol) would need special handling if needed
-};
-
 // Watch for changes in call_number and auto-select location
 watch(() => form.call_number, (newCallNumber: string) => {
     if (!newCallNumber) {
-        // Clear location selection if call number is empty
         form.physical_location_id = '';
         return;
     }
 
-    // Extract the first part (prefix) of the call number
     const callNumberPrefix = newCallNumber.trim().split(/[\s.]/)[0].toUpperCase();
 
-    // Check if we have a mapping for this prefix
-    if (callNumberToLocationMapping[callNumberPrefix]) {
-        const locationSymbol = callNumberToLocationMapping[callNumberPrefix];
+    // Directly find a location with the same symbol
+    const matchingLocation = props.physicalLocations.find(
+        loc => loc.symbol?.toUpperCase() === callNumberPrefix
+    );
 
-        // Find the matching physical location by symbol
-        const matchingLocation = props.physicalLocations.find(
-            loc => loc.symbol === locationSymbol
-        );
-
-        if (matchingLocation) {
-            form.physical_location_id = matchingLocation.id.toString();
-        }
-    } else {
-        // No mapping found - clear the location selection
-        form.physical_location_id = '';
-    }
+    form.physical_location_id = matchingLocation ? matchingLocation.id.toString() : '';
 });
 
 const submit = () => {
