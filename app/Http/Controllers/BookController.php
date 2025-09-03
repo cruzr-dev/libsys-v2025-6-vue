@@ -123,8 +123,8 @@ class BookController extends Controller
 
     public function create(): \Inertia\Response
     {
-        $ddcClassifications = DdcClassification::select('id', 'name', 'code')
-            ->orderBy('name')
+        $ddcClassifications = DdcClassification::select('id', 'title', 'number')
+            ->orderBy('title')
             ->get();
 
         $lcClassifications = LcClassification::select('id', 'code', 'name')

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
 import { ArrowUpDown, Search, X, Loader2, Eye, ChevronDown, Plus } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
@@ -586,9 +586,11 @@ console.log(data);
 
                     <!-- Column Visibility Dropdown -->
                     <div class="flex gap-2">
-                        <Button variant="secondary">
-                            <Plus class="w-4 h-4" /> Add Book
-                        </Button>
+                        <Link href="/records/books/create">
+                            <Button variant="secondary">
+                                <Plus class="w-4 h-4" /> Add Book
+                            </Button>
+                        </Link>
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
                                 <Button variant="outline" class="ml-auto" :disabled="isLoading">
