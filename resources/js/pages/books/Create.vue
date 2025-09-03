@@ -16,6 +16,7 @@ import SubjectTagsInput from '@/components/SubjectTagsInput.vue';
 
 // Props from Inertia
 const props = defineProps<{
+    nextAccessionNumber: number;
     ddcClassifications: { id: number; code: string; name: string }[];
     lcClassifications: { id: number; code: string; name: string }[];
     physicalLocations: { id: number; name: string; symbol: string }[];
@@ -30,7 +31,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
-    accession_number: '',
+    accession_number: props.nextAccessionNumber.toString(), // Pre-filled with incremented value
     title: '',
     authors: [],
     editors: [],
@@ -78,13 +79,31 @@ const submit = () => {
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="grid gap-2">
                                 <Label for="accession_number">Accession Number</Label>
-                                <Input id="accession_number" type="text" required v-model="form.accession_number" />
+                                <Input placeholder="Accession number" id="accession_number" type="text" required v-model="form.accession_number" />
                                 <InputError :message="form.errors.accession_number" />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="call_number">
+                                    Call Number
+                                    <span class="text-xs text-muted-foreground block">Example: GR 808.8 El57h 1937</span>
+                                </Label>
+                                <Input id="call_number" type="text" v-model="form.call_number" />
+                                <InputError :message="form.errors.call_number" />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="isbn">ISBN</Label>
+                                <Input id="isbn" type="text" required v-model="form.isbn" />
+                                <InputError :message="form.errors.isbn" />
                             </div>
                             <div class="grid gap-2 col-span-2">
                                 <Label for="title">Title</Label>
                                 <Input id="title" type="text" required v-model="form.title" />
                                 <InputError :message="form.errors.title" />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="volume">Volume</Label>
+                                <Input id="volume" type="text" required v-model="form.volume" />
+                                <InputError :message="form.errors.volume" />
                             </div>
                             <div class="grid gap-2 col-span-2">
                                 <div class="flex gap-2 ">
@@ -95,9 +114,9 @@ const submit = () => {
                                 <InputError :message="form.errors.authors" />
                             </div>
                             <div class="grid gap-2">
-                                <Label for="isbn">ISBN</Label>
-                                <Input id="isbn" type="text" required v-model="form.isbn" />
-                                <InputError :message="form.errors.isbn" />
+                                <Label for="edition">Edition</Label>
+                                <Input id="edition" type="text" required v-model="form.edition" />
+                                <InputError :message="form.errors.edition" />
                             </div>
                             <div class="grid gap-2 col-span-2">
                                 <div class="flex gap-2">
@@ -122,16 +141,6 @@ const submit = () => {
                                 <Input id="publication_place" type="text" required v-model="form.publication_place" />
                                 <InputError :message="form.errors.publication_place" />
                             </div>
-                            <div class="grid gap-2">
-                                <Label for="volume">Volume</Label>
-                                <Input id="volume" type="text" required v-model="form.volume" />
-                                <InputError :message="form.errors.volume" />
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="edition">Edition</Label>
-                                <Input id="edition" type="text" required v-model="form.edition" />
-                                <InputError :message="form.errors.edition" />
-                            </div>
                         </div>
                     </section>
 
@@ -139,14 +148,6 @@ const submit = () => {
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Classification & Location</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="grid gap-2">
-                                <Label for="call_number">
-                                    Call Number
-                                    <span class="text-xs text-muted-foreground block">Example: GR 808.8 El57h 1937</span>
-                                </Label>
-                                <Input id="call_number" type="text" v-model="form.call_number" />
-                                <InputError :message="form.errors.call_number" />
-                            </div>
                             <!-- DDC Classification -->
                             <div v-if="!form.lc_class_id" class="grid gap-2">
                                 <Label for="ddc_class_id">DDC Classification</Label>

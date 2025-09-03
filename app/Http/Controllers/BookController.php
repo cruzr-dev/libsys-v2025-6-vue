@@ -123,6 +123,8 @@ class BookController extends Controller
 
     public function create(): \Inertia\Response
     {
+        $maxAcc = Record::max('accession_number') ?? 0;
+
         $ddcClassifications = DdcClassification::select('id', 'title', 'number')
             ->orderBy('title')
             ->get();
@@ -140,6 +142,7 @@ class BookController extends Controller
         $sources = Source::select('id', 'name')->orderBy('name')->get();
 
         return Inertia::render('books/Create', [
+            'nextAccessionNumber' => $maxAcc + 1,
             'ddcClassifications' => $ddcClassifications,
             'lcClassifications'  => $lcClassifications,
             'physicalLocations'  => $physicalLocations,
