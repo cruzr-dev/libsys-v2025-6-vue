@@ -133,7 +133,7 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="publication_year">Copyright Date</Label>
-                                <Input id="publication_year" type="number" required v-model="form.publication_year" />
+                                <Input disabled id="publication_year" type="number" required v-model="form.publication_year" />
                                 <InputError :message="form.errors.publication_year" />
                             </div>
                             <div class="grid gap-2">
@@ -149,9 +149,9 @@ const submit = () => {
                         <h2 class="text-lg font-semibold">Classification & Location</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <!-- DDC Classification -->
-                            <div v-if="!form.lc_class_id" class="grid gap-2">
+                            <div class="grid gap-2">
                                 <Label for="ddc_class_id">DDC Classification</Label>
-                                <Select v-model="form.ddc_class_id">
+                                <Select v-model="form.ddc_class_id" disabled>
                                     <SelectTrigger id="ddc_class_id">
                                         <SelectValue placeholder="Select DDC classification" />
                                     </SelectTrigger>
@@ -171,7 +171,7 @@ const submit = () => {
                             <!-- Physical Location -->
                             <div class="grid gap-2">
                                 <Label for="physical_location_id">Location</Label>
-                                <Select v-model="form.physical_location_id" required>
+                                <Select v-model="form.physical_location_id" required disabled>
                                     <SelectTrigger id="physical_location_id">
                                         <SelectValue placeholder="Select location" />
                                     </SelectTrigger>
