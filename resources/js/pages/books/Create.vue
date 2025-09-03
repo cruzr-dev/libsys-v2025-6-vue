@@ -18,8 +18,7 @@ import SubjectTagsInput from '@/components/SubjectTagsInput.vue';
 // Props from Inertia
 const props = defineProps<{
     nextAccessionNumber: number;
-    ddcClassifications: { id: number; code: string; name: string }[];
-    lcClassifications: { id: number; code: string; name: string }[];
+    ddcClassifications: { id: number; number_range: string; title: string }[];
     physicalLocations: { id: number; name: string; symbol: string }[];
     coverTypes: { id: number; name: string }[];
     sources: { id: number; name: string }[];
@@ -42,7 +41,6 @@ const form = useForm({
     isbn: '',
     call_number: '',
     ddc_class_id: '',
-    lc_class_id: '',
     physical_location_id: '',
     cover_image: null,
     ics_number: '',
@@ -202,7 +200,7 @@ const submit = () => {
                                             :key="ddc.id"
                                             :value="ddc.id.toString()"
                                         >
-                                            {{ ddc.name }}
+                                            {{ ddc.title }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>

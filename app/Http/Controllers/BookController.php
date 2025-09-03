@@ -125,7 +125,7 @@ class BookController extends Controller
     {
         $maxAcc = Record::max('accession_number') ?? 0;
 
-        $ddcClassifications = DdcClassification::select('id', 'title', 'number')
+        $ddcClassifications = DdcClassification::select('id', 'title', 'number_range')
             ->orderBy('title')
             ->get();
 
