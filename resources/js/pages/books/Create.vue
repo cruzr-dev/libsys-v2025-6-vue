@@ -128,7 +128,7 @@ const submit = () => {
                                     Call Number
                                     <span class="text-xs text-muted-foreground block">Example: GR 808.8 El57h 1937</span>
                                 </Label>
-                                <Input id="call_number" type="text" v-model="form.call_number" />
+                                <Input id="call_number" placeholder="Call Number" type="text" v-model="form.call_number" />
                                 <InputError :message="form.errors.call_number" />
                             </div>
                             <div class="grid gap-2">

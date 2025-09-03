@@ -41,7 +41,7 @@ const mainNavItems = computed((): NavItem[] => [
         isActive: isRouteActive('/users'),
     },
     {
-        title: 'Records',
+        title: 'Collection',
         url: '/records',
         icon: Library,
         isActive: isRouteActive('/records'),

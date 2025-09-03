@@ -14,24 +14,24 @@ class DdcClassificationSeeder extends Seeder
     public function run()
     {
         $classifications = [
-            ['title' => 'APPLIED SCIENCE', 'number' => '600'],
-            ['title' => 'ARTS', 'number' => '700'],
-            ['title' => 'FICTION', 'number' => '800'], // usually under Literature
-            ['title' => 'GENERAL WORKS', 'number' => '000'],
-            ['title' => 'GENERAL WORKS/INFORMATION', 'number' => '000'], // optional, if library splits this
-            ['title' => 'HISTORY', 'number' => '900'],
-            ['title' => 'LANGUAGE', 'number' => '400'],
-            ['title' => 'LITERATURE', 'number' => '800'],
-            ['title' => 'PHILOSOPHY', 'number' => '100'],
-            ['title' => 'PURE SCIENCE', 'number' => '500'],
-            ['title' => 'RELIGION', 'number' => '200'],
-            ['title' => 'SOCIAL SCIENCE', 'number' => '300'],
+            ['title' => 'GENERAL WORKS', 'number_range' => '000-009'],
+            ['title' => 'GENERAL WORKS/INFORMATION', 'number_range' => '010-019'],
+            ['title' => 'PHILOSOPHY & PSYCHOLOGY', 'number_range' => '100-199'],
+            ['title' => 'RELIGION', 'number_range' => '200-299'],
+            ['title' => 'SOCIAL SCIENCE', 'number_range' => '300-399'],
+            ['title' => 'LANGUAGE', 'number_range' => '400-499'],
+            ['title' => 'PURE SCIENCE', 'number_range' => '500-599'],
+            ['title' => 'APPLIED SCIENCE / TECHNOLOGY', 'number_range' => '600-699'],
+            ['title' => 'ARTS & RECREATION', 'number_range' => '700-799'],
+            ['title' => 'LITERATURE', 'number_range' => '800-899'],
+            ['title' => 'HISTORY & GEOGRAPHY', 'number_range' => '900-999'],
+            ['title' => 'FICTION', 'number_range' => '813-813.9, 823-823.9, 833-833.9, 843-843.9'],
         ];
 
         foreach ($classifications as $classification) {
             DB::table('ddc_classifications')->insert([
                 'title' => $classification['title'],
-                'number' => $classification['number'],
+                'number_range' => $classification['number_range'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

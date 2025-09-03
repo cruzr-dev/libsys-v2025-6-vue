@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('ddc_classifications', function (Blueprint $table) {
             $table->id();
-            $table->string('number');
+            $table->string('number_range');
             $table->string('title')->unique(); // e.g., 'Applied Science'
             $table->timestamps();
         });
