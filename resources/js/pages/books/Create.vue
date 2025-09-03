@@ -63,11 +63,8 @@ const form = useForm({
 // Function to extract DDC number from call number
 const extractDDCNumber = (callNumber: string): string | null => {
     if (!callNumber) return null;
-    // Split by whitespace or dots and take the first numeric part
     const parts = callNumber.trim().split(/[\s.]/);
-    // Find the first part that is a valid number (integer or decimal)
     const ddcPart = parts.find(part => /^\d+(\.\d+)?$/.test(part));
-    // Validate: DDC number should be between 0 and 999.999...
     if (ddcPart) {
         const ddcNumber = parseFloat(ddcPart);
         if (ddcNumber >= 0 && ddcNumber < 1000) {
@@ -80,7 +77,6 @@ const extractDDCNumber = (callNumber: string): string | null => {
 // Function to check if DDC number falls within a range
 const isDDCInRange = (ddcNumber: string, range: string): boolean => {
     const ddcValue = parseFloat(ddcNumber);
-    // Handle comma-separated ranges (e.g., "813-813.9, 823-823.9")
     const ranges = range.split(',').map(r => r.trim());
     for (const singleRange of ranges) {
         const [start, end] = singleRange.split('-').map(s => s.trim());
@@ -93,15 +89,34 @@ const isDDCInRange = (ddcNumber: string, range: string): boolean => {
     return false;
 };
 
-// Watch for changes in call_number and auto-select location and DDC classification
+// Function to extract year from call number
+const extractYear = (callNumber: string): string | null => {
+    if (!callNumber) return null;
+    const parts = callNumber.trim().split(/[\s.]/);
+    // Find the last part that is a four-digit number
+    const yearPart = parts.reverse().find(part => /^\d{4}$/.test(part));
+    if (yearPart) {
+        const year = parseInt(yearPart);
+        // Validate year (e.g., between 1800 and current year)
+        const currentYear = new Date().getFullYear();
+        if (year >= 1800 && year <= currentYear) {
+            return year.toString();
+        }
+    }
+    return null;
+};
+
+// Watch for changes in call_number and auto-select location, DDC classification, and publication year
 watch(() => form.call_number, (newCallNumber: string) => {
-    // Auto-select location
+    // Reset fields if call number is empty
     if (!newCallNumber) {
         form.physical_location_id = '';
         form.ddc_class_id = '';
+        form.publication_year = '';
         return;
     }
 
+    // Auto-select location
     const callNumberPrefix = newCallNumber.trim().split(/[\s.]/)[0].toUpperCase();
     const matchingLocation = props.physicalLocations.find(
         loc => loc.symbol?.toUpperCase() === callNumberPrefix
@@ -112,13 +127,16 @@ watch(() => form.call_number, (newCallNumber: string) => {
     const ddcNumber = extractDDCNumber(newCallNumber);
     if (!ddcNumber) {
         form.ddc_class_id = '';
-        return;
+    } else {
+        const matchingDDC = props.ddcClassifications.find(ddc =>
+            isDDCInRange(ddcNumber, ddc.number_range)
+        );
+        form.ddc_class_id = matchingDDC ? matchingDDC.id.toString() : '';
     }
 
-    const matchingDDC = props.ddcClassifications.find(ddc =>
-        isDDCInRange(ddcNumber, ddc.number_range)
-    );
-    form.ddc_class_id = matchingDDC ? matchingDDC.id.toString() : '';
+    // Auto-select publication year
+    const year = extractYear(newCallNumber);
+    form.publication_year = year || '';
 });
 
 const submit = () => {
@@ -193,7 +211,7 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="publication_year">Copyright Date</Label>
-                                <Input disabled id="publication_year" type="number" required v-model="form.publication_year" />
+                                <Input id="publication_year" type="number" required v-model="form.publication_year" />
                                 <InputError :message="form.errors.publication_year" />
                             </div>
                             <div class="grid gap-2">
