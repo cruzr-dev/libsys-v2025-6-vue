@@ -55,8 +55,9 @@ const error = ref<string | null>(null);
 const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({
-    editors_list: false, // Hide editors column by default
-    publication_year: true
+    editors_list: false,
+    publication_year: true,
+    call_number: true,
 });
 
 // Modal dialog state
@@ -127,6 +128,18 @@ const columns: ColumnDef<any>[] = [
             ]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
         enableHiding: false, // Always show title
+    },
+    {
+        id: 'call_number',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Call No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => {
+            const callNumber = row.original.book?.call_number;
+            return h('div', callNumber || 'N/A');
+        },
+        enableHiding: true,
     },
     {
         accessorKey: 'authors_list',
