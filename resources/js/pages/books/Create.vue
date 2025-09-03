@@ -60,21 +60,65 @@ const form = useForm({
     status: 'available',
 });
 
-// Watch for changes in call_number and auto-select location
+// Function to extract DDC number from call number
+const extractDDCNumber = (callNumber: string): string | null => {
+    if (!callNumber) return null;
+    // Split by whitespace or dots and take the first numeric part
+    const parts = callNumber.trim().split(/[\s.]/);
+    // Find the first part that is a valid number (integer or decimal)
+    const ddcPart = parts.find(part => /^\d+(\.\d+)?$/.test(part));
+    // Validate: DDC number should be between 0 and 999.999...
+    if (ddcPart) {
+        const ddcNumber = parseFloat(ddcPart);
+        if (ddcNumber >= 0 && ddcNumber < 1000) {
+            return ddcPart;
+        }
+    }
+    return null;
+};
+
+// Function to check if DDC number falls within a range
+const isDDCInRange = (ddcNumber: string, range: string): boolean => {
+    const ddcValue = parseFloat(ddcNumber);
+    // Handle comma-separated ranges (e.g., "813-813.9, 823-823.9")
+    const ranges = range.split(',').map(r => r.trim());
+    for (const singleRange of ranges) {
+        const [start, end] = singleRange.split('-').map(s => s.trim());
+        const startValue = parseFloat(start);
+        const endValue = end ? parseFloat(end) : startValue;
+        if (ddcValue >= startValue && ddcValue <= endValue) {
+            return true;
+        }
+    }
+    return false;
+};
+
+// Watch for changes in call_number and auto-select location and DDC classification
 watch(() => form.call_number, (newCallNumber: string) => {
+    // Auto-select location
     if (!newCallNumber) {
         form.physical_location_id = '';
+        form.ddc_class_id = '';
         return;
     }
 
     const callNumberPrefix = newCallNumber.trim().split(/[\s.]/)[0].toUpperCase();
-
-    // Directly find a location with the same symbol
     const matchingLocation = props.physicalLocations.find(
         loc => loc.symbol?.toUpperCase() === callNumberPrefix
     );
-
     form.physical_location_id = matchingLocation ? matchingLocation.id.toString() : '';
+
+    // Auto-select DDC classification
+    const ddcNumber = extractDDCNumber(newCallNumber);
+    if (!ddcNumber) {
+        form.ddc_class_id = '';
+        return;
+    }
+
+    const matchingDDC = props.ddcClassifications.find(ddc =>
+        isDDCInRange(ddcNumber, ddc.number_range)
+    );
+    form.ddc_class_id = matchingDDC ? matchingDDC.id.toString() : '';
 });
 
 const submit = () => {
@@ -167,7 +211,7 @@ const submit = () => {
                             <!-- DDC Classification -->
                             <div class="grid gap-2">
                                 <Label for="ddc_class_id">DDC Classification</Label>
-                                <Select v-model="form.ddc_class_id" disabled>
+                                <Select v-model="form.ddc_class_id">
                                     <SelectTrigger id="ddc_class_id">
                                         <SelectValue placeholder="Select DDC classification" />
                                     </SelectTrigger>
