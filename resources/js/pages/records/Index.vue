@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +9,7 @@ import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import { ArrowUpDown, Search, X, Loader2, Eye, Filter } from 'lucide-vue-next';
+import { ArrowUpDown, Search, X, Loader2, Eye } from 'lucide-vue-next';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import type { ColumnDef, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
 import {
@@ -74,9 +73,6 @@ const selectedRecord = ref<any | null>(null);
 // Search functionality state
 const filterInput = ref<string>('');
 const searchInputRef = ref(null);
-
-// Record type filter state
-const recordTypeFilter = ref<string>('');
 
 // Pagination state
 const pageSizes = [5, 10, 20, 30, 40, 50];
@@ -159,9 +155,6 @@ const columns: ColumnDef<any>[] = [
             }, () => typeInfo.label);
         },
         enableHiding: false,
-        filterFn: (row, id, value) => {
-            return value === '' || row.getValue(id) === value;
-        },
     },
     {
         id: 'action',
@@ -196,23 +189,6 @@ const applyFilter = () => {
 const clearFilter = () => {
     filterInput.value = '';
     const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-    table.setColumnFilters(newFilters);
-};
-
-// Handle record type filter
-const handleRecordTypeFilter = (value: string) => {
-    recordTypeFilter.value = value;
-    const newFilters = columnFilters.value.filter((f) => f.id !== 'record_type');
-    if (value && value !== '') {
-        newFilters.push({ id: 'record_type', value });
-    }
-    table.setColumnFilters(newFilters);
-};
-
-// Clear record type filter
-const clearRecordTypeFilter = () => {
-    recordTypeFilter.value = '';
-    const newFilters = columnFilters.value.filter((f) => f.id !== 'record_type');
     table.setColumnFilters(newFilters);
 };
 
@@ -394,14 +370,6 @@ const initializeFromURL = () => {
         filterInput.value = searchParam;
         columnFilters.value = [{ id: 'search', value: searchParam }];
     }
-
-    // Initialize record type filter
-    const recordTypeParam = urlParams.get('record_type');
-    if (recordTypeParam) {
-        recordTypeFilter.value = recordTypeParam;
-        const existingFilters = columnFilters.value.filter((f) => f.id !== 'record_type');
-        columnFilters.value = [...existingFilters, { id: 'record_type', value: recordTypeParam }];
-    }
 };
 
 // Table instance
@@ -537,41 +505,6 @@ const getRecordSpecificData = (record: any) => {
                         >
                             <Search class="h-4 w-4 text-foreground" />
                         </div>
-                    </div>
-
-                    <!-- Record Type Filter -->
-                    <div class="flex items-center gap-2">
-                        <div class="flex items-center gap-2">
-                            <Filter class="h-4 w-4 text-muted-foreground" />
-                            <span class="text-sm font-medium">Type:</span>
-                        </div>
-                        <Select
-                            :model-value="recordTypeFilter"
-                            @update:model-value="handleRecordTypeFilter"
-                        >
-                            <SelectTrigger class="w-[180px]">
-                                <SelectValue placeholder="All Types" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="">All Types</SelectItem>
-                                <SelectItem
-                                    v-for="type in recordTypes"
-                                    :key="type.value"
-                                    :value="type.value"
-                                >
-                                    {{ type.label }}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <Button
-                            v-if="recordTypeFilter"
-                            variant="ghost"
-                            size="sm"
-                            @click="clearRecordTypeFilter"
-                            class="px-2"
-                        >
-                            <X class="h-4 w-4" />
-                        </Button>
                     </div>
                 </div>
 

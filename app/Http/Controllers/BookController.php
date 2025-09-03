@@ -26,7 +26,7 @@ class BookController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): \Inertia\Response
+    public function index(): \Inertia\Response
     {
         return Inertia::render('books/Index');
     }
