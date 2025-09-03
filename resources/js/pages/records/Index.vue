@@ -51,8 +51,20 @@ const recordTypes = [
     { value: 'thesis', label: 'Thesis/Dissertation', color: 'bg-orange-100 text-orange-800' },
 ];
 
+const statusTypes = [
+    { key: 'available', label: 'Available', color: 'bg-green-100 text-green-800' },
+    { key: 'borrowed', label: 'Borrowed', color: 'bg-yellow-100 text-yellow-800' },
+    { key: 'damaged', label: 'Damaged', color: 'bg-red-100 text-red-800' },
+    { key: 'missing', label: 'Missing', color: 'bg-red-200 text-red-900' },
+    { key: 'discarded', label: 'Discarded', color: 'bg-gray-200 text-gray-800' },
+];
+
 const getRecordTypeInfo = (type: string) => {
     return recordTypes.find(rt => rt.value === type) || { value: type, label: type, color: 'bg-gray-100 text-gray-800' };
+};
+
+const getStatusInfo = (status: string) => {
+    return statusTypes.find(s => s.key === status) || { key: status, label: status, color: 'bg-gray-100 text-gray-800' };
 };
 
 // Reactive state
@@ -142,6 +154,18 @@ const columns: ColumnDef<any>[] = [
                 'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
             ]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
+        enableHiding: false,
+    },
+    {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => {
+            const status = row.getValue('status') as string;
+            const statusInfo = getStatusInfo(status);
+            return h(Badge, {
+                class: `${statusInfo.color} border-0 font-medium text-xs px-2 py-1`
+            }, () => statusInfo.label);
+        },
         enableHiding: false,
     },
     {
@@ -466,6 +490,8 @@ const getRecordSpecificData = (record: any) => {
             return {};
     }
 };
+
+console.log(data);
 </script>
 
 <template>
