@@ -56,9 +56,14 @@ const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({
     editors_list: false,
-    publication_year: true,
+    publication_year: false,
     call_number: true,
+    isbn: false,
+    volume: false,
+    edition: false,
+    publisher: false,
 });
+
 
 // Modal dialog state
 const isDialogOpen = ref(false);
@@ -128,6 +133,54 @@ const columns: ColumnDef<any>[] = [
             ]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
         enableHiding: false, // Always show title
+    },
+    {
+        id: 'volume',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Volume', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => {
+            const volume = row.original.book?.volume;
+            return h('div', volume || 'N/A');
+        },
+        enableHiding: true,
+    },
+    {
+        id: 'edition',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Edition', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => {
+            const edition = row.original.book?.edition;
+            return h('div', edition || 'N/A');
+        },
+        enableHiding: true,
+    },
+    {
+        id: 'publisher',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Publisher', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => {
+            const publisher = row.original.book?.publisher;
+            return h('div', publisher || 'N/A');
+        },
+        enableHiding: true,
+    },
+    {
+        id: 'isbn',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => {
+            const isbn = row.original.book?.isbn;
+            return h('div', isbn || 'N/A');
+        },
+        enableHiding: true,
     },
     {
         id: 'call_number',
