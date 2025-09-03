@@ -94,7 +94,7 @@ const clearSearch = () => {
 
 <template>
     <div class="grid space-y-4">
-        <div class="flex gap-2">
+        <div class="flex gap-1">
             <!-- Filter Select Box -->
             <Select v-model="selectedFilter">
                 <SelectTrigger class="w-48">
