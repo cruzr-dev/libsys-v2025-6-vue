@@ -57,12 +57,13 @@ const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({
     editors_list: false,
     publication_year: false,
-    call_number: true,
+    call_number: false,
     isbn: false,
     volume: false,
     edition: false,
     publisher: false,
     ddc_classification: true,
+    physical_location: true,
 });
 
 
@@ -204,6 +205,18 @@ const columns: ColumnDef<any>[] = [
         cell: ({ row }) => {
             const ddc = row.original.ddc_classification;
             return h('div', ddc || 'N/A');
+        },
+        enableHiding: true,
+    },
+    {
+        id: 'physical_location',
+        header: ({ column }) =>
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
+                'Location', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
+            ]),
+        cell: ({ row }) => {
+            const location = row.original.physical_location;
+            return h('div', location || 'N/A');
         },
         enableHiding: true,
     },

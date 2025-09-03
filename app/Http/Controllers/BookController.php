@@ -36,7 +36,7 @@ class BookController extends Controller
         $query = Record::query()
             ->whereNull('deleted_at') // respect soft deletes
             ->whereHas('book')
-            ->with(['book.authors', 'book.editors', 'book.ddcClassification']);
+            ->with(['book.authors', 'book.editors', 'book.ddcClassification', 'book.physicalLocation']);
 
         // Handle search
         if ($request->filled('search')) {
@@ -69,6 +69,7 @@ class BookController extends Controller
         $showAuthors = !$request->has('hide_authors_list') || $request->get('show_authors_list') === '1';
         $showEditors = !$request->has('hide_editors_list') || $request->get('show_editors_list') === '1';
         $showDDC = !$request->has('hide_ddc_classification') || $request->get('show_ddc_classification') === '1';
+        $showLocation = !$request->has('hide_physical_location') || $request->get('show_physical_location') === '1';
 
         // Conditionally load relationships based on visibility
         if (!$showAuthors && !$showEditors) {
@@ -89,7 +90,7 @@ class BookController extends Controller
         $records = $query->paginate($perPage);
 
         // Transform the data to include author and editor information
-        $records->getCollection()->transform(function ($record) use ($showAuthors, $showEditors, $showDDC) {
+        $records->getCollection()->transform(function ($record) use ($showAuthors, $showEditors, $showDDC, $showLocation) {
             if ($showAuthors) {
                 $record->authors_list = $record->book && $record->book->authors->count() > 0
                     ? $record->book->authors->pluck('name')->join(', ')
@@ -105,6 +106,12 @@ class BookController extends Controller
             if ($showDDC) {
                 $record->ddc_classification = $record->book && $record->book->ddcClassification
                     ? $record->book->ddcClassification->title
+                    : null;
+            }
+
+            if ($showLocation) {
+                $record->physical_location = $record->book && $record->book->physicalLocation
+                    ? $record->book->physicalLocation->name
                     : null;
             }
 
