@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
@@ -31,7 +32,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
-    accession_number: props.nextAccessionNumber.toString(), // Pre-filled with incremented value
+    accession_number: props.nextAccessionNumber.toString(),
     title: '',
     authors: [],
     editors: [],
@@ -59,6 +60,46 @@ const form = useForm({
     table_of_contents: '',
     subject_headings: [],
     status: 'available',
+});
+
+// Create a mapping of call number prefixes to location symbols
+const callNumberToLocationMapping: Record<string, string> = {
+    'GR': 'Gr',      // General References
+    'FIC': 'Fic',    // Fiction
+    'FIL': 'Fil',    // Filipiniana
+    'CIR': 'Cir',    // Circulation
+    'RES': 'Res',    // Reserve
+    'GS': 'Gs',      // Graduate School
+    // Note: 'Gs/Fil' and PCARRD (null symbol) would need special handling if needed
+};
+
+// Watch for changes in call_number and auto-select location
+watch(() => form.call_number, (newCallNumber: string) => {
+    if (!newCallNumber) {
+        // Clear location selection if call number is empty
+        form.physical_location_id = '';
+        return;
+    }
+
+    // Extract the first part (prefix) of the call number
+    const callNumberPrefix = newCallNumber.trim().split(/[\s.]/)[0].toUpperCase();
+
+    // Check if we have a mapping for this prefix
+    if (callNumberToLocationMapping[callNumberPrefix]) {
+        const locationSymbol = callNumberToLocationMapping[callNumberPrefix];
+
+        // Find the matching physical location by symbol
+        const matchingLocation = props.physicalLocations.find(
+            loc => loc.symbol === locationSymbol
+        );
+
+        if (matchingLocation) {
+            form.physical_location_id = matchingLocation.id.toString();
+        }
+    } else {
+        // No mapping found - clear the location selection
+        form.physical_location_id = '';
+    }
 });
 
 const submit = () => {
@@ -171,7 +212,7 @@ const submit = () => {
                             <!-- Physical Location -->
                             <div class="grid gap-2">
                                 <Label for="physical_location_id">Location</Label>
-                                <Select v-model="form.physical_location_id" required disabled>
+                                <Select v-model="form.physical_location_id" required>
                                     <SelectTrigger id="physical_location_id">
                                         <SelectValue placeholder="Select location" />
                                     </SelectTrigger>
@@ -190,6 +231,7 @@ const submit = () => {
                         </div>
                     </section>
 
+                    <!-- Rest of the form sections remain the same -->
                     <!-- Physical Description -->
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Physical Description</h2>
