@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Author;
 use App\Models\DdcClassification;
 use App\Models\Record;
 use App\Models\User;
@@ -133,6 +134,33 @@ class RecordController extends Controller
             'per_page' => $records->perPage(),
             'last_page' => $records->lastPage(),
             'total' => $records->total(),
+        ]);
+    }
+
+    public function searchAuthors(Request $request): \Illuminate\Http\JsonResponse
+    {
+        // Get the search query from the request
+        $query = $request->query('q', '');
+
+        // Build the query
+        $authorsQuery = Author::select('id', 'name')
+            ->when($query, function ($queryBuilder, $searchTerm) {
+                return $queryBuilder->where('name', 'like', '%' . $searchTerm . '%');
+            })
+            ->orderBy('name')
+            ->limit(50); // Limit results to prevent overload
+
+        // Execute query and get results
+        $authors = $authorsQuery->get();
+
+        // Format response to match frontend expectations
+        return response()->json([
+            'authors' => $authors->map(function ($author) {
+                return [
+                    'id' => $author->id,
+                    'name' => $author->name,
+                ];
+            }),
         ]);
     }
 

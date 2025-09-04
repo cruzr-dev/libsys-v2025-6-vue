@@ -42,9 +42,10 @@ Route::get('/faculties/', [FacultyController::class, 'fetchAll']);
 Route::get('/staff/', [StaffController::class, 'fetchAll']);
 Route::get('/admins/', [AdminController::class, 'fetchAll']);
 
-Route::get('/welcome_records/', [RecordController::class, 'fetchAllWelcome']);
-Route::get('/records/', [RecordController::class, 'fetchAll']);
-Route::get('/books/', [BookController::class, 'fetchAll']);
-Route::get('/multimedia/', [DigitalResourceController::class, 'fetchAll']);
-Route::get('/periodicals/', [PeriodicalController::class, 'fetchAll']);
-Route::get('/theses/', [ThesisController::class, 'fetchAll']);
+Route::get('/welcome_records', [RecordController::class, 'fetchAllWelcome']);
+Route::get('/records', [RecordController::class, 'fetchAll']);
+Route::get('/authors/search', [RecordController::class, 'searchAuthors']);
+Route::get('/books', [BookController::class, 'fetchAll']);
+Route::get('/multimedia', [DigitalResourceController::class, 'fetchAll']);
+Route::get('/periodicals', [PeriodicalController::class, 'fetchAll']);
+Route::get('/theses', [ThesisController::class, 'fetchAll']);
