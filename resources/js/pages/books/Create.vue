@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
@@ -60,6 +60,15 @@ const form = useForm({
     status: 'available',
 });
 
+// State to track auto-selection and override status
+const isLocationAutoSelected = ref(false);
+const isDDCAutoSelected = ref(false);
+const isYearAutoSelected = ref(false);
+const isLocationOverridden = ref(false);
+const isDDCOverridden = ref(false);
+const isYearOverridden = ref(false);
+const isCallNumberValid = ref(true);
+
 // Function to extract DDC number from call number
 const extractDDCNumber = (callNumber: string): string | null => {
     if (!callNumber) return null;
@@ -93,11 +102,9 @@ const isDDCInRange = (ddcNumber: string, range: string): boolean => {
 const extractYear = (callNumber: string): string | null => {
     if (!callNumber) return null;
     const parts = callNumber.trim().split(/[\s.]/);
-    // Find the last part that is a four-digit number
     const yearPart = parts.reverse().find(part => /^\d{4}$/.test(part));
     if (yearPart) {
         const year = parseInt(yearPart);
-        // Validate year (e.g., between 1800 and current year)
         const currentYear = new Date().getFullYear();
         if (year >= 1800 && year <= currentYear) {
             return year.toString();
@@ -106,9 +113,14 @@ const extractYear = (callNumber: string): string | null => {
     return null;
 };
 
-// Watch for changes in call_number and auto-select location, DDC classification, and publication year
+// Watch for changes in call_number and auto-select fields
 watch(() => form.call_number, (newCallNumber: string) => {
-    // Reset fields if call number is empty
+    // Reset states
+    isLocationAutoSelected.value = false;
+    isDDCAutoSelected.value = false;
+    isYearAutoSelected.value = false;
+    isCallNumberValid.value = true;
+
     if (!newCallNumber) {
         form.physical_location_id = '';
         form.ddc_class_id = '';
@@ -121,22 +133,63 @@ watch(() => form.call_number, (newCallNumber: string) => {
     const matchingLocation = props.physicalLocations.find(
         loc => loc.symbol?.toUpperCase() === callNumberPrefix
     );
-    form.physical_location_id = matchingLocation ? matchingLocation.id.toString() : '';
+    if (matchingLocation) {
+        form.physical_location_id = matchingLocation.id.toString();
+        isLocationAutoSelected.value = true;
+        isLocationOverridden.value = false;
+    } else {
+        form.physical_location_id = '';
+        isCallNumberValid.value = false;
+    }
 
     // Auto-select DDC classification
     const ddcNumber = extractDDCNumber(newCallNumber);
-    if (!ddcNumber) {
-        form.ddc_class_id = '';
-    } else {
+    if (ddcNumber) {
         const matchingDDC = props.ddcClassifications.find(ddc =>
             isDDCInRange(ddcNumber, ddc.number_range)
         );
-        form.ddc_class_id = matchingDDC ? matchingDDC.id.toString() : '';
+        if (matchingDDC) {
+            form.ddc_class_id = matchingDDC.id.toString();
+            isDDCAutoSelected.value = true;
+            isDDCOverridden.value = false;
+        } else {
+            form.ddc_class_id = '';
+            isCallNumberValid.value = false;
+        }
+    } else {
+        form.ddc_class_id = '';
+        isCallNumberValid.value = false;
     }
 
     // Auto-select publication year
     const year = extractYear(newCallNumber);
-    form.publication_year = year || '';
+    if (year) {
+        form.publication_year = year;
+        isYearAutoSelected.value = true;
+        isYearOverridden.value = false;
+    } else {
+        form.publication_year = '';
+        isCallNumberValid.value = false;
+    }
+});
+
+// Watch for manual changes to detect overrides
+watch(() => form.physical_location_id, (newValue, oldValue) => {
+    if (isLocationAutoSelected.value && newValue !== oldValue && oldValue !== '') {
+        isLocationOverridden.value = true;
+    }
+});
+
+watch(() => form.ddc_class_id, (newValue, oldValue) => {
+    if (isDDCAutoSelected.value && newValue !== oldValue && oldValue !== '') {
+        isDDCOverridden.value = true;
+    }
+});
+
+watch(() => form.publication_year, (newValue, oldValue) => {
+    if (isYearAutoSelected.value && newValue !== oldValue && oldValue !== '') {
+        isYearOverridden.value = true;
+    }
 });
 
 const submit = () => {
@@ -150,7 +203,6 @@ const submit = () => {
         <RecordsLayout>
             <div class="flex flex-col gap-6 p-6 bg-white rounded-xl shadow-sm overflow-x-auto">
                 <form @submit.prevent="submit" class="flex flex-col gap-8 max-w-5xl mx-auto">
-
                     <!-- Basic Information -->
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Basic Information</h2>
@@ -166,6 +218,7 @@ const submit = () => {
                                     <span class="text-xs text-muted-foreground block">Example: GR 808.8 El57h 1937</span>
                                 </Label>
                                 <Input id="call_number" placeholder="Call Number" type="text" v-model="form.call_number" />
+                                <span v-if="!isCallNumberValid && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
                                 <InputError :message="form.errors.call_number" />
                             </div>
                             <div class="grid gap-2">
@@ -212,6 +265,9 @@ const submit = () => {
                             <div class="grid gap-2">
                                 <Label for="publication_year">Copyright Date</Label>
                                 <Input id="publication_year" type="number" required v-model="form.publication_year" />
+                                <span v-if="isYearAutoSelected && !isYearOverridden" class="text-sm text-green-500">Auto selected</span>
+                                <span v-if="isYearOverridden" class="text-sm text-blue-500">Overridden auto select</span>
+                                <span v-if="!isCallNumberValid && !isYearAutoSelected && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
                                 <InputError :message="form.errors.publication_year" />
                             </div>
                             <div class="grid gap-2">
@@ -243,6 +299,9 @@ const submit = () => {
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <span v-if="isDDCAutoSelected && !isDDCOverridden" class="text-sm text-green-500">Auto selected</span>
+                                <span v-if="isDDCOverridden" class="text-sm text-blue-500">Overridden auto select</span>
+                                <span v-if="!isCallNumberValid && !isDDCAutoSelected && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
                                 <InputError :message="form.errors.ddc_class_id" />
                             </div>
 
@@ -263,12 +322,14 @@ const submit = () => {
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <span v-if="isLocationAutoSelected && !isLocationOverridden" class="text-sm text-green-500">Auto selected</span>
+                                <span v-if="isLocationOverridden" class="text-sm text-blue-500">Overridden auto select</span>
+                                <span v-if="!isCallNumberValid && !isLocationAutoSelected && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
                                 <InputError :message="form.errors.physical_location_id" />
                             </div>
                         </div>
                     </section>
 
-                    <!-- Rest of the form sections remain the same -->
                     <!-- Physical Description -->
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Physical Description</h2>
@@ -377,7 +438,7 @@ const submit = () => {
                             </div>
 
                             <!-- Purchase-specific -->
-                            <template v-if="form.source === 'purchase'">
+                            <template v-if="form.source_id === 'purchase'">
                                 <div class="grid gap-2">
                                     <Label for="purchase_amount">Purchase Amount</Label>
                                     <Input id="purchase_amount" type="number" step="0.01" v-model="form.purchase_amount" />
@@ -396,14 +457,13 @@ const submit = () => {
                             </template>
 
                             <!-- Donation-specific -->
-                            <template v-if="form.source === 'donation'">
+                            <template v-if="form.source_id === 'donation'">
                                 <div class="grid gap-2">
                                     <Label for="donated_by">Donated By</Label>
                                     <Input id="donated_by" type="text" v-model="form.donated_by" />
                                     <InputError :message="form.errors.donated_by" />
                                 </div>
                             </template>
-
                         </div>
                     </section>
 
