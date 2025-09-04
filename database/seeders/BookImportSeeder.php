@@ -245,11 +245,13 @@ class BookImportSeeder extends Seeder
         }
 
         $authors = [];
-        foreach ($authorNames as $authorName) {
+        foreach ($authorNames as $index => $authorName) {
             $authors[] = [
                 'name' => $authorName,
-                'author_number' => $authorNumber, // Add author_number
-                'role' => 'primary author' // Default role
+                // Only assign author_number to the primary author (first in array)
+                'author_number' => $index === 0 ? $authorNumber : null,
+                // Dynamic role assignment: 'primary author' for first, 'co-author' for others
+                'role' => $index === 0 ? 'primary author' : 'co-author'
             ];
         }
 
@@ -270,11 +272,12 @@ class BookImportSeeder extends Seeder
                 ['name' => $authorInfo['name']],
                 [
                     'name' => $authorInfo['name'],
-                    'author_number' => $authorInfo['author_number'] // Save author_number
+                    'author_number' => $authorInfo['author_number'] // Save author_number (null for co-authors)
                 ]
             );
 
-            // Update author_number if it exists and is different
+            // Update author_number only if it exists in the current data and is different
+            // Only primary authors should have author_number updated
             if (!empty($authorInfo['author_number']) && $author->author_number !== $authorInfo['author_number']) {
                 $author->update(['author_number' => $authorInfo['author_number']]);
             }
