@@ -459,23 +459,26 @@ class BookImportSeeder extends Seeder
         }
 
         // Normalize spacing
-        $processedAuthor = trim(preg_replace('/\s+/', ' ', $value));
+        $processed = trim(preg_replace('/\s+/', ' ', $value));
 
-        // Check if the format is "Last, First Middle" (contains a comma)
-        if (strpos($processedAuthor, ',') !== false) {
-            // Split by comma
-            $parts = array_map('trim', explode(',', $processedAuthor, 2));
-
-            if (count($parts) === 2) {
-                $lastName = $parts[0];
-                $firstMiddle = $parts[1];
-
-                // Reorder to "First Middle Last"
-                $processedAuthor = $firstMiddle . ' ' . $lastName;
-            }
+        if ($processed === '') {
+            return null;
         }
 
-        return [$processedAuthor];
+        // Regex splitter:
+        // - semicolon (;)
+        // - "and"
+        // - "&"
+        // - any form of "et al", "et.al", with or without dot/space
+        $authors = preg_split(
+            '/\s*(?:;| and |&|et\.?\s*al\.?)/i',
+            $processed
+        );
+
+        // Clean and filter empty entries
+        $authors = array_values(array_filter(array_map('trim', $authors)));
+
+        return $authors;
     }
 
     /**
