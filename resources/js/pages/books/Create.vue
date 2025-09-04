@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AuthorsTagsInput from '@/components/AuthorsTagsInput.vue';
 import EditorsTagsInput from '@/components/EditorsTagsInput.vue';
 import SubjectTagsInput from '@/components/SubjectTagsInput.vue';
+import PrimaryAuthorComboBox from '@/components/PrimaryAuthorComboBox.vue';
 
 // Props from Inertia
 const props = defineProps<{
@@ -240,7 +241,7 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="primary_author">Primary Author</Label>
-                                <Input id="primary_author" placeholder="Primary Author..." type="text" required v-model="form.primary_author" />
+                                <PrimaryAuthorComboBox />
                                 <InputError :message="form.errors.primary_author" />
                             </div>
                             <div class="grid gap-2 col-span-2">
