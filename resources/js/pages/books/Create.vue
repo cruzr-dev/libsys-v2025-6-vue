@@ -33,7 +33,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 const form = useForm({
     accession_number: props.nextAccessionNumber.toString(),
     title: '',
-    authors: [],
+    volume: '',
+    primary_author: '',
+    co_authors: [],
     editors: [],
     publication_year: '',
     publisher: '',
@@ -217,32 +219,37 @@ const submit = () => {
                                     Call Number
                                     <span class="text-xs text-muted-foreground block">Example: GR 808.8 El57h 1937</span>
                                 </Label>
-                                <Input id="call_number" placeholder="Call Number" type="text" v-model="form.call_number" />
+                                <Input id="call_number" placeholder="Call Number..." type="text" v-model="form.call_number" />
                                 <span v-if="!isCallNumberValid && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
                                 <InputError :message="form.errors.call_number" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="isbn">ISBN</Label>
-                                <Input id="isbn" type="text" required v-model="form.isbn" />
+                                <Input id="isbn" placeholder="ISBN..." type="text" required v-model="form.isbn" />
                                 <InputError :message="form.errors.isbn" />
                             </div>
                             <div class="grid gap-2 col-span-2">
                                 <Label for="title">Title</Label>
-                                <Input id="title" type="text" required v-model="form.title" />
+                                <Input id="title" placeholder="Title..." type="text" required v-model="form.title" />
                                 <InputError :message="form.errors.title" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="volume">Volume</Label>
-                                <Input id="volume" type="text" required v-model="form.volume" />
+                                <Input id="volume" placeholder="Volume..." type="text" required v-model="form.volume" />
                                 <InputError :message="form.errors.volume" />
                             </div>
+                            <div class="grid gap-2">
+                                <Label for="primary_author">Primary Author</Label>
+                                <Input id="primary_author" placeholder="Primary Author..." type="text" required v-model="form.primary_author" />
+                                <InputError :message="form.errors.primary_author" />
+                            </div>
                             <div class="grid gap-2 col-span-2">
-                                <div class="flex gap-2 ">
-                                    <Label for="authors">Author/s</Label>
-                                    <span class="text-sm text-gray-500">(Hit 'ENTER' for each author)</span>
+                                <div class="flex gap-2">
+                                    <Label for="co_authors">Co-authors</Label>
+                                    <span class="text-sm text-gray-500">(Hit 'ENTER' for each co-author)</span>
                                 </div>
-                                <AuthorsTagsInput v-model="form.authors" />
-                                <InputError :message="form.errors.authors" />
+                                <AuthorsTagsInput id="co_authors" v-model="form.co_authors" />
+                                <InputError :message="form.errors.co_authors" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="edition">Edition</Label>

@@ -24,6 +24,6 @@ const localValue = computed({
             <TagsInputItemText />
             <TagsInputItemDelete />
         </TagsInputItem>
-        <TagsInputInput placeholder="Authors..." />
+        <TagsInputInput placeholder="Co-authors..." />
     </TagsInput>
 </template>
