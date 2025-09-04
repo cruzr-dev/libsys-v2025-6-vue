@@ -148,7 +148,7 @@ class RecordController extends Controller
                 return $queryBuilder->where('name', 'like', '%' . $searchTerm . '%');
             })
             ->orderBy('name')
-            ->limit(50); // Limit results to prevent overload
+            ->limit(5); // Limit results to prevent overload
 
         // Execute query and get results
         $authors = $authorsQuery->get();
