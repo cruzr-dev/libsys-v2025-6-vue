@@ -180,7 +180,7 @@ class BookImportSeeder extends Seeder
             'publisher' => $this->parseString($row[10] ?? null),
             'publication_place' => $this->parseString($row[9] ?? null),
             'isbn' => $this->parseIsbn($row[12] ?? null),
-            'call_number' => $this->parseString($row[3] ?? null),
+            'call_number' => $this->parseCallNumber($row[3] ?? null),
             'ddc_class_id' => $this->parseDdcClassification($row[7] ?? null),
             'physical_location_id' => $this->parsePhysicalLocation($row[8] ?? null),
             'cover_type_id' => $this->parseCoverType($row[16] ?? null),
@@ -315,6 +315,42 @@ class BookImportSeeder extends Seeder
         }
 
         return $remarkData;
+    }
+
+    /**
+     * Parse call number with specific validation and formatting.
+     *
+     * @param mixed $value
+     * @return string|null
+     */
+    private function parseCallNumber($value): ?string
+    {
+        if (empty($value) || !is_string($value)) {
+            return null;
+        }
+
+        // Trim whitespace
+        $callNumber = trim($value);
+
+        // Return null if empty after trimming
+        if ($callNumber === '') {
+            return null;
+        }
+
+        // Convert to uppercase for consistency (common practice for call numbers)
+        $callNumber = strtoupper($callNumber);
+
+        // Remove multiple spaces and normalize spacing
+        $callNumber = preg_replace('/\s+/', ' ', $callNumber);
+
+        // Additional validation: call numbers should typically contain alphanumeric characters
+        // and common separators like periods, spaces, and forward slashes
+        if (!preg_match('/^[A-Z0-9\.\s\/\-]+$/', $callNumber)) {
+            // Log warning for invalid call number format but still return the value
+            Log::warning("Potentially invalid call number format: {$callNumber}");
+        }
+
+        return $callNumber;
     }
 
     /**
