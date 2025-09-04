@@ -161,17 +161,17 @@ const maskName = (name: string): string => {
         </DialogTrigger>
 
         <DialogContent class="h-full max-h-[60%] sm:max-w-xl p-0 overflow-clip">
-            <div class="relative flex flex-col min-h-[400px] w-full max-w-2xl mx-auto">
+            <div class="relative flex flex-col min-h-[400px] w-full max-w-2xl mx-auto"
+                 :class="user?.transaction_type === 'login' ? 'bg-green-50' : 'bg-red-50'">
                 <!-- Progress Bar -->
                 <div class="absolute top-0 left-0 w-full">
                     <div class="w-full bg-gray-200 h-2.5">
                         <div
-                            class="bg-primary h-2.5 transition-all duration-200 ease-linear"
+                            :class="user?.transaction_type === 'login' ? 'bg-secondary h-2.5 transition-all duration-200 ease-linear' : 'bg-primary h-2.5 transition-all duration-200 ease-linear'"
                             :style="{ width: `${progress}%` }"
                         ></div>
                     </div>
                 </div>
-
                 <!-- Content Container -->
                 <div class="flex flex-col items-center justify-center flex-grow p-6 pt-12 space-y-8">
                     <!-- Status Message -->
@@ -181,27 +181,22 @@ const maskName = (name: string): string => {
                     <div v-else-if="user?.transaction_type === 'logout'" class="text-2xl font-semibold text-destructive text-center">
                         You are now leaving the library
                     </div>
-
                     <!-- User Info Section -->
                     <div class="flex flex-col items-center text-center space-y-4">
                         <!-- User Icon -->
                         <div class="flex justify-center">
                             <CircleUser class="w-24 h-24 text-muted-foreground" />
                         </div>
-
                         <!-- Library ID -->
                         <div class="text-center">
                             <span class="text-sm font-medium text-muted-foreground">Library ID: </span>
                             <span class="text-lg font-semibold">{{ user?.library_id }}</span>
                         </div>
-
                         <!-- User Name -->
                         <h2 class="text-2xl font-bold">{{ maskName(user?.first_name) }}</h2>
-
                         <!-- Last Name -->
                         <p class="text-xl text-muted-foreground">{{ maskName(user?.last_name) }}</p>
                     </div>
-
                 </div>
             </div>
         </DialogContent>
