@@ -125,7 +125,7 @@ const displayValue = (user: any) => {
                             v-if="!isLoading"
                             class="size-4 text-muted-foreground"
                         />
-                        <div
+                        <span
                             v-else
                             class="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
                         />
