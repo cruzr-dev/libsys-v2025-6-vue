@@ -24,10 +24,10 @@ const authors = [
 
 <template>
     <Combobox by="name">
-        <ComboboxAnchor>
+        <ComboboxAnchor class="border w-full">
             <div class="relative w-full max-w-sm items-center">
                 <ComboboxInput
-                    class="pl-9"
+                    class="pl-2"
                     :display-value="(val) => val ? `${val.name} (${val.author_number})` : ''"
                     placeholder="Search author..."
                 />
