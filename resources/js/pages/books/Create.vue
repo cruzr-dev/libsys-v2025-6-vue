@@ -195,12 +195,14 @@ watch(() => form.call_number, (newCallNumber: string) => {
         isCallNumberValid.value = false;
     }
 
-    // Extract and set Cutter number
-    cutterNumber.value = extractCutterNumber(newCallNumber);
-    if (cutterNumber.value) {
-        // We'll pass this to the PrimaryAuthorComboBox to auto-select or search
+    // Extract and set Cutter number - this will trigger the PrimaryAuthorComboBox to search
+    const extractedCutter = extractCutterNumber(newCallNumber);
+    if (extractedCutter) {
+        cutterNumber.value = extractedCutter;
+        // Don't set form.primary_author here - let the component handle it
     } else {
         form.primary_author = '';
+        cutterNumber.value = null;
         isCallNumberValid.value = false;
     }
 });
@@ -223,6 +225,10 @@ watch(() => form.publication_year, (newValue, oldValue) => {
         isYearOverridden.value = true;
     }
 });
+
+const handleAuthorSelected = (author: any) => {
+    form.primary_author = author.name; // Set the name string, not the object
+};
 
 const submit = () => {
     form.post(route('books.store'));
@@ -272,9 +278,11 @@ const submit = () => {
                                 <Label for="primary_author">Primary Author</Label>
                                 <PrimaryAuthorComboBox
                                     :cutter-number="cutterNumber"
-                                    v-model:selected-author="form.primary_author"
-                                    @author-selected="author => form.primary_author = author.name"
+                                    :selected-author="form.primary_author"
+                                    @update:selected-author="form.primary_author = $event"
+                                    @author-selected="handleAuthorSelected"
                                 />
+                                <span v-if="cutterNumber && form.primary_author" class="text-sm text-green-500">Auto selected from Cutter number</span>
                                 <InputError :message="form.errors.primary_author" />
                             </div>
                             <div class="grid gap-2 col-span-2">
