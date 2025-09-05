@@ -282,7 +282,9 @@ const submit = () => {
                                     @update:selected-author="form.primary_author = $event"
                                     @author-selected="handleAuthorSelected"
                                 />
-                                <span v-if="cutterNumber && form.primary_author" class="text-sm text-green-500">Auto selected from Cutter number</span>
+                                <span v-if="cutterNumber && form.primary_author" class="text-sm text-green-500">
+            Auto selected from Cutter number
+        </span>
                                 <InputError :message="form.errors.primary_author" />
                             </div>
                             <div class="grid gap-2 col-span-2">
@@ -295,8 +297,6 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="edition">Edition</Label>
-                                <Input id="edition" type="text" required v-model="form.edition" />
-                                <InputError :message="form.errors.edition" />
                             </div>
                             <div class="grid gap-2 col-span-2">
                                 <div class="flex gap-2">

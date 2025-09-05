@@ -140,60 +140,29 @@ class RecordController extends Controller
 
     public function searchAuthor(Request $request): JsonResponse
     {
-        $query = $request->get('q');
         $cutterNumber = $request->get('cutter_number');
 
-        if ((empty($query) || strlen($query) < 2) && empty($cutterNumber)) {
+        if (empty($cutterNumber)) {
             return response()->json([
                 'authors' => [],
-                'message' => 'Query or cutter_number must be provided and query must be at least 2 characters long'
+                'message' => 'Cutter number must be provided'
             ]);
         }
 
         try {
-            $authorsQuery = Author::query();
-            $priorityResults = collect();
-            $generalResults = collect();
-
-            // First, if we have a cutter number, search for exact matches
-            if ($cutterNumber) {
-                $priorityResults = Author::where('author_number', $cutterNumber)
-                    ->select(['id', 'name', 'author_number'])
-                    ->get();
-            }
-
-            // Then search by query if provided
-            if ($query && strlen($query) >= 2) {
-                $generalQuery = Author::where(function ($q) use ($query) {
-                    $q->where('name', 'LIKE', "%{$query}%")
-                        ->orWhere('author_number', 'LIKE', "%{$query}%");
-                });
-
-                // Exclude already found priority results
-                if ($priorityResults->isNotEmpty()) {
-                    $priorityIds = $priorityResults->pluck('id')->toArray();
-                    $generalQuery->whereNotIn('id', $priorityIds);
-                }
-
-                $generalResults = $generalQuery
-                    ->select(['id', 'name', 'author_number'])
-                    ->orderBy('name')
-                    ->limit(5 - $priorityResults->count()) // Ensure total doesn't exceed 5
-                    ->get();
-            }
-
-            // Merge results with priority results first
-            $authors = $priorityResults->concat($generalResults);
+            // Search for exact cutter number match only
+            $authors = Author::where('author_number', $cutterNumber)
+                ->select(['id', 'name', 'author_number'])
+                ->get();
 
             return response()->json([
-                'authors' => $authors->values(), // Reset array keys
+                'authors' => $authors->values(),
                 'count' => $authors->count(),
-                'cutter_match' => $priorityResults->isNotEmpty() // Indicate if cutter number had matches
+                'cutter_match' => $authors->isNotEmpty()
             ]);
 
         } catch (\Exception $e) {
             Log::error('Author search failed', [
-                'query' => $query,
                 'cutter_number' => $cutterNumber,
                 'error' => $e->getMessage()
             ]);
