@@ -87,57 +87,18 @@ const displayResults = computed(() => {
 })
 
 // Handle author selection
-const handleAuthorSelect = async (author: any) => {
-    if (author?.isNew) {
-        // Handle new author creation
-        const newAuthor = {
-            name: author.name,
-            author_number: null // Backend can assign this
-        }
-
-        // Optionally, send to backend to create the author
-        try {
-            const response = await fetch('/api/authors', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify(newAuthor)
-            })
-
-            if (response.ok) {
-                const createdAuthor = await response.json()
-                selectedAuthor.value = createdAuthor
-                emit('update:selectedAuthor', createdAuthor)
-                emit('authorSelected', createdAuthor)
-            } else {
-                console.error('Failed to create author:', response.statusText)
-                // Fallback to client-side selection if backend fails
-                selectedAuthor.value = newAuthor
-                emit('update:selectedAuthor', newAuthor)
-                emit('authorSelected', newAuthor)
-            }
-        } catch (error) {
-            console.error('Error creating author:', error)
-            // Fallback to client-side selection
-            selectedAuthor.value = newAuthor
-            emit('update:selectedAuthor', newAuthor)
-            emit('authorSelected', newAuthor)
-        }
-    } else {
-        // Existing author selected
-        selectedAuthor.value = author
-        emit('update:selectedAuthor', author)
-        emit('authorSelected', author)
-    }
+const handleAuthorSelect = (author: any) => {
+    selectedAuthor.value = author
+    emit('update:selectedAuthor', author)
+    emit('authorSelected', author)
+    // Update searchQuery to reflect the selected author's name
+    searchQuery.value = author.name
 }
 
 // Display function for selected author
 const displayValue = (author: any) => {
     if (!author) return ''
-    return `${author.name}${author.isNew ? ' (New)' : ''}`
+    return `${author.name}`
 }
 </script>
 
