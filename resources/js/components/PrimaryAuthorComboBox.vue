@@ -80,7 +80,7 @@ const handleAuthorSelect = (author: any) => {
 // Display function for selected author
 const displayValue = (author: any) => {
     if (!author) return ''
-    return `${author.name} (${author.author_number})`
+    return `${author.name}`
 }
 </script>
 
