@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { Check, Search, BookOpen } from "lucide-vue-next"
+import { ref, watch, computed } from 'vue'
+import { Check, Search, BookOpen, Plus } from "lucide-vue-next"
 import { cn } from "@/utils"
 import {
     Combobox,
@@ -70,17 +70,74 @@ watch(searchQuery, (newQuery) => {
     debouncedSearch(newQuery)
 })
 
+// Computed property to include "Create New Author" option
+const displayResults = computed(() => {
+    const results = [...searchResults.value]
+    if (
+        searchQuery.value.length >= 2 &&
+        !searchResults.value.some(author => author.name.toLowerCase() === searchQuery.value.toLowerCase())
+    ) {
+        results.push({
+            name: searchQuery.value,
+            author_number: null,
+            isNew: true // Flag to indicate this is a new author
+        })
+    }
+    return results
+})
+
 // Handle author selection
-const handleAuthorSelect = (author: any) => {
-    selectedAuthor.value = author
-    emit('update:selectedAuthor', author)
-    emit('authorSelected', author)
+const handleAuthorSelect = async (author: any) => {
+    if (author?.isNew) {
+        // Handle new author creation
+        const newAuthor = {
+            name: author.name,
+            author_number: null // Backend can assign this
+        }
+
+        // Optionally, send to backend to create the author
+        try {
+            const response = await fetch('/api/authors', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify(newAuthor)
+            })
+
+            if (response.ok) {
+                const createdAuthor = await response.json()
+                selectedAuthor.value = createdAuthor
+                emit('update:selectedAuthor', createdAuthor)
+                emit('authorSelected', createdAuthor)
+            } else {
+                console.error('Failed to create author:', response.statusText)
+                // Fallback to client-side selection if backend fails
+                selectedAuthor.value = newAuthor
+                emit('update:selectedAuthor', newAuthor)
+                emit('authorSelected', newAuthor)
+            }
+        } catch (error) {
+            console.error('Error creating author:', error)
+            // Fallback to client-side selection
+            selectedAuthor.value = newAuthor
+            emit('update:selectedAuthor', newAuthor)
+            emit('authorSelected', newAuthor)
+        }
+    } else {
+        // Existing author selected
+        selectedAuthor.value = author
+        emit('update:selectedAuthor', author)
+        emit('authorSelected', author)
+    }
 }
 
 // Display function for selected author
 const displayValue = (author: any) => {
     if (!author) return ''
-    return `${author.name}`
+    return `${author.name}${author.isNew ? ' (New)' : ''}`
 }
 </script>
 
@@ -96,7 +153,7 @@ const displayValue = (author: any) => {
                     v-model="searchQuery"
                     class="pl-2"
                     :display-value="displayValue"
-                    placeholder="Search author by name or number..."
+                    placeholder="Search or type a new author name..."
                 />
                 <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
                     <Search
@@ -116,21 +173,23 @@ const displayValue = (author: any) => {
                 <div class="flex flex-col items-center p-4 text-center">
                     <BookOpen class="size-8 text-muted-foreground mb-2" />
                     <p class="text-sm text-muted-foreground">
-                        {{ searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No authors found' }}
+                        {{ searchQuery.length < 2 ? 'Type at least 2 characters to search or create' : 'No authors found' }}
                     </p>
                 </div>
             </ComboboxEmpty>
 
-            <ComboboxGroup v-if="searchResults.length > 0">
+            <ComboboxGroup v-if="displayResults.length > 0">
                 <ComboboxItem
-                    v-for="author in searchResults"
-                    :key="author.author_number"
+                    v-for="author in displayResults"
+                    :key="author.author_number || `new-${author.name}`"
                     :value="author"
                     class="flex items-center justify-between py-2"
                 >
-                    <span>
-                      {{ author.name }}
-                      <span v-if="author.author_number">({{ author.author_number }})</span>
+                    <span class="flex items-center">
+                        <Plus v-if="author.isNew" class="size-4 mr-2 text-primary" />
+                        {{ author.name }}
+                        <span v-if="author.author_number && !author.isNew">({{ author.author_number }})</span>
+                        <span v-if="author.isNew" class="text-primary ml-2">(Create New)</span>
                     </span>
                     <ComboboxItemIndicator>
                         <Check :class="cn('ml-auto h-4 w-4')" />
