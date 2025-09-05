@@ -16,7 +16,7 @@ import { debounce } from 'lodash-es';
 
 // Props
 const props = defineProps<{
-    selectedAuthor?: string; // Changed to string to match form field
+    selectedAuthor?: string;
     cutterNumber?: string | null;
 }>();
 
@@ -67,7 +67,7 @@ const debouncedSearch = debounce(async (query: string) => {
                     author => author.author_number?.toLowerCase() === props.cutterNumber?.toLowerCase()
                 );
                 if (matchingAuthor) {
-                    await nextTick(); // Wait for DOM update
+                    await nextTick();
                     handleAuthorSelect(matchingAuthor);
                     hasAutoSelected.value = true;
                 }
@@ -91,16 +91,15 @@ watch(searchQuery, (newQuery) => {
     }
 });
 
-// Watch for cutterNumber changes - this triggers the auto-selection
+// Watch for cutterNumber changes
 watch(
     () => props.cutterNumber,
     (newCutterNumber, oldCutterNumber) => {
         if (newCutterNumber && newCutterNumber !== oldCutterNumber) {
-            hasAutoSelected.value = false; // Reset auto-selection flag
+            hasAutoSelected.value = false;
             searchQuery.value = newCutterNumber;
             debouncedSearch(newCutterNumber);
         } else if (!newCutterNumber) {
-            // Clear selection when cutter number is removed
             searchQuery.value = '';
             selectedAuthorObject.value = null;
             searchResults.value = [];
@@ -116,29 +115,41 @@ watch(
     () => props.selectedAuthor,
     (newSelectedAuthor) => {
         if (newSelectedAuthor && newSelectedAuthor !== selectedAuthorObject.value?.name) {
-            // External change - update our internal state
             searchQuery.value = newSelectedAuthor;
         } else if (!newSelectedAuthor && selectedAuthorObject.value) {
-            // Clear our internal state
             selectedAuthorObject.value = null;
             searchQuery.value = '';
         }
     }
 );
 
-// Computed property to include "Create New Author" option
+// CRITICAL FIX: This computed property ensures displayResults is NEVER empty when we have a valid query
 const displayResults = computed(() => {
+    const trimmedQuery = searchQuery.value.trim();
+
+    // If query is too short, return empty array (this will trigger ComboboxEmpty)
+    if (trimmedQuery.length < 2) {
+        return [];
+    }
+
+    // Start with existing search results
     const results = [...searchResults.value];
-    if (
-        searchQuery.value.length >= 2 &&
-        !searchResults.value.some(author => author.name.toLowerCase() === searchQuery.value.toLowerCase())
-    ) {
+
+    // Check if we have an exact match (case insensitive)
+    const hasExactMatch = searchResults.value.some(author =>
+        author.name.toLowerCase().trim() === trimmedQuery.toLowerCase()
+    );
+
+    // ALWAYS add "Create New" option if no exact match exists
+    // This ensures displayResults is never empty for valid queries
+    if (!hasExactMatch) {
         results.push({
-            name: searchQuery.value,
+            name: trimmedQuery,
             author_number: props.cutterNumber || null,
             isNew: true,
         });
     }
+
     return results;
 });
 
@@ -146,8 +157,6 @@ const displayResults = computed(() => {
 const handleAuthorSelect = (author: any) => {
     selectedAuthorObject.value = author;
     searchQuery.value = author.name;
-
-    // Emit both events for backward compatibility
     emit('update:selectedAuthor', author.name);
     emit('authorSelected', author);
 };
@@ -191,12 +200,12 @@ const displayValue = (author: any) => {
                 <div class="flex flex-col items-center p-4 text-center">
                     <BookOpen class="size-8 text-muted-foreground mb-2" />
                     <p class="text-sm text-muted-foreground">
-                        {{ searchQuery.length < 2 ? 'Type at least 2 characters to search or create' : 'No authors found' }}
+                        Type at least 2 characters to search or create an author
                     </p>
                 </div>
             </ComboboxEmpty>
 
-            <ComboboxGroup v-if="displayResults.length > 0">
+            <ComboboxGroup>
                 <ComboboxItem
                     v-for="author in displayResults"
                     :key="author.author_number || `new-${author.name}`"
