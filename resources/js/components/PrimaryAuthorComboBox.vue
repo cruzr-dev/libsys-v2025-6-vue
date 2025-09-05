@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { Check, Search, BookOpen, Plus } from "lucide-vue-next"
-import { cn } from "@/utils"
+import { ref, watch, computed } from 'vue';
+import { Check, Search, BookOpen, Plus } from 'lucide-vue-next';
+import { cn } from '@/utils';
 import {
     Combobox,
     ComboboxAnchor,
@@ -10,96 +10,127 @@ import {
     ComboboxInput,
     ComboboxItem,
     ComboboxItemIndicator,
-    ComboboxList
-} from "@/components/ui/combobox"
-import { debounce } from 'lodash-es'
+    ComboboxList,
+} from '@/components/ui/combobox';
+import { debounce } from 'lodash-es';
 
 // Props
 const props = defineProps<{
-    selectedAuthor?: any
-}>()
+    selectedAuthor?: any;
+    cutterNumber?: string | null; // New prop for Cutter number
+}>();
 
 // Emits
 const emit = defineEmits<{
-    'update:selectedAuthor': [author: any]
-    'authorSelected': [author: any]
-}>()
+    'update:selectedAuthor': [author: any];
+    'authorSelected': [author: any];
+}>();
 
 // Reactive state
-const searchQuery = ref('')
-const searchResults = ref<any[]>([])
-const isLoading = ref(false)
-const selectedAuthor = ref(props.selectedAuthor || null)
+const searchQuery = ref('');
+const searchResults = ref<any[]>([]);
+const isLoading = ref(false);
+const selectedAuthor = ref(props.selectedAuthor || null);
 
 // Debounced search function
 const debouncedSearch = debounce(async (query: string) => {
     if (!query || query.length < 2) {
-        searchResults.value = []
-        isLoading.value = false
-        return
+        searchResults.value = [];
+        isLoading.value = false;
+        return;
     }
 
-    isLoading.value = true
+    isLoading.value = true;
 
     try {
-        // Make request to your Laravel backend
-        const response = await fetch(`/api/authors/search?q=${encodeURIComponent(query)}`, {
+        // Make request to your Laravel backend, including cutter_number if provided
+        const url = new URL('/api/authors/search', window.location.origin);
+        url.searchParams.append('q', query);
+        if (props.cutterNumber) {
+            url.searchParams.append('cutter_number', props.cutterNumber);
+        }
+
+        const response = await fetch(url, {
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-            }
-        })
+            },
+        });
 
         if (response.ok) {
-            const data = await response.json()
-            searchResults.value = data.authors || data || []
+            const data = await response.json();
+            searchResults.value = data.authors || data || [];
+            // If cutterNumber matches an author, auto-select it
+            if (props.cutterNumber) {
+                const matchingAuthor = searchResults.value.find(
+                    author => author.author_number?.toLowerCase() === props.cutterNumber?.toLowerCase()
+                );
+                if (matchingAuthor && !selectedAuthor.value) {
+                    selectedAuthor.value = matchingAuthor;
+                    emit('update:selectedAuthor', matchingAuthor);
+                    emit('authorSelected', matchingAuthor);
+                    searchQuery.value = matchingAuthor.name;
+                }
+            }
         } else {
-            console.error('Author search failed:', response.statusText)
-            searchResults.value = []
+            console.error('Author search failed:', response.statusText);
+            searchResults.value = [];
         }
     } catch (error) {
-        console.error('Author search error:', error)
-        searchResults.value = []
+        console.error('Author search error:', error);
+        searchResults.value = [];
     } finally {
-        isLoading.value = false
+        isLoading.value = false;
     }
-}, 300)
+}, 300);
 
 // Watch for search query changes
 watch(searchQuery, (newQuery) => {
-    debouncedSearch(newQuery)
-})
+    debouncedSearch(newQuery);
+});
+
+// Watch for cutterNumber changes
+watch(
+    () => props.cutterNumber,
+    (newCutterNumber) => {
+        if (newCutterNumber) {
+            searchQuery.value = newCutterNumber; // Pre-populate search with Cutter number
+            debouncedSearch(newCutterNumber);
+        }
+    },
+    { immediate: true }
+);
 
 // Computed property to include "Create New Author" option
 const displayResults = computed(() => {
-    const results = [...searchResults.value]
+    const results = [...searchResults.value];
     if (
         searchQuery.value.length >= 2 &&
         !searchResults.value.some(author => author.name.toLowerCase() === searchQuery.value.toLowerCase())
     ) {
         results.push({
             name: searchQuery.value,
-            author_number: null,
-            isNew: true // Flag to indicate this is a new author
-        })
+            author_number: props.cutterNumber || null, // Use cutterNumber if available
+            isNew: true, // Flag to indicate this is a new author
+        });
     }
-    return results
-})
+    return results;
+});
 
 // Handle author selection
 const handleAuthorSelect = (author: any) => {
-    selectedAuthor.value = author
-    emit('update:selectedAuthor', author)
-    emit('authorSelected', author)
+    selectedAuthor.value = author;
+    emit('update:selectedAuthor', author);
+    emit('authorSelected', author);
     // Update searchQuery to reflect the selected author's name
-    searchQuery.value = author.name
-}
+    searchQuery.value = author.name;
+};
 
 // Display function for selected author
 const displayValue = (author: any) => {
-    if (!author) return ''
-    return `${author.name}`
-}
+    if (!author) return '';
+    return `${author.name}`;
+};
 </script>
 
 <template>

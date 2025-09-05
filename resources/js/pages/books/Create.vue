@@ -71,6 +71,7 @@ const isLocationOverridden = ref(false);
 const isDDCOverridden = ref(false);
 const isYearOverridden = ref(false);
 const isCallNumberValid = ref(true);
+const cutterNumber = ref<string | null>(null);
 
 // Function to extract DDC number from call number
 const extractDDCNumber = (callNumber: string): string | null => {
@@ -116,6 +117,23 @@ const extractYear = (callNumber: string): string | null => {
     return null;
 };
 
+// Function to extract Cutter number from call number
+const extractCutterNumber = (callNumber: string): string | null => {
+    if (!callNumber) return null;
+    const parts = callNumber.trim().split(/[\s.]/);
+    // The Cutter number is typically the part after the DDC number and before the year (if present)
+    const ddcPart = parts.find(part => /^\d+(\.\d+)?$/.test(part));
+    const ddcIndex = ddcPart ? parts.indexOf(ddcPart) : -1;
+    if (ddcIndex !== -1 && ddcIndex + 1 < parts.length) {
+        const cutterCandidate = parts[ddcIndex + 1];
+        // Basic validation for Cutter number (e.g., starts with a letter, followed by numbers)
+        if (/^[A-Za-z]+\d+/.test(cutterCandidate)) {
+            return cutterCandidate;
+        }
+    }
+    return null;
+};
+
 // Watch for changes in call_number and auto-select fields
 watch(() => form.call_number, (newCallNumber: string) => {
     // Reset states
@@ -123,11 +141,13 @@ watch(() => form.call_number, (newCallNumber: string) => {
     isDDCAutoSelected.value = false;
     isYearAutoSelected.value = false;
     isCallNumberValid.value = true;
+    cutterNumber.value = null;
 
     if (!newCallNumber) {
         form.physical_location_id = '';
         form.ddc_class_id = '';
         form.publication_year = '';
+        form.primary_author = '';
         return;
     }
 
@@ -172,6 +192,15 @@ watch(() => form.call_number, (newCallNumber: string) => {
         isYearOverridden.value = false;
     } else {
         form.publication_year = '';
+        isCallNumberValid.value = false;
+    }
+
+    // Extract and set Cutter number
+    cutterNumber.value = extractCutterNumber(newCallNumber);
+    if (cutterNumber.value) {
+        // We'll pass this to the PrimaryAuthorComboBox to auto-select or search
+    } else {
+        form.primary_author = '';
         isCallNumberValid.value = false;
     }
 });
@@ -241,7 +270,11 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="primary_author">Primary Author</Label>
-                                <PrimaryAuthorComboBox />
+                                <PrimaryAuthorComboBox
+                                    :cutter-number="cutterNumber"
+                                    v-model:selected-author="form.primary_author"
+                                    @author-selected="author => form.primary_author = author.name"
+                                />
                                 <InputError :message="form.errors.primary_author" />
                             </div>
                             <div class="grid gap-2 col-span-2">

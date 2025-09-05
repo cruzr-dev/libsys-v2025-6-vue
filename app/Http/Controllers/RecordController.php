@@ -16,7 +16,7 @@ class RecordController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): \Illuminate\Http\RedirectResponse
     {
         return to_route('records.all');
     }
@@ -26,7 +26,7 @@ class RecordController extends Controller
         return Inertia::render('records/Index', []);
     }
 
-    public function fetchAll(Request $request)
+    public function fetchAll(Request $request): \Illuminate\Pagination\LengthAwarePaginator
     {
         // Define valid relations for record types
         $validRelations = ['book', 'digitalResource', 'periodical', 'thesis'];
@@ -85,7 +85,7 @@ class RecordController extends Controller
         return $records;
     }
 
-    public function fetchAllWelcome(Request $request)
+    public function fetchAllWelcome(Request $request): JsonResponse
     {
         // Validate per_page to ensure it's within acceptable bounds
         $perPage = in_array($request->get('per_page', 6), [3, 6, 9, 12]) ? $request->get('per_page') : 6;
@@ -141,19 +141,31 @@ class RecordController extends Controller
     public function searchAuthor(Request $request): JsonResponse
     {
         $query = $request->get('q');
+        $cutterNumber = $request->get('cutter_number');
 
-        if (empty($query) || strlen($query) < 2) {
+        if ((empty($query) || strlen($query) < 2) && empty($cutterNumber)) {
             return response()->json([
                 'authors' => [],
-                'message' => 'Query must be at least 2 characters long'
+                'message' => 'Query or cutter_number must be provided and query must be at least 2 characters long'
             ]);
         }
 
         try {
-            $authors = Author::where(function ($q) use ($query) {
-                $q->where('name', 'LIKE', "%{$query}%")
-                    ->orWhere('author_number', 'LIKE', "%{$query}%");
-            })
+            $authorsQuery = Author::query();
+
+            if ($cutterNumber) {
+                // Prioritize exact matches on author_number
+                $authorsQuery->where('author_number', $cutterNumber);
+            }
+
+            if ($query && strlen($query) >= 2) {
+                $authorsQuery->orWhere(function ($q) use ($query) {
+                    $q->where('name', 'LIKE', "%{$query}%")
+                        ->orWhere('author_number', 'LIKE', "%{$query}%");
+                });
+            }
+
+            $authors = $authorsQuery
                 ->select([
                     'id',
                     'name',
