@@ -44,7 +44,7 @@ Route::get('/admins/', [AdminController::class, 'fetchAll']);
 
 Route::get('/welcome_records', [RecordController::class, 'fetchAllWelcome']);
 Route::get('/records', [RecordController::class, 'fetchAll']);
-Route::get('/authors/search', [RecordController::class, 'searchAuthors']);
+Route::get('/authors/search', [RecordController::class, 'searchAuthor']);
 Route::get('/books', [BookController::class, 'fetchAll']);
 Route::get('/multimedia', [DigitalResourceController::class, 'fetchAll']);
 Route::get('/periodicals', [PeriodicalController::class, 'fetchAll']);

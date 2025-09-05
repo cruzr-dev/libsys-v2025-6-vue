@@ -7,6 +7,7 @@ use App\Models\DdcClassification;
 use App\Models\Record;
 use App\Models\User;
 use App\Models\UserType;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -137,31 +138,43 @@ class RecordController extends Controller
         ]);
     }
 
-    public function searchAuthors(Request $request): \Illuminate\Http\JsonResponse
+    public function searchAuthor(Request $request): JsonResponse
     {
-        // Get the search query from the request
-        $query = $request->query('q', '');
+        $query = $request->get('q');
 
-        // Build the query
-        $authorsQuery = Author::select('id', 'name')
-            ->when($query, function ($queryBuilder, $searchTerm) {
-                return $queryBuilder->where('name', 'like', '%' . $searchTerm . '%');
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([
+                'authors' => [],
+                'message' => 'Query must be at least 2 characters long'
+            ]);
+        }
+
+        try {
+            $authors = Author::where(function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                    ->orWhere('author_number', 'LIKE', "%{$query}%");
             })
-            ->orderBy('name')
-            ->limit(5); // Limit results to prevent overload
+                ->select([
+                    'id',
+                    'name',
+                    'author_number'
+                ])
+                ->limit(5) // Limit results
+                ->orderBy('name')
+                ->get();
 
-        // Execute query and get results
-        $authors = $authorsQuery->get();
+            return response()->json([
+                'authors' => $authors,
+                'count' => $authors->count()
+            ]);
 
-        // Format response to match frontend expectations
-        return response()->json([
-            'authors' => $authors->map(function ($author) {
-                return [
-                    'id' => $author->id,
-                    'name' => $author->name,
-                ];
-            }),
-        ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'authors' => [],
+                'error' => 'Author search failed',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
 }
