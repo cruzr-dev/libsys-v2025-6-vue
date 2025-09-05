@@ -283,8 +283,8 @@ const submit = () => {
                                     @author-selected="handleAuthorSelected"
                                 />
                                 <span v-if="cutterNumber && form.primary_author" class="text-sm text-green-500">
-            Auto selected from Cutter number
-        </span>
+                                    Auto selected from Cutter number
+                                </span>
                                 <InputError :message="form.errors.primary_author" />
                             </div>
                             <div class="grid gap-2 col-span-2">
