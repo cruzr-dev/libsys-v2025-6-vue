@@ -142,7 +142,7 @@ const clearSearch = () => {
                 <!-- Search Results Dropdown -->
                 <div
                     v-if="searchQuery"
-                    class="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-lg max-h-96 overflow-y-auto"
+                    class="absolute top-full left-0 right-0 z-50 mt-1 bg-muted border rounded-md shadow-lg max-h-96 overflow-y-auto"
                 >
                     <!-- Empty state -->
                     <div
@@ -160,7 +160,7 @@ const clearSearch = () => {
                         <div
                             v-for="record in searchResults"
                             :key="record.id"
-                            class="flex bg-red-500 flex-col items-start hover:bg-accent rounded-sm cursor-pointer"
+                            class="flex my-1 bg-white flex-col items-start hover:bg-accent rounded-sm cursor-pointer"
                         >
                             <div class="flex w-full items-center justify-between">
                                 <WelcomeSearchDialog :record="record"/>

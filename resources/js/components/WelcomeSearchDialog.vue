@@ -6,7 +6,7 @@ const getCoverUrl = (path: string) => {
     return path ? `/storage/uploads/book-covers/${path}` : `/storage/placeholders/sample1.png`;
 };
 
-defineProps({
+const props = defineProps({
     record: Object,
 });
 
@@ -14,15 +14,20 @@ defineProps({
 
 <template>
     <Dialog class="">
-        <DialogTrigger as-child class="max-w-full bg-green-50">
-            <div class="flex gap-4 ">
-                <div class="items-center p-2 flex">
-                    <div class="font-medium leading-tight w-8">{{ record?.accession_number }}</div>
+        <DialogTrigger as-child class="p-2">
+
+                <div class="w-full grid gap-2">
+                    <div class="text-md font-semibold leading-tight truncate w-full 0">{{ record?.title }}</div>
+                    <div class="flex w-full justify-between">
+                        <div class="leading-tight">{{ record?.accession_number }}</div>
+                        <div>
+                            <span v-if="record.book">book</span>
+                            <span v-if="record.thesis">thesis/dissertation</span>
+                            <span v-if="record.digital_resource">multimedia</span>
+                            <span v-if="record.periodical">periodical/magazine</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="record-content w-full">
-                    <div class="text-md font-semibold leading-tight truncate max-w-72  0">{{ record?.title }}</div>
-                </div>
-            </div>
         </DialogTrigger>
         <DialogContent class="grid gap-6 h-full max-h-9/10 sm:grid-cols-2 sm:max-w-6xl justify-between">
             <div class="flex items-center justify-center">
