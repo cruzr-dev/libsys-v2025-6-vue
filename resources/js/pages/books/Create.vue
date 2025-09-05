@@ -253,7 +253,7 @@ const submit = () => {
                             <div class="grid gap-2">
                                 <Label for="call_number">
                                     Call Number
-                                    <span class="text-xs text-muted-foreground block">Example: GR 808.8 El57h 1937</span>
+                                    <span class="text-xs text-muted-foreground block">Example: GR 808.8 c967 1937</span>
                                 </Label>
                                 <Input id="call_number" placeholder="Call Number..." type="text" v-model="form.call_number" />
                                 <span v-if="!isCallNumberValid && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
