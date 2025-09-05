@@ -1,22 +1,36 @@
 <script setup lang="ts">
 import { Check, Search } from "lucide-vue-next"
 import { cn } from "@/utils"
-import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxList } from "@/components/ui/combobox"
+import {
+    Combobox,
+    ComboboxAnchor,
+    ComboboxEmpty,
+    ComboboxGroup,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxItemIndicator,
+    ComboboxList
+} from "@/components/ui/combobox"
 
-const frameworks = [
-    { value: "next.js", label: "Next.js" },
-    { value: "sveltekit", label: "SvelteKit" },
-    { value: "nuxt", label: "Nuxt" },
-    { value: "remix", label: "Remix" },
-    { value: "astro", label: "Astro" },
+// Example authors data
+const authors = [
+    { name: "Charles Eliot", author_number: "E42" },
+    { name: "Robert Maynard Hutchins", author_number: "H97" },
+    { name: "Alfredo R. Roces", author_number: "R56" },
+    { name: "Lucila L. Salcedo", author_number: "S23" },
+    { name: "William Lambe", author_number: "L34" },
 ]
 </script>
 
 <template>
-    <Combobox by="label">
+    <Combobox by="name">
         <ComboboxAnchor>
             <div class="relative w-full max-w-sm items-center">
-                <ComboboxInput class="pl-9" :display-value="(val) => val?.label ?? ''" placeholder="Select framework..." />
+                <ComboboxInput
+                    class="pl-9"
+                    :display-value="(val) => val ? `${val.name} (${val.author_number})` : ''"
+                    placeholder="Search author..."
+                />
                 <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
           <Search class="size-4 text-muted-foreground" />
         </span>
@@ -25,16 +39,16 @@ const frameworks = [
 
         <ComboboxList>
             <ComboboxEmpty>
-                No framework found.
+                No author found.
             </ComboboxEmpty>
 
             <ComboboxGroup>
                 <ComboboxItem
-                    v-for="framework in frameworks"
-                    :key="framework.value"
-                    :value="framework"
+                    v-for="author in authors"
+                    :key="author.author_number"
+                    :value="author"
                 >
-                    {{ framework.label }}
+                    {{ author.name }} ({{ author.author_number }})
 
                     <ComboboxItemIndicator>
                         <Check :class="cn('ml-auto h-4 w-4')" />
