@@ -160,7 +160,7 @@ const clearSearch = () => {
                         <div
                             v-for="record in searchResults"
                             :key="record.id"
-                            class="flex flex-col items-start hover:bg-accent rounded-sm cursor-pointer"
+                            class="flex bg-red-500 flex-col items-start hover:bg-accent rounded-sm cursor-pointer"
                         >
                             <div class="flex w-full items-center justify-between">
                                 <WelcomeSearchDialog :record="record"/>

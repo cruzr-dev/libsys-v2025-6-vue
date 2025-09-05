@@ -14,13 +14,13 @@ defineProps({
 
 <template>
     <Dialog class="">
-        <DialogTrigger as-child>
-            <div class="flex gap-4 w-full">
+        <DialogTrigger as-child class="max-w-full bg-green-50">
+            <div class="flex gap-4 ">
                 <div class="items-center p-2 flex">
-                    <div class="font-medium leading-tight">{{ record?.accession_number }}</div>
+                    <div class="font-medium leading-tight w-8">{{ record?.accession_number }}</div>
                 </div>
                 <div class="record-content w-full">
-                    <div class="text-md font-semibold leading-tight truncate w-sm  0">{{ record?.title }}</div>
+                    <div class="text-md font-semibold leading-tight truncate max-w-72  0">{{ record?.title }}</div>
                 </div>
             </div>
         </DialogTrigger>
