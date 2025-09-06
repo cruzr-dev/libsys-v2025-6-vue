@@ -218,10 +218,17 @@ class BookController extends Controller
                     $coverImagePath = $imageService->store($request->file('cover_image'), $validated['accession_number']);
                 }
 
+                $subject = null;
+                if (!empty($validated['subject_headings'])) {
+                    $subject = collect($validated['subject_headings'])
+                        ->map(fn($heading, $i) => ($i + 1) . '. ' . trim($heading) . '.')
+                        ->implode(' '); // join into one string
+                }
+
                 $record = Record::create([
                     'accession_number' => $validated['accession_number'],
                     'title'            => $validated['title'],
-                    'subject_headings' => $validated['subject_headings'],
+                    'subject'          => $subject, // <-- formatted string
                     'status'           => $validated['status'],
                     'date_received'    => now(),
                     'added_by'         => auth()->id(),
