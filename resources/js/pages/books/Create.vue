@@ -67,6 +67,23 @@ const form = useForm({
     status: 'available',
 });
 
+// Auto-clear errors when editing fields
+watch(
+    () => ({ ...form }), // watch whole form
+    (newForm, oldForm) => {
+        if (!oldForm) return
+        for (const key in newForm) {
+            if (
+                form.errors[key] && // has an error
+                newForm[key] !== oldForm[key] // value actually changed
+            ) {
+                form.clearErrors(key)
+            }
+        }
+    },
+    { deep: true }
+)
+
 // Date picker setup for ics_date
 const icsDate = ref<Date | null>(form.ics_date ? new Date(form.ics_date) : null);
 
