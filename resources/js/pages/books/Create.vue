@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
-import { BookOpen, LoaderCircle } from 'lucide-vue-next';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/vue3';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
-import RecordsLayout from '@/layouts/records/Layout.vue';
-import { Textarea } from '@/components/ui/textarea';
 import AuthorsTagsInput from '@/components/AuthorsTagsInput.vue';
 import EditorsTagsInput from '@/components/EditorsTagsInput.vue';
+import InputError from '@/components/InputError.vue';
 import SubjectTagsInput from '@/components/SubjectTagsInput.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/AppLayout.vue';
+import RecordsLayout from '@/layouts/records/Layout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head, useForm } from '@inertiajs/vue3';
+import { BookOpen, LoaderCircle } from 'lucide-vue-next';
+import { nextTick, ref, watch } from 'vue';
 
 // Props
 const props = defineProps<{
@@ -79,7 +79,7 @@ const hasAutoSelectedAuthor = ref(false);
 const extractDDCNumber = (callNumber: string): string | null => {
     if (!callNumber) return null;
     const parts = callNumber.trim().split(/[\s.]/);
-    const ddcPart = parts.find(part => /^\d+(\.\d+)?$/.test(part));
+    const ddcPart = parts.find((part) => /^\d+(\.\d+)?$/.test(part));
     if (ddcPart) {
         const ddcNumber = parseFloat(ddcPart);
         if (ddcNumber >= 0 && ddcNumber < 1000) {
@@ -92,9 +92,9 @@ const extractDDCNumber = (callNumber: string): string | null => {
 // Function to check if DDC number falls within a range
 const isDDCInRange = (ddcNumber: string, range: string): boolean => {
     const ddcValue = parseFloat(ddcNumber);
-    const ranges = range.split(',').map(r => r.trim());
+    const ranges = range.split(',').map((r) => r.trim());
     for (const singleRange of ranges) {
-        const [start, end] = singleRange.split('-').map(s => s.trim());
+        const [start, end] = singleRange.split('-').map((s) => s.trim());
         const startValue = parseFloat(start);
         const endValue = end ? parseFloat(end) : startValue;
         if (ddcValue >= startValue && ddcValue <= endValue) {
@@ -108,7 +108,7 @@ const isDDCInRange = (ddcNumber: string, range: string): boolean => {
 const extractYear = (callNumber: string): string | null => {
     if (!callNumber) return null;
     const parts = callNumber.trim().split(/[\s.]/);
-    const yearPart = parts.reverse().find(part => /^\d{4}$/.test(part));
+    const yearPart = parts.reverse().find((part) => /^\d{4}$/.test(part));
     if (yearPart) {
         const year = parseInt(yearPart);
         const currentYear = new Date().getFullYear();
@@ -123,7 +123,7 @@ const extractYear = (callNumber: string): string | null => {
 const extractCutterNumber = (callNumber: string): string | null => {
     if (!callNumber) return null;
     const parts = callNumber.trim().split(/[\s.]/);
-    const ddcPart = parts.find(part => /^\d+(\.\d+)?$/.test(part));
+    const ddcPart = parts.find((part) => /^\d+(\.\d+)?$/.test(part));
     const ddcIndex = ddcPart ? parts.indexOf(ddcPart) : -1;
     if (ddcIndex !== -1 && ddcIndex + 1 < parts.length) {
         const cutterCandidate = parts[ddcIndex + 1];
@@ -147,7 +147,7 @@ const autoSelectFromCutter = async (cutterNumber: string) => {
 
         const response = await fetch(url, {
             headers: {
-                'Accept': 'application/json',
+                Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
             },
         });
@@ -156,9 +156,7 @@ const autoSelectFromCutter = async (cutterNumber: string) => {
             const data = await response.json();
             const authors = data.authors || data || [];
 
-            const matchingAuthor = authors.find(
-                author => author.author_number?.toLowerCase() === cutterNumber.toLowerCase()
-            );
+            const matchingAuthor = authors.find((author) => author.author_number?.toLowerCase() === cutterNumber.toLowerCase());
 
             if (matchingAuthor) {
                 await nextTick();
@@ -190,85 +188,84 @@ const autoSelectFromCutter = async (cutterNumber: string) => {
 };
 
 // Watch for changes in call_number and auto-select fields
-watch(() => form.call_number, (newCallNumber: string, oldCallNumber: string) => {
-    isLocationAutoSelected.value = false;
-    isDDCAutoSelected.value = false;
-    isYearAutoSelected.value = false;
-    isCallNumberValid.value = true;
-    isAuthorNotFound.value = false;
-
-    const newCutter = extractCutterNumber(newCallNumber);
-    const oldCutter = extractCutterNumber(oldCallNumber);
-
-    if (newCutter !== oldCutter) {
-        form.primary_author = '';
-        cutterNumber.value = newCutter;
-        hasAutoSelectedAuthor.value = false;
-    }
-
-    if (!newCallNumber) {
-        form.physical_location_id = '';
-        form.ddc_class_id = '';
-        form.publication_year = '';
-        form.primary_author = '';
-        cutterNumber.value = null;
-        hasAutoSelectedAuthor.value = false;
+watch(
+    () => form.call_number,
+    (newCallNumber: string, oldCallNumber: string) => {
+        isLocationAutoSelected.value = false;
+        isDDCAutoSelected.value = false;
+        isYearAutoSelected.value = false;
+        isCallNumberValid.value = true;
         isAuthorNotFound.value = false;
-        return;
-    }
 
-    const callNumberPrefix = newCallNumber.trim().split(/[\s.]/)[0].toUpperCase();
-    const matchingLocation = props.physicalLocations.find(
-        loc => loc.symbol?.toUpperCase() === callNumberPrefix
-    );
-    if (matchingLocation) {
-        form.physical_location_id = matchingLocation.id.toString();
-        isLocationAutoSelected.value = true;
-        isLocationOverridden.value = false;
-    } else {
-        form.physical_location_id = '';
-        isCallNumberValid.value = false;
-    }
+        const newCutter = extractCutterNumber(newCallNumber);
+        const oldCutter = extractCutterNumber(oldCallNumber);
 
-    const ddcNumber = extractDDCNumber(newCallNumber);
-    if (ddcNumber) {
-        const matchingDDC = props.ddcClassifications.find(ddc =>
-            isDDCInRange(ddcNumber, ddc.number_range)
-        );
-        if (matchingDDC) {
-            form.ddc_class_id = matchingDDC.id.toString();
-            isDDCAutoSelected.value = true;
-            isDDCOverridden.value = false;
+        if (newCutter !== oldCutter) {
+            form.primary_author = '';
+            cutterNumber.value = newCutter;
+            hasAutoSelectedAuthor.value = false;
+        }
+
+        if (!newCallNumber) {
+            form.physical_location_id = '';
+            form.ddc_class_id = '';
+            form.publication_year = '';
+            form.primary_author = '';
+            cutterNumber.value = null;
+            hasAutoSelectedAuthor.value = false;
+            isAuthorNotFound.value = false;
+            return;
+        }
+
+        const callNumberPrefix = newCallNumber.trim().split(/[\s.]/)[0].toUpperCase();
+        const matchingLocation = props.physicalLocations.find((loc) => loc.symbol?.toUpperCase() === callNumberPrefix);
+        if (matchingLocation) {
+            form.physical_location_id = matchingLocation.id.toString();
+            isLocationAutoSelected.value = true;
+            isLocationOverridden.value = false;
+        } else {
+            form.physical_location_id = '';
+            isCallNumberValid.value = false;
+        }
+
+        const ddcNumber = extractDDCNumber(newCallNumber);
+        if (ddcNumber) {
+            const matchingDDC = props.ddcClassifications.find((ddc) => isDDCInRange(ddcNumber, ddc.number_range));
+            if (matchingDDC) {
+                form.ddc_class_id = matchingDDC.id.toString();
+                isDDCAutoSelected.value = true;
+                isDDCOverridden.value = false;
+            } else {
+                form.ddc_class_id = '';
+                isCallNumberValid.value = false;
+            }
         } else {
             form.ddc_class_id = '';
             isCallNumberValid.value = false;
         }
-    } else {
-        form.ddc_class_id = '';
-        isCallNumberValid.value = false;
-    }
 
-    const year = extractYear(newCallNumber);
-    if (year) {
-        form.publication_year = year;
-        isYearAutoSelected.value = true;
-        isYearOverridden.value = false;
-    } else {
-        form.publication_year = '';
-        isCallNumberValid.value = false;
-    }
+        const year = extractYear(newCallNumber);
+        if (year) {
+            form.publication_year = year;
+            isYearAutoSelected.value = true;
+            isYearOverridden.value = false;
+        } else {
+            form.publication_year = '';
+            isCallNumberValid.value = false;
+        }
 
-    cutterNumber.value = newCutter;
-    if (!newCutter) {
-        form.primary_author = '';
-        isCallNumberValid.value = false;
-        isAuthorNotFound.value = false;
-    }
-});
+        cutterNumber.value = newCutter;
+        if (!newCutter) {
+            form.primary_author = '';
+            isCallNumberValid.value = false;
+            isAuthorNotFound.value = false;
+        }
+    },
+);
 
 const handleAuthorSelected = (author: any) => {
     form.primary_author = author ? author.name : '';
-    isAuthorNotFound.value = !author;
+    isAuthorNotFound.value = !author && !form.primary_author;
 };
 
 // Watch for cutterNumber changes
@@ -286,27 +283,47 @@ watch(
             handleAuthorSelected(null);
         }
     },
-    { immediate: true }
+    { immediate: true },
+);
+
+// Watch for manual changes to primary_author
+watch(
+    () => form.primary_author,
+    (newValue, oldValue) => {
+        if (isAuthorNotFound.value && newValue !== oldValue) {
+            hasAutoSelectedAuthor.value = false; // Reset auto-selection on manual input
+            isAuthorNotFound.value = !newValue; // Update not found state based on input
+        }
+    },
 );
 
 // Watch for manual changes to detect overrides
-watch(() => form.physical_location_id, (newValue, oldValue) => {
-    if (isLocationAutoSelected.value && newValue !== oldValue && oldValue !== '') {
-        isLocationOverridden.value = true;
-    }
-});
+watch(
+    () => form.physical_location_id,
+    (newValue, oldValue) => {
+        if (isLocationAutoSelected.value && newValue !== oldValue && oldValue !== '') {
+            isLocationOverridden.value = true;
+        }
+    },
+);
 
-watch(() => form.ddc_class_id, (newValue, oldValue) => {
-    if (isDDCAutoSelected.value && newValue !== oldValue && oldValue !== '') {
-        isDDCOverridden.value = true;
-    }
-});
+watch(
+    () => form.ddc_class_id,
+    (newValue, oldValue) => {
+        if (isDDCAutoSelected.value && newValue !== oldValue && oldValue !== '') {
+            isDDCOverridden.value = true;
+        }
+    },
+);
 
-watch(() => form.publication_year, (newValue, oldValue) => {
-    if (isYearAutoSelected.value && newValue !== oldValue && oldValue !== '') {
-        isYearOverridden.value = true;
-    }
-});
+watch(
+    () => form.publication_year,
+    (newValue, oldValue) => {
+        if (isYearAutoSelected.value && newValue !== oldValue && oldValue !== '') {
+            isYearOverridden.value = true;
+        }
+    },
+);
 
 const submit = () => {
     form.post(route('books.store'));
@@ -317,12 +334,12 @@ const submit = () => {
     <Head title="Add Book" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <RecordsLayout>
-            <div class="flex flex-col gap-6 p-6 bg-white rounded-xl shadow-sm overflow-x-auto">
-                <form @submit.prevent="submit" class="flex flex-col gap-8 max-w-5xl mx-auto">
+            <div class="flex flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm">
+                <form @submit.prevent="submit" class="mx-auto flex max-w-5xl flex-col gap-8">
                     <!-- Basic Information -->
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Basic Information</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div class="grid gap-2">
                                 <Label for="accession_number">Accession Number</Label>
                                 <Input placeholder="Accession number" id="accession_number" type="text" required v-model="form.accession_number" />
@@ -331,7 +348,7 @@ const submit = () => {
                             <div class="grid gap-2">
                                 <Label for="call_number">
                                     Call Number
-                                    <span class="text-xs text-muted-foreground block">Example: GR 808.8 c967 1937</span>
+                                    <span class="block text-xs text-muted-foreground">Example: GR 808.8 c967 1937</span>
                                 </Label>
                                 <Input id="call_number" placeholder="Call Number..." type="text" v-model="form.call_number" />
                                 <span v-if="!isCallNumberValid && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
@@ -342,7 +359,7 @@ const submit = () => {
                                 <Input id="isbn" placeholder="ISBN..." type="text" required v-model="form.isbn" />
                                 <InputError :message="form.errors.isbn" />
                             </div>
-                            <div class="grid gap-2 col-span-2">
+                            <div class="col-span-2 grid gap-2">
                                 <Label for="title">Title</Label>
                                 <Input id="title" placeholder="Title..." type="text" required v-model="form.title" />
                                 <InputError :message="form.errors.title" />
@@ -356,33 +373,46 @@ const submit = () => {
                                 <Label for="primary_author">Primary Author</Label>
                                 <div class="relative">
                                     <Input
-                                        :value="form.primary_author || ''"
-                                        :disabled="true"
-                                        :placeholder="isLoadingAuthor ? 'Loading...' : isAuthorNotFound ? 'Author Not Found' : 'Auto-selected from Cutter number'"
+                                        v-model="form.primary_author"
+                                        :disabled="isLoadingAuthor || (hasAutoSelectedAuthor && !isAuthorNotFound)"
+                                        :placeholder="
+                                            isLoadingAuthor
+                                                ? 'Loading...'
+                                                : isAuthorNotFound
+                                                  ? 'Enter author name'
+                                                  : hasAutoSelectedAuthor
+                                                    ? 'Auto-selected from Cutter number'
+                                                    : 'Enter or auto-select from Cutter number'
+                                        "
                                         :class="[
-                                            'bg-gray-50',
+                                            isAuthorNotFound ? 'bg-white' : 'bg-gray-50',
                                             form.primary_author ? 'text-gray-900' : 'text-gray-500',
-                                            isAuthorNotFound ? 'text-red-500' : '',
-                                            'cursor-not-allowed'
-                                          ]"
-                                        readonly
+                                            isAuthorNotFound ? 'text-gray-900' : '',
+                                            isLoadingAuthor || (hasAutoSelectedAuthor && !isAuthorNotFound) ? 'cursor-not-allowed' : 'cursor-text',
+                                        ]"
                                     />
-                                    <div v-if="isLoadingAuthor" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                    <div v-if="isLoadingAuthor" class="absolute top-1/2 right-3 -translate-y-1/2 transform">
                                         <div class="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"></div>
                                     </div>
-                                    <div v-else-if="!form.primary_author && !isLoadingAuthor" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                    <div
+                                        v-else-if="!form.primary_author && !isLoadingAuthor"
+                                        class="absolute top-1/2 right-3 -translate-y-1/2 transform"
+                                    >
                                         <BookOpen class="size-4 text-muted-foreground" />
                                     </div>
                                 </div>
-                                <span v-if="cutterNumber && form.primary_author" class="text-sm text-green-500">
+                                <span
+                                    v-if="cutterNumber && form.primary_author && hasAutoSelectedAuthor && !isAuthorNotFound"
+                                    class="text-sm text-green-500"
+                                >
                                     Auto selected from Cutter number
                                 </span>
                                 <span v-if="cutterNumber && isAuthorNotFound" class="text-sm text-red-500">
-                                    No author found for Cutter number
+                                    No author found for Cutter number, please enter manually
                                 </span>
                                 <InputError :message="form.errors.primary_author" />
                             </div>
-                            <div class="grid gap-2 col-span-2">
+                            <div class="col-span-2 grid gap-2">
                                 <div class="flex gap-2">
                                     <Label for="co_authors">Co-authors</Label>
                                     <span class="text-sm text-gray-500">(Hit 'ENTER' for each co-author)</span>
@@ -393,7 +423,7 @@ const submit = () => {
                             <div class="grid gap-2">
                                 <Label for="edition">Edition</Label>
                             </div>
-                            <div class="grid gap-2 col-span-2">
+                            <div class="col-span-2 grid gap-2">
                                 <div class="flex gap-2">
                                     <Label for="editors">Editor/s</Label>
                                     <span class="text-sm text-gray-500">(Hit 'ENTER' for each editor)</span>
@@ -411,7 +441,9 @@ const submit = () => {
                                 <Input id="publication_year" type="number" required v-model="form.publication_year" />
                                 <span v-if="isYearAutoSelected && !isYearOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isYearOverridden" class="text-sm text-blue-500">Overridden auto select</span>
-                                <span v-if="!isCallNumberValid && !isYearAutoSelected && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
+                                <span v-if="!isCallNumberValid && !isYearAutoSelected && form.call_number" class="text-sm text-red-500"
+                                    >Invalid call number format</span
+                                >
                                 <InputError :message="form.errors.publication_year" />
                             </div>
                             <div class="grid gap-2">
@@ -425,7 +457,7 @@ const submit = () => {
                     <!-- Classification & Location -->
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Classification & Location</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div class="grid gap-2">
                                 <Label for="ddc_class_id">DDC Classification</Label>
                                 <Select v-model="form.ddc_class_id">
@@ -433,18 +465,16 @@ const submit = () => {
                                         <SelectValue placeholder="Select DDC classification" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem
-                                            v-for="ddc in props.ddcClassifications"
-                                            :key="ddc.id"
-                                            :value="ddc.id.toString()"
-                                        >
+                                        <SelectItem v-for="ddc in props.ddcClassifications" :key="ddc.id" :value="ddc.id.toString()">
                                             {{ ddc.title }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <span v-if="isDDCAutoSelected && !isDDCOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isDDCOverridden" class="text-sm text-blue-500">Overridden auto select</span>
-                                <span v-if="!isCallNumberValid && !isDDCAutoSelected && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
+                                <span v-if="!isCallNumberValid && !isDDCAutoSelected && form.call_number" class="text-sm text-red-500"
+                                    >Invalid call number format</span
+                                >
                                 <InputError :message="form.errors.ddc_class_id" />
                             </div>
                             <div class="grid gap-2">
@@ -454,18 +484,16 @@ const submit = () => {
                                         <SelectValue placeholder="Select location" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem
-                                            v-for="loc in props.physicalLocations"
-                                            :key="loc.id"
-                                            :value="loc.id.toString()"
-                                        >
+                                        <SelectItem v-for="loc in props.physicalLocations" :key="loc.id" :value="loc.id.toString()">
                                             {{ loc.name }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <span v-if="isLocationAutoSelected && !isLocationOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isLocationOverridden" class="text-sm text-blue-500">Overridden auto select</span>
-                                <span v-if="!isCallNumberValid && !isLocationAutoSelected && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
+                                <span v-if="!isCallNumberValid && !isLocationAutoSelected && form.call_number" class="text-sm text-red-500"
+                                    >Invalid call number format</span
+                                >
                                 <InputError :message="form.errors.physical_location_id" />
                             </div>
                         </div>
@@ -474,7 +502,7 @@ const submit = () => {
                     <!-- Physical Description -->
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Physical Description</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div class="grid gap-2">
                                 <Label for="cover_type">Cover Type</Label>
                                 <Select v-model="form.cover_type_id" required>
@@ -482,11 +510,7 @@ const submit = () => {
                                         <SelectValue placeholder="Select cover type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem
-                                            v-for="type in props.coverTypes"
-                                            :key="type.id"
-                                            :value="type.id"
-                                        >
+                                        <SelectItem v-for="type in props.coverTypes" :key="type.id" :value="type.id">
                                             {{ type.name }}
                                         </SelectItem>
                                     </SelectContent>
@@ -495,7 +519,7 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="cover_image">Cover Page</Label>
-                                <Input id="cover_image" type="file" @change="e => form.cover_image = e.target.files[0]" />
+                                <Input id="cover_image" type="file" @change="(e) => (form.cover_image = e.target.files[0])" />
                                 <InputError :message="form.errors.cover_image" />
                             </div>
                             <div class="grid gap-2">
@@ -520,7 +544,7 @@ const submit = () => {
                     <!-- Administrative Information -->
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Procurement Information</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div class="grid gap-2">
                                 <Label for="ics_number">ICS Number</Label>
                                 <Input id="ics_number" type="number" v-model="form.ics_number" />
@@ -558,11 +582,7 @@ const submit = () => {
                                         <SelectValue placeholder="Select source" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem
-                                            v-for="source in props.sources"
-                                            :key="source.id"
-                                            :value="source.id"
-                                        >
+                                        <SelectItem v-for="source in props.sources" :key="source.id" :value="source.id">
                                             {{ source.name }}
                                         </SelectItem>
                                     </SelectContent>
@@ -619,7 +639,7 @@ const submit = () => {
                     <!-- Submit -->
                     <div class="flex justify-end pt-4">
                         <Button type="submit" :disabled="form.processing">
-                            <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin mr-2" />
+                            <LoaderCircle v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                             Add Book Record
                         </Button>
                     </div>
