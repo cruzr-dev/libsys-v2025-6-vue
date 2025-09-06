@@ -60,6 +60,7 @@ const form = useForm({
     lot_cost: '',
     supplier: '',
     donated_by: '',
+    replaced_by: '',
     cover_type_id: '',
     table_of_contents: '',
     subject_headings: [],
@@ -411,6 +412,11 @@ const donationSourceId = computed(() => {
     return purchaseSource?.id.toString() || null;
 });
 
+const replacedSourceId = computed(() => {
+    const purchaseSource = props.sources.find(s => s.name.toLowerCase() === 'replaced');
+    return purchaseSource?.id.toString() || null;
+});
+
 const submit = () => {
     form.post(route('books.store'));
 };
@@ -721,6 +727,26 @@ const submit = () => {
                                     </div>
                                     <Input id="donated_by" placeholder="Donated by..." type="text" v-model="form.donated_by" />
                                     <InputError :message="form.errors.donated_by" />
+                                </div>
+                            </template>
+                            <template v-if="form.source_id.toString() === donationSourceId">
+                                <div class="grid gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <Label for="donated_by">Donated By</Label>
+                                        <span class="text-xs text-muted-foreground">(donation related info)</span>
+                                    </div>
+                                    <Input id="donated_by" placeholder="Donated by..." type="text" v-model="form.donated_by" />
+                                    <InputError :message="form.errors.donated_by" />
+                                </div>
+                            </template>
+                            <template v-if="form.source_id.toString() === replacedSourceId">
+                                <div class="grid gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <Label for="replaced_by">Replaced By</Label>
+                                        <span class="text-xs text-muted-foreground">(replacement related info)</span>
+                                    </div>
+                                    <Input id="replaced_by" placeholder="Replaced by..." type="text" v-model="form.replaced_by" />
+                                    <InputError :message="form.errors.replaced_by" />
                                 </div>
                             </template>
                         </div>
