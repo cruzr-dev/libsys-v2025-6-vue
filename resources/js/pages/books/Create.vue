@@ -682,18 +682,29 @@ const submit = () => {
                             </div>
                             <template v-if="form.source_id.toString() === purchaseSourceId">
                                 <div class="grid gap-2">
-                                    <Label for="purchase_amount">Purchase Amount</Label>
-                                    <Input id="purchase_amount" type="number" step="0.01" v-model="form.purchase_amount" />
+                                    <div class="flex items-center gap-2">
+                                        <Label for="purchase_amount">Purchase Amount</Label>
+                                        <span class="text-xs text-muted-foreground">(purchase related info)</span>
+                                    </div>
+                                    <Input id="purchase_amount" placeholder="Purchase amount..." type="number" step="0.01" v-model="form.purchase_amount" />
                                     <InputError :message="form.errors.purchase_amount" />
                                 </div>
+
                                 <div class="grid gap-2">
-                                    <Label for="lot_cost">Lot Cost</Label>
-                                    <Input id="lot_cost" type="number" step="0.01" v-model="form.lot_cost" />
+                                    <div class="flex items-center gap-2">
+                                        <Label for="lot_cost">Lot Cost</Label>
+                                        <span class="text-xs text-muted-foreground">(purchase related info)</span>
+                                    </div>
+                                    <Input id="lot_cost" placeholder="Lot cost..." type="number" step="0.01" v-model="form.lot_cost" />
                                     <InputError :message="form.errors.lot_cost" />
                                 </div>
+
                                 <div class="grid gap-2">
-                                    <Label for="supplier">Supplier</Label>
-                                    <Input id="supplier" type="text" v-model="form.supplier" />
+                                    <div class="flex items-center gap-2">
+                                        <Label for="supplier">Supplier</Label>
+                                        <span class="text-xs text-muted-foreground">(purchase related info)</span>
+                                    </div>
+                                    <Input id="supplier" placeholder="Supplier..." type="text" v-model="form.supplier" />
                                     <InputError :message="form.errors.supplier" />
                                 </div>
                             </template>
