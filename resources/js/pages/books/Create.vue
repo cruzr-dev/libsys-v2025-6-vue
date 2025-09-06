@@ -14,6 +14,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 import { BookOpen, LoaderCircle } from 'lucide-vue-next';
 import { nextTick, ref, watch } from 'vue';
+import CoverTypeComboBox from '@/components/CoverTypeComboBox.vue';
 
 // Props
 const props = defineProps<{
@@ -508,17 +509,7 @@ const submit = () => {
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div class="grid gap-2">
                                 <Label for="cover_type">Cover Type</Label>
-                                <Select v-model="form.cover_type_id" required>
-                                    <SelectTrigger id="cover_type">
-                                        <SelectValue placeholder="Select cover type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem v-for="type in props.coverTypes" :key="type.id" :value="type.id">
-                                            {{ type.name }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError :message="form.errors.cover_type_id" />
+                                <CoverTypeComboBox />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="cover_image">Cover Page</Label>
