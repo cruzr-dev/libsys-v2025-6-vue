@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, nextTick } from 'vue';
+import { BookOpen, LoaderCircle } from 'lucide-vue-next';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
@@ -8,13 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle } from 'lucide-vue-next';
 import RecordsLayout from '@/layouts/records/Layout.vue';
 import { Textarea } from '@/components/ui/textarea';
 import AuthorsTagsInput from '@/components/AuthorsTagsInput.vue';
 import EditorsTagsInput from '@/components/EditorsTagsInput.vue';
 import SubjectTagsInput from '@/components/SubjectTagsInput.vue';
-import PrimaryAuthorComboBox from '@/components/PrimaryAuthorComboBox.vue';
 
 // Props
 const props = defineProps<{
@@ -72,7 +71,9 @@ const isDDCOverridden = ref(false);
 const isYearOverridden = ref(false);
 const isCallNumberValid = ref(true);
 const cutterNumber = ref<string | null>(null);
-const isAuthorNotFound = ref(false); // New state to track if no author was found
+const isAuthorNotFound = ref(false);
+const isLoadingAuthor = ref(false);
+const hasAutoSelectedAuthor = ref(false);
 
 // Function to extract DDC number from call number
 const extractDDCNumber = (callNumber: string): string | null => {
@@ -133,23 +134,76 @@ const extractCutterNumber = (callNumber: string): string | null => {
     return null;
 };
 
+// Auto-select author based on cutter number
+const autoSelectFromCutter = async (cutterNumber: string) => {
+    if (!cutterNumber || hasAutoSelectedAuthor.value) return;
+
+    isLoadingAuthor.value = true;
+    isAuthorNotFound.value = false;
+
+    try {
+        const url = new URL('/api/authors/search', window.location.origin);
+        url.searchParams.append('cutter_number', cutterNumber);
+
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const authors = data.authors || data || [];
+
+            const matchingAuthor = authors.find(
+                author => author.author_number?.toLowerCase() === cutterNumber.toLowerCase()
+            );
+
+            if (matchingAuthor) {
+                await nextTick();
+                form.primary_author = matchingAuthor.name;
+                handleAuthorSelected(matchingAuthor);
+                hasAutoSelectedAuthor.value = true;
+                isAuthorNotFound.value = false;
+            } else {
+                await nextTick();
+                form.primary_author = '';
+                handleAuthorSelected(null);
+                hasAutoSelectedAuthor.value = false;
+                isAuthorNotFound.value = true;
+            }
+        } else {
+            console.error('Author search failed:', response.statusText);
+            form.primary_author = '';
+            handleAuthorSelected(null);
+            isAuthorNotFound.value = true;
+        }
+    } catch (error) {
+        console.error('Author search error:', error);
+        form.primary_author = '';
+        handleAuthorSelected(null);
+        isAuthorNotFound.value = true;
+    } finally {
+        isLoadingAuthor.value = false;
+    }
+};
+
 // Watch for changes in call_number and auto-select fields
 watch(() => form.call_number, (newCallNumber: string, oldCallNumber: string) => {
-    // Reset states
     isLocationAutoSelected.value = false;
     isDDCAutoSelected.value = false;
     isYearAutoSelected.value = false;
     isCallNumberValid.value = true;
     isAuthorNotFound.value = false;
 
-    // Extract new Cutter number
     const newCutter = extractCutterNumber(newCallNumber);
     const oldCutter = extractCutterNumber(oldCallNumber);
 
-    // Clear primary_author if Cutter number has changed
     if (newCutter !== oldCutter) {
         form.primary_author = '';
         cutterNumber.value = newCutter;
+        hasAutoSelectedAuthor.value = false;
     }
 
     if (!newCallNumber) {
@@ -158,10 +212,11 @@ watch(() => form.call_number, (newCallNumber: string, oldCallNumber: string) => 
         form.publication_year = '';
         form.primary_author = '';
         cutterNumber.value = null;
+        hasAutoSelectedAuthor.value = false;
+        isAuthorNotFound.value = false;
         return;
     }
 
-    // Auto-select location
     const callNumberPrefix = newCallNumber.trim().split(/[\s.]/)[0].toUpperCase();
     const matchingLocation = props.physicalLocations.find(
         loc => loc.symbol?.toUpperCase() === callNumberPrefix
@@ -175,7 +230,6 @@ watch(() => form.call_number, (newCallNumber: string, oldCallNumber: string) => 
         isCallNumberValid.value = false;
     }
 
-    // Auto-select DDC classification
     const ddcNumber = extractDDCNumber(newCallNumber);
     if (ddcNumber) {
         const matchingDDC = props.ddcClassifications.find(ddc =>
@@ -194,7 +248,6 @@ watch(() => form.call_number, (newCallNumber: string, oldCallNumber: string) => 
         isCallNumberValid.value = false;
     }
 
-    // Auto-select publication year
     const year = extractYear(newCallNumber);
     if (year) {
         form.publication_year = year;
@@ -205,13 +258,36 @@ watch(() => form.call_number, (newCallNumber: string, oldCallNumber: string) => 
         isCallNumberValid.value = false;
     }
 
-    // Set Cutter number
     cutterNumber.value = newCutter;
     if (!newCutter) {
         form.primary_author = '';
         isCallNumberValid.value = false;
+        isAuthorNotFound.value = false;
     }
 });
+
+const handleAuthorSelected = (author: any) => {
+    form.primary_author = author ? author.name : '';
+    isAuthorNotFound.value = !author;
+};
+
+// Watch for cutterNumber changes
+watch(
+    () => cutterNumber.value,
+    (newCutterNumber, oldCutterNumber) => {
+        if (newCutterNumber && newCutterNumber !== oldCutterNumber) {
+            hasAutoSelectedAuthor.value = false;
+            isAuthorNotFound.value = false;
+            autoSelectFromCutter(newCutterNumber);
+        } else if (!newCutterNumber) {
+            hasAutoSelectedAuthor.value = false;
+            isAuthorNotFound.value = false;
+            form.primary_author = '';
+            handleAuthorSelected(null);
+        }
+    },
+    { immediate: true }
+);
 
 // Watch for manual changes to detect overrides
 watch(() => form.physical_location_id, (newValue, oldValue) => {
@@ -231,11 +307,6 @@ watch(() => form.publication_year, (newValue, oldValue) => {
         isYearOverridden.value = true;
     }
 });
-
-const handleAuthorSelected = (author: any) => {
-    form.primary_author = author ? author.name : ''; // Handle null author
-    isAuthorNotFound.value = !author; // Set not found state
-};
 
 const submit = () => {
     form.post(route('books.store'));
@@ -283,12 +354,26 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="primary_author">Primary Author</Label>
-                                <PrimaryAuthorComboBox
-                                    :cutter-number="cutterNumber"
-                                    :selected-author="form.primary_author"
-                                    @update:selected-author="form.primary_author = $event"
-                                    @author-selected="handleAuthorSelected"
-                                />
+                                <div class="relative">
+                                    <Input
+                                        :value="form.primary_author || ''"
+                                        :disabled="true"
+                                        :placeholder="isLoadingAuthor ? 'Loading...' : isAuthorNotFound ? 'Author Not Found' : 'Auto-selected from Cutter number'"
+                                        :class="[
+                                            'bg-gray-50',
+                                            form.primary_author ? 'text-gray-900' : 'text-gray-500',
+                                            isAuthorNotFound ? 'text-red-500' : '',
+                                            'cursor-not-allowed'
+                                          ]"
+                                        readonly
+                                    />
+                                    <div v-if="isLoadingAuthor" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                        <div class="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"></div>
+                                    </div>
+                                    <div v-else-if="!form.primary_author && !isLoadingAuthor" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                        <BookOpen class="size-4 text-muted-foreground" />
+                                    </div>
+                                </div>
                                 <span v-if="cutterNumber && form.primary_author" class="text-sm text-green-500">
                                     Auto selected from Cutter number
                                 </span>
@@ -341,7 +426,6 @@ const submit = () => {
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Classification & Location</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- DDC Classification -->
                             <div class="grid gap-2">
                                 <Label for="ddc_class_id">DDC Classification</Label>
                                 <Select v-model="form.ddc_class_id">
@@ -363,8 +447,6 @@ const submit = () => {
                                 <span v-if="!isCallNumberValid && !isDDCAutoSelected && form.call_number" class="text-sm text-red-500">Invalid call number format</span>
                                 <InputError :message="form.errors.ddc_class_id" />
                             </div>
-
-                            <!-- Physical Location -->
                             <div class="grid gap-2">
                                 <Label for="physical_location_id">Location</Label>
                                 <Select v-model="form.physical_location_id" required>
@@ -393,7 +475,6 @@ const submit = () => {
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Physical Description</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Cover Type -->
                             <div class="grid gap-2">
                                 <Label for="cover_type">Cover Type</Label>
                                 <Select v-model="form.cover_type_id" required>
@@ -440,7 +521,6 @@ const submit = () => {
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Procurement Information</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- ICS -->
                             <div class="grid gap-2">
                                 <Label for="ics_number">ICS Number</Label>
                                 <Input id="ics_number" type="number" v-model="form.ics_number" />
@@ -451,8 +531,6 @@ const submit = () => {
                                 <Input id="ics_date" type="date" v-model="form.ics_date" />
                                 <InputError :message="form.errors.ics_date" />
                             </div>
-
-                            <!-- PR -->
                             <div class="grid gap-2">
                                 <Label for="pr_number">PR Number</Label>
                                 <Input id="pr_number" type="number" v-model="form.pr_number" />
@@ -463,8 +541,6 @@ const submit = () => {
                                 <Input id="pr_date" type="date" v-model="form.pr_date" />
                                 <InputError :message="form.errors.pr_date" />
                             </div>
-
-                            <!-- PO -->
                             <div class="grid gap-2">
                                 <Label for="po_number">PO Number</Label>
                                 <Input id="po_number" type="number" v-model="form.po_number" />
@@ -475,8 +551,6 @@ const submit = () => {
                                 <Input id="po_date" type="date" v-model="form.po_date" />
                                 <InputError :message="form.errors.po_date" />
                             </div>
-
-                            <!-- Source -->
                             <div class="grid gap-2">
                                 <Label for="source">Source</Label>
                                 <Select v-model="form.source_id" required>
@@ -495,8 +569,6 @@ const submit = () => {
                                 </Select>
                                 <InputError :message="form.errors.source_id" />
                             </div>
-
-                            <!-- Purchase-specific -->
                             <template v-if="form.source_id === 'purchase'">
                                 <div class="grid gap-2">
                                     <Label for="purchase_amount">Purchase Amount</Label>
@@ -514,8 +586,6 @@ const submit = () => {
                                     <InputError :message="form.errors.supplier" />
                                 </div>
                             </template>
-
-                            <!-- Donation-specific -->
                             <template v-if="form.source_id === 'donation'">
                                 <div class="grid gap-2">
                                     <Label for="donated_by">Donated By</Label>
