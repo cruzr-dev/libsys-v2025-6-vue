@@ -5,19 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\College;
 use App\Models\Course;
 use App\Models\Major;
-use App\Models\Student;
 use App\Models\User;
 use App\Models\UserType;
 use App\Services\BarcodeService;
 use App\Services\ProfileImageService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
-use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class StudentController extends Controller
 {

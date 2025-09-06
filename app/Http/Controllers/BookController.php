@@ -11,8 +11,7 @@ use App\Models\DdcClassification;
 use App\Models\PhysicalLocation;
 use App\Models\Record;
 use App\Models\Source;
-use App\Models\User;
-use App\Models\UserType;
+use App\Services\BookCoverImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -161,129 +160,113 @@ class BookController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, BookCoverImageService $imageService): \Illuminate\Http\RedirectResponse
     {
-        // 1. Validate based exactly on your front-end inputs
+        // 1. Validation
+        $validated = $request->validate([
+            // Basic Information
+            'accession_number'      => 'required|string|max:50|unique:records,accession_number',
+            'title'                 => 'required|string|max:255',
+            'volume'                => 'nullable|string|max:50',
+            'edition'               => 'nullable|string|max:50',
+            'primary_author'        => 'required|string|max:255',
+            'co_authors'            => 'nullable|array',
+            'co_authors.*'          => 'string|max:255',
+            'editors'               => 'nullable|array',
+            'editors.*'             => 'string|max:255',
+            'publication_year'      => 'required|integer|min:1000|max:' . date('Y'),
+            'publisher'             => 'required|string|max:255',
+            'publication_place'     => 'required|string|max:255',
+            'isbn'                  => 'required|string|max:20|unique:books,isbn',
+
+            // Classification & Location
+            'call_number'           => 'nullable|string|max:50',
+            'ddc_class_id'          => 'nullable|exists:ddc_classifications,id',
+            'physical_location_id'  => 'required|exists:physical_locations,id',
+
+            // Physical Description
+            'cover_image'           => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
+            'cover_type_id'         => 'nullable|exists:cover_types,id',
+            'status'                => 'required|in:available,damaged,missing,borrowed,discarded',
+
+            // Administrative Information
+            'ics_number'            => 'nullable|string|max:50',
+            'ics_date'              => 'nullable|date',
+            'pr_number'             => 'nullable|string|max:50',
+            'pr_date'               => 'nullable|date',
+            'po_number'             => 'nullable|string|max:50',
+            'po_date'               => 'nullable|date',
+            'source_id'             => 'required|exists:sources,id',
+            'purchase_amount'       => 'nullable|numeric|min:0',
+            'lot_cost'              => 'nullable|numeric|min:0',
+            'supplier'              => 'nullable|string|max:255',
+            'donated_by'            => 'nullable|string|max:255',
+            'replaced_by'           => 'nullable|string|max:255',
+
+            // Content Description
+            'table_of_contents'     => 'nullable|string',
+            'subject_headings'      => 'nullable|array',
+            'subject_headings.*'    => 'string|max:255',
+        ]);
+
+        // 2. Transaction
         try {
-            $request->validate([
-                // Basic Information
-                'accession_number'      => 'required|string|max:50|unique:records,accession_number',
-                'title'                 => 'required|string|max:255',
-                'volume'                => 'nullable|string|max:50',
-                'edition'               => 'nullable|string|max:50',
-                'primary_author'        => 'required|string|max:255',
-                'co_authors'            => 'nullable|array',
-                'co_authors.*'          => 'string|max:255',
-                'editors'               => 'nullable|array',
-                'editors.*'             => 'string|max:255',
-                'publication_year'      => 'required|integer|min:1000|max:' . date('Y'),
-                'publisher'             => 'required|string|max:255',
-                'publication_place'     => 'required|string|max:255',
-                'isbn'                  => 'required|string|max:20|unique:books,isbn',
+            DB::transaction(function () use ($validated, $request, $imageService) {
+                $coverImagePath = null;
 
-                // Classification & Location
-                'call_number'           => 'nullable|string|max:50',
-                'ddc_class_id'          => 'nullable|exists:ddc_classifications,id',
-                'physical_location_id'  => 'required|exists:physical_locations,id',
+                if ($request->hasFile('cover_image')) {
+                    $coverImagePath = $imageService->store($request->file('cover_image'), $validated['accession_number']);
+                }
 
-                // Physical Description
-                'cover_image'           => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
-                'cover_type_id'         => 'nullable|exists:cover_types,id',
-                'status'                => 'required|in:available,damaged,missing,borrowed,discarded',
+                $record = Record::create([
+                    'accession_number' => $validated['accession_number'],
+                    'title'            => $validated['title'],
+                    'subject_headings' => $validated['subject_headings'],
+                    'status'           => $validated['status'],
+                    'date_received'    => now(),
+                    'added_by'         => auth()->id(),
+                ]);
 
-                // Administrative Information
-                'ics_number'            => 'nullable|string|max:50',
-                'ics_date'              => 'nullable|date',
-                'pr_number'             => 'nullable|string|max:50',
-                'pr_date'               => 'nullable|date',
-                'po_number'             => 'nullable|string|max:50',
-                'po_date'               => 'nullable|date',
-                'source_id'             => 'required|exists:sources,id',
-                'purchase_amount'       => 'nullable|numeric|min:0',
-                'lot_cost'              => 'nullable|numeric|min:0',
-                'supplier'              => 'nullable|string|max:255',
-                'donated_by'            => 'nullable|string|max:255',
-                'replaced_by'           => 'nullable|string|max:255',
-
-                // Content Description
-                'table_of_contents'     => 'nullable|string',
-                'subject_headings'      => 'nullable|array',
-                'subject_headings.*'    => 'string|max:255',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            session()->flash('error', 'Please fix the validation errors below.');
-            throw $e;
-        }
-
-        // 2. Database Transaction
-        try {
-            DB::beginTransaction();
-
-            // Handle file upload
-            $coverImagePath = null;
-            if ($request->hasFile('cover_image')) {
-                $coverImagePath = $request->file('cover_image')->store('uploads/covers', 'public');
-            }
-
-            // Create main record
-            $record = Record::create([
-                'accession_number' => $request->accession_number,
-                'title'            => $request->title,
-                'subject_headings' => $request->subject_headings,
-                'status'           => $request->status,
-                'date_received'    => now(),
-                'added_by'         => auth()->id(),
-            ]);
-
-            // Create related book record
-            $record->book()->create([
-                'primary_author'       => $request->primary_author,
-                'co_authors'           => $request->co_authors,
-                'editors'              => $request->editors,
-                'volume'               => $request->volume,
-                'edition'              => $request->edition,
-                'publication_year'     => $request->publication_year,
-                'publisher'            => $request->publisher,
-                'publication_place'    => $request->publication_place,
-                'isbn'                 => $request->isbn,
-                'call_number'          => $request->call_number,
-                'ddc_class_id'         => $request->ddc_class_id,
-                'physical_location_id' => $request->physical_location_id,
-                'cover_type_id'        => $request->cover_type_id,
-                'cover_image'          => $coverImagePath,
-                'ics_number'           => $request->ics_number,
-                'ics_date'             => $request->ics_date,
-                'pr_number'            => $request->pr_number,
-                'pr_date'              => $request->pr_date,
-                'po_number'            => $request->po_number,
-                'po_date'              => $request->po_date,
-                'source_id'            => $request->source_id,
-                'purchase_amount'      => $request->purchase_amount,
-                'lot_cost'             => $request->lot_cost,
-                'supplier'             => $request->supplier,
-                'donated_by'           => $request->donated_by,
-                'replaced_by'          => $request->replaced_by,
-                'table_of_contents'    => $request->table_of_contents,
-            ]);
-
-            DB::commit();
+                $record->book()->create([
+                    'primary_author'       => $validated['primary_author'],
+                    'co_authors'           => $validated['co_authors'],
+                    'editors'              => $validated['editors'],
+                    'volume'               => $validated['volume'],
+                    'edition'              => $validated['edition'],
+                    'publication_year'     => $validated['publication_year'],
+                    'publisher'            => $validated['publisher'],
+                    'publication_place'    => $validated['publication_place'],
+                    'isbn'                 => $validated['isbn'],
+                    'call_number'          => $validated['call_number'],
+                    'ddc_class_id'         => $validated['ddc_class_id'],
+                    'physical_location_id' => $validated['physical_location_id'],
+                    'cover_type_id'        => $validated['cover_type_id'],
+                    'cover_image'          => $coverImagePath,
+                    'ics_number'           => $validated['ics_number'],
+                    'ics_date'             => $validated['ics_date'],
+                    'pr_number'            => $validated['pr_number'],
+                    'pr_date'              => $validated['pr_date'],
+                    'po_number'            => $validated['po_number'],
+                    'po_date'              => $validated['po_date'],
+                    'source_id'            => $validated['source_id'],
+                    'purchase_amount'      => $validated['purchase_amount'],
+                    'lot_cost'             => $validated['lot_cost'],
+                    'supplier'             => $validated['supplier'],
+                    'donated_by'           => $validated['donated_by'],
+                    'replaced_by'          => $validated['replaced_by'],
+                    'table_of_contents'    => $validated['table_of_contents'],
+                ]);
+            });
 
             return to_route('books.index')
                 ->with('success', 'Book record created successfully.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            DB::rollBack();
-            Log::error('Database error creating Book: ' . $e->getMessage(), [
-                'request_data' => $request->except(['cover_image']),
-                'exception'    => $e
+        } catch (\Throwable $e) {
+            Log::error('Error creating Book: ' . $e->getMessage(), [
+                'accession_number' => $validated['accession_number'],
+                'isbn'             => $validated['isbn'],
             ]);
-            return back()->withInput()->with('error', 'Database error occurred while creating the book.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Unexpected error creating Book: ' . $e->getMessage(), [
-                'request_data' => $request->except(['cover_image']),
-                'exception'    => $e
-            ]);
-            return back()->withInput()->with('error', 'An unexpected error occurred. Please try again.');
+
+            return back()->withInput()->with('error', 'Failed to create book record. Please try again.');
         }
     }
 
