@@ -230,24 +230,26 @@ class BookController extends Controller
                 'accession_number' => $request->accession_number,
                 'title'            => $request->title,
                 'subject_headings' => $request->subject_headings,
-                'status'           => $request->status, // Added status field
-                'date_received'   => now(),
+                'status'           => $request->status,
+                'date_received'    => now(),
                 'added_by'         => auth()->id(),
             ]);
 
             // Create related book record
             $record->book()->create([
-                'authors'              => $request->authors,
+                'primary_author'       => $request->primary_author,
+                'co_authors'           => $request->co_authors,
                 'editors'              => $request->editors,
+                'volume'               => $request->volume,
+                'edition'              => $request->edition,
                 'publication_year'     => $request->publication_year,
                 'publisher'            => $request->publisher,
                 'publication_place'    => $request->publication_place,
                 'isbn'                 => $request->isbn,
                 'call_number'          => $request->call_number,
                 'ddc_class_id'         => $request->ddc_class_id,
-                'lc_class_id'          => $request->lc_class_id,
                 'physical_location_id' => $request->physical_location_id,
-                'cover_type_id'           => $request->cover_type_id,
+                'cover_type_id'        => $request->cover_type_id,
                 'cover_image'          => $coverImagePath,
                 'ics_number'           => $request->ics_number,
                 'ics_date'             => $request->ics_date,
@@ -255,11 +257,12 @@ class BookController extends Controller
                 'pr_date'              => $request->pr_date,
                 'po_number'            => $request->po_number,
                 'po_date'              => $request->po_date,
-                'source_id'               => $request->source_id,
+                'source_id'            => $request->source_id,
                 'purchase_amount'      => $request->purchase_amount,
                 'lot_cost'             => $request->lot_cost,
                 'supplier'             => $request->supplier,
                 'donated_by'           => $request->donated_by,
+                'replaced_by'          => $request->replaced_by,
                 'table_of_contents'    => $request->table_of_contents,
             ]);
 
