@@ -511,7 +511,7 @@ const submit = () => {
                             <div class="col-span-2 grid gap-2">
                                 <div class="flex gap-2">
                                     <Label for="co_authors">Co-authors</Label>
-                                    <span class="text-sm text-gray-500">(Hit 'ENTER' for each co-author)</span>
+                                    <span class="text-sm text-gray-500">(Hit 'ENTER' or ';' for each co-author)</span>
                                 </div>
                                 <AuthorsTagsInput id="co_authors" v-model="form.co_authors" />
                                 <InputError :message="form.errors.co_authors" />
@@ -524,7 +524,7 @@ const submit = () => {
                             <div class="col-span-2 grid gap-2">
                                 <div class="flex gap-2">
                                     <Label for="editors">Editor/s</Label>
-                                    <span class="text-sm text-gray-500">(Hit 'ENTER' for each editor)</span>
+                                    <span class="text-sm text-gray-500">(Hit 'ENTER' or ';' for each editor)</span>
                                 </div>
                                 <EditorsTagsInput v-model="form.editors" />
                                 <InputError :message="form.errors.editors" />
@@ -758,7 +758,7 @@ const submit = () => {
                             <div class="grid gap-2">
                                 <div class="flex gap-2">
                                     <Label for="">Subject Heading/s</Label>
-                                    <span class="text-sm text-gray-500">(Hit 'ENTER' for each subject)</span>
+                                    <span class="text-sm text-gray-500">(Hit 'ENTER' or ';' for each subject)</span>
                                 </div>
                                 <SubjectTagsInput v-model="form.subject_headings" />
                                 <InputError :message="form.errors.subject_headings" />
