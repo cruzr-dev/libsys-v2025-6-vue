@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref, onMounted } from "vue"
 import { Check, ChevronsUpDown } from "lucide-vue-next"
-import { cn } from "@/utils"
 import {
     Combobox,
     ComboboxAnchor,
@@ -14,15 +13,39 @@ import {
     ComboboxTrigger,
 } from "@/components/ui/combobox"
 
-const coverTypes = [
-    { key: "hc", name: "Hardcover" },
-    { key: "pb", name: "Paperback" },
-    { key: "sc", name: "Softcover" },
-    { key: "dj", name: "Dust Jacket" },
-    { key: "sl", name: "Slipcase" },
-]
+// Define the interface for cover types
+interface CoverType {
+    key: string
+    name: string
+}
 
-const selected = ref<typeof coverTypes[number] | null>(null)
+// Reactive state for cover types and selected item
+const coverTypes = ref<CoverType[]>([])
+const selected = ref<CoverType | null>(null)
+
+// Fetch cover types from API
+const fetchCoverTypes = async () => {
+    try {
+        // Replace with your actual API endpoint
+        const response = await fetch('/api/books/cover-types', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch cover types')
+        }
+        const data = await response.json()
+        // Assuming API returns an array of { key: string, name: string }
+        coverTypes.value = data
+    } catch (error) {
+        console.error('Error fetching cover types:', error)
+    }
+}
+
+// Fetch data when component is mounted
+onMounted(fetchCoverTypes)
 </script>
 
 <template>

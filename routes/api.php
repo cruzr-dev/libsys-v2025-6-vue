@@ -46,6 +46,7 @@ Route::get('/welcome_records', [RecordController::class, 'fetchAllWelcome']);
 Route::get('/records', [RecordController::class, 'fetchAll']);
 Route::get('/authors/search', [RecordController::class, 'searchAuthor']);
 Route::get('/books', [BookController::class, 'fetchAll']);
+Route::get('/books/cover-types', [BookController::class, 'fetchCoverTypes']);
 Route::get('/multimedia', [DigitalResourceController::class, 'fetchAll']);
 Route::get('/periodicals', [PeriodicalController::class, 'fetchAll']);
 Route::get('/theses', [ThesisController::class, 'fetchAll']);

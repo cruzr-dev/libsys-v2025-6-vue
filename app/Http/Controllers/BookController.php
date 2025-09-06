@@ -151,6 +151,13 @@ class BookController extends Controller
         ]);
     }
 
+    public function fetchCoverTypes(): \Illuminate\Http\JsonResponse
+    {
+        $coverTypes = CoverType::select('key', 'name')->get();
+
+        return response()->json($coverTypes);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
