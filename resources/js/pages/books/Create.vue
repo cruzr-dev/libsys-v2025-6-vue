@@ -406,6 +406,11 @@ const purchaseSourceId = computed(() => {
     return purchaseSource?.id.toString() || null;
 });
 
+const donationSourceId = computed(() => {
+    const purchaseSource = props.sources.find(s => s.name.toLowerCase() === 'donation');
+    return purchaseSource?.id.toString() || null;
+});
+
 const submit = () => {
     form.post(route('books.store'));
 };
@@ -708,10 +713,13 @@ const submit = () => {
                                     <InputError :message="form.errors.supplier" />
                                 </div>
                             </template>
-                            <template v-if="form.source_id === 'donation'">
+                            <template v-if="form.source_id.toString() === donationSourceId">
                                 <div class="grid gap-2">
-                                    <Label for="donated_by">Donated By</Label>
-                                    <Input id="donated_by" type="text" v-model="form.donated_by" />
+                                    <div class="flex items-center gap-2">
+                                        <Label for="donated_by">Donated By</Label>
+                                        <span class="text-xs text-muted-foreground">(donation related info)</span>
+                                    </div>
+                                    <Input id="donated_by" placeholder="Donated by..." type="text" v-model="form.donated_by" />
                                     <InputError :message="form.errors.donated_by" />
                                 </div>
                             </template>
