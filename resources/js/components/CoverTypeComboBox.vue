@@ -26,12 +26,15 @@ const selected = ref<typeof coverTypes[number] | null>(null)
 </script>
 
 <template>
-    <Combobox v-model="selected" by="key">
-        <ComboboxAnchor>
-            <div class="relative w-full max-w-sm items-center">
+    <Combobox v-model="selected" by="key" class="w-full">
+        <ComboboxAnchor class="w-full">
+            <div
+                class="relative w-full flex items-center rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+            >
                 <ComboboxInput
                     :display-value="(val) => val?.name ?? ''"
                     placeholder="Select cover type..."
+                    class="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
                 />
                 <ComboboxTrigger
                     class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
@@ -42,25 +45,21 @@ const selected = ref<typeof coverTypes[number] | null>(null)
         </ComboboxAnchor>
 
         <ComboboxList>
-            <ComboboxEmpty> Nothing found. </ComboboxEmpty>
+            <ComboboxEmpty>Nothing found.</ComboboxEmpty>
 
             <ComboboxGroup>
                 <ComboboxItem
                     v-for="cover in coverTypes"
                     :key="cover.key"
                     :value="cover"
+                    class="flex items-center gap-2"
                 >
                     {{ cover.name }}
-
                     <ComboboxItemIndicator>
-                        <Check :class="cn('ml-auto h-4 w-4')" />
+                        <Check class="ml-auto h-4 w-4" />
                     </ComboboxItemIndicator>
                 </ComboboxItem>
             </ComboboxGroup>
         </ComboboxList>
     </Combobox>
-
-    <p class="mt-2 text-sm text-gray-500">
-        Selected: {{ selected?.name || "None" }}
-    </p>
 </template>
