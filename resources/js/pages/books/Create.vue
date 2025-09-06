@@ -402,20 +402,24 @@ watch(
     },
 );
 
-const purchaseSourceId = computed(() => {
-    const purchaseSource = props.sources.find(s => s.name.toLowerCase() === 'purchased');
-    return purchaseSource?.id.toString() || null;
-});
+function useSourceChecker(form, sources) {
+    return (targetNames: string[]) => {
+        return computed(() => {
+            const matchedSources = sources.filter((s) =>
+                targetNames.includes(s.name.toLowerCase())
+            )
+            return matchedSources.some(
+                (s) => form.source_id?.toString() === s.id?.toString()
+            )
+        })
+    }
+}
 
-const donationSourceId = computed(() => {
-    const purchaseSource = props.sources.find(s => s.name.toLowerCase() === 'donation');
-    return purchaseSource?.id.toString() || null;
-});
+const checkSource = useSourceChecker(form, props.sources)
 
-const replacedSourceId = computed(() => {
-    const purchaseSource = props.sources.find(s => s.name.toLowerCase() === 'replaced');
-    return purchaseSource?.id.toString() || null;
-});
+const isPurchased = checkSource(["purchased", "purchased-photocopy"])
+const isDonated = checkSource(["donation", 'donation-photocopy'])
+const isReplaced = checkSource(["replaced"])
 
 const submit = () => {
     form.post(route('books.store'));
@@ -691,7 +695,7 @@ const submit = () => {
                                 </Select>
                                 <InputError :message="form.errors.source_id" />
                             </div>
-                            <template v-if="form.source_id.toString() === purchaseSourceId">
+                            <template v-if="isPurchased">
                                 <div class="grid gap-2">
                                     <div class="flex items-center gap-2">
                                         <Label for="purchase_amount">Purchase Amount</Label>
@@ -719,7 +723,7 @@ const submit = () => {
                                     <InputError :message="form.errors.supplier" />
                                 </div>
                             </template>
-                            <template v-if="form.source_id.toString() === donationSourceId">
+                            <template v-if="isDonated">
                                 <div class="grid gap-2">
                                     <div class="flex items-center gap-2">
                                         <Label for="donated_by">Donated By</Label>
@@ -729,17 +733,7 @@ const submit = () => {
                                     <InputError :message="form.errors.donated_by" />
                                 </div>
                             </template>
-                            <template v-if="form.source_id.toString() === donationSourceId">
-                                <div class="grid gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <Label for="donated_by">Donated By</Label>
-                                        <span class="text-xs text-muted-foreground">(donation related info)</span>
-                                    </div>
-                                    <Input id="donated_by" placeholder="Donated by..." type="text" v-model="form.donated_by" />
-                                    <InputError :message="form.errors.donated_by" />
-                                </div>
-                            </template>
-                            <template v-if="form.source_id.toString() === replacedSourceId">
+                            <template v-if="isReplaced">
                                 <div class="grid gap-2">
                                     <div class="flex items-center gap-2">
                                         <Label for="replaced_by">Replaced By</Label>
