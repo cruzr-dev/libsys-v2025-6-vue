@@ -69,6 +69,12 @@ const form = useForm({
 // Date picker setup for ics_date
 const icsDate = ref<Date | null>(form.ics_date ? new Date(form.ics_date) : null);
 
+// Date picker setup for pr_date
+const prDate = ref<Date | null>(form.pr_date ? new Date(form.pr_date) : null);
+
+// Date picker setup for po_date
+const poDate = ref<Date | null>(form.po_date ? new Date(form.po_date) : null);
+
 // Sync icsDate with form.ics_date
 watch(icsDate, (newValue) => {
     if (newValue) {
@@ -81,12 +87,54 @@ watch(icsDate, (newValue) => {
     }
 });
 
+// Sync prDate with form.pr_date
+watch(prDate, (newValue) => {
+    if (newValue) {
+        const year = newValue.getFullYear();
+        const month = String(newValue.getMonth() + 1).padStart(2, '0');
+        const day = String(newValue.getDate()).padStart(2, '0');
+        form.pr_date = `${year}-${month}-${day}`; // Format as YYYY-MM-DD
+    } else {
+        form.pr_date = '';
+    }
+});
+
+// Sync poDate with form.po_date
+watch(poDate, (newValue) => {
+    if (newValue) {
+        const year = newValue.getFullYear();
+        const month = String(newValue.getMonth() + 1).padStart(2, '0');
+        const day = String(newValue.getDate()).padStart(2, '0');
+        form.po_date = `${year}-${month}-${day}`; // Format as YYYY-MM-DD
+    } else {
+        form.po_date = '';
+    }
+});
+
 // Sync form.ics_date back to icsDate if changed externally
 watch(() => form.ics_date, (newValue) => {
     if (newValue && newValue !== (icsDate.value ? icsDate.value.toISOString().split('T')[0] : '')) {
         icsDate.value = new Date(newValue);
     } else if (!newValue) {
         icsDate.value = null;
+    }
+});
+
+// Sync form.pr_date back to prDate if changed externally
+watch(() => form.pr_date, (newValue) => {
+    if (newValue && newValue !== (prDate.value ? prDate.value.toISOString().split('T')[0] : '')) {
+        prDate.value = new Date(newValue);
+    } else if (!newValue) {
+        prDate.value = null;
+    }
+});
+
+// Sync form.po_date back to poDate if changed externally
+watch(() => form.po_date, (newValue) => {
+    if (newValue && newValue !== (poDate.value ? poDate.value.toISOString().split('T')[0] : '')) {
+        poDate.value = new Date(newValue);
+    } else if (!newValue) {
+        poDate.value = null;
     }
 });
 
@@ -472,7 +520,7 @@ const submit = () => {
                                 <span v-if="isYearAutoSelected && !isYearOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isYearOverridden" class="text-sm text-blue-500">Overridden auto select</span>
                                 <span v-if="!isCallNumberValid && !isYearAutoSelected && form.call_number" class="text-sm text-red-500"
-                                    >Invalid call number format</span
+                                >Invalid call number format</span
                                 >
                                 <InputError :message="form.errors.publication_year" />
                             </div>
@@ -503,7 +551,7 @@ const submit = () => {
                                 <span v-if="isDDCAutoSelected && !isDDCOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isDDCOverridden" class="text-sm text-blue-500">Overridden auto select</span>
                                 <span v-if="!isCallNumberValid && !isDDCAutoSelected && form.call_number" class="text-sm text-red-500"
-                                    >Invalid call number format</span
+                                >Invalid call number format</span
                                 >
                                 <InputError :message="form.errors.ddc_class_id" />
                             </div>
@@ -522,7 +570,7 @@ const submit = () => {
                                 <span v-if="isLocationAutoSelected && !isLocationOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isLocationOverridden" class="text-sm text-blue-500">Overridden auto select</span>
                                 <span v-if="!isCallNumberValid && !isLocationAutoSelected && form.call_number" class="text-sm text-red-500"
-                                    >Invalid call number format</span
+                                >Invalid call number format</span
                                 >
                                 <InputError :message="form.errors.physical_location_id" />
                             </div>
@@ -573,22 +621,28 @@ const submit = () => {
                             <div v-if="form.ics_number" class="grid gap-2">
                                 <Label for="ics_date">ICS Date</Label>
                                 <DatePicker class="min-w-full"
-                                    v-model:value="icsDate"
-                                    type="date"
-                                    valueType="date"
-                                    format="YYYY-MM-DD"
-                                    placeholder="Select ICS date"
+                                            v-model:value="icsDate"
+                                            type="date"
+                                            valueType="date"
+                                            format="YYYY-MM-DD"
+                                            placeholder="Select ICS date"
                                 />
                                 <InputError :message="form.errors.ics_date" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="pr_number">PR Number</Label>
-                                <Input id="pr_number" type="number" v-model="form.pr_number" />
+                                <Input id="pr_number" placeholder="PR number..." type="number" v-model="form.pr_number" />
                                 <InputError :message="form.errors.pr_number" />
                             </div>
                             <div v-if="form.pr_number" class="grid gap-2">
                                 <Label for="pr_date">PR Date</Label>
-                                <Input id="pr_date" type="date" v-model="form.pr_date" />
+                                <DatePicker class="min-w-full"
+                                            v-model:value="prDate"
+                                            type="date"
+                                            valueType="date"
+                                            format="YYYY-MM-DD"
+                                            placeholder="Select PR date"
+                                />
                                 <InputError :message="form.errors.pr_date" />
                             </div>
                             <div class="grid gap-2">
@@ -598,7 +652,13 @@ const submit = () => {
                             </div>
                             <div v-if="form.po_number" class="grid gap-2">
                                 <Label for="po_date">PO Date</Label>
-                                <Input id="po_date" type="date" v-model="form.po_date" />
+                                <DatePicker class="min-w-full"
+                                            v-model:value="poDate"
+                                            type="date"
+                                            valueType="date"
+                                            format="YYYY-MM-DD"
+                                            placeholder="Select PO date"
+                                />
                                 <InputError :message="form.errors.po_date" />
                             </div>
                             <div class="grid gap-2">
