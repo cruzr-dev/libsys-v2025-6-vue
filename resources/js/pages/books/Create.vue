@@ -15,6 +15,8 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { BookOpen, LoaderCircle } from 'lucide-vue-next';
 import { nextTick, ref, watch } from 'vue';
 import CoverTypeComboBox from '@/components/CoverTypeComboBox.vue';
+import DatePicker from 'vue-datepicker-next';
+import 'vue-datepicker-next/index.css';
 
 // Props
 const props = defineProps<{
@@ -62,6 +64,30 @@ const form = useForm({
     table_of_contents: '',
     subject_headings: [],
     status: 'available',
+});
+
+// Date picker setup for ics_date
+const icsDate = ref<Date | null>(form.ics_date ? new Date(form.ics_date) : null);
+
+// Sync icsDate with form.ics_date
+watch(icsDate, (newValue) => {
+    if (newValue) {
+        const year = newValue.getFullYear();
+        const month = String(newValue.getMonth() + 1).padStart(2, '0');
+        const day = String(newValue.getDate()).padStart(2, '0');
+        form.ics_date = `${year}-${month}-${day}`; // Format as YYYY-MM-DD
+    } else {
+        form.ics_date = '';
+    }
+});
+
+// Sync form.ics_date back to icsDate if changed externally
+watch(() => form.ics_date, (newValue) => {
+    if (newValue && newValue !== (icsDate.value ? icsDate.value.toISOString().split('T')[0] : '')) {
+        icsDate.value = new Date(newValue);
+    } else if (!newValue) {
+        icsDate.value = null;
+    }
 });
 
 // State to track auto-selection and override status
@@ -541,12 +567,18 @@ const submit = () => {
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div class="grid gap-2">
                                 <Label for="ics_number">ICS Number</Label>
-                                <Input id="ics_number" type="number" v-model="form.ics_number" />
+                                <Input id="ics_number" placeholder="ICS number..." type="number" v-model="form.ics_number" />
                                 <InputError :message="form.errors.ics_number" />
                             </div>
                             <div v-if="form.ics_number" class="grid gap-2">
                                 <Label for="ics_date">ICS Date</Label>
-                                <Input id="ics_date" type="date" v-model="form.ics_date" />
+                                <DatePicker class="min-w-full"
+                                    v-model:value="icsDate"
+                                    type="date"
+                                    valueType="date"
+                                    format="YYYY-MM-DD"
+                                    placeholder="Select ICS date"
+                                />
                                 <InputError :message="form.errors.ics_date" />
                             </div>
                             <div class="grid gap-2">
