@@ -36,6 +36,7 @@ const form = useForm({
     volume: '',
     primary_author: '',
     co_authors: [],
+    edition: '',
     editors: [],
     publication_year: '',
     publisher: '',
@@ -422,6 +423,8 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="edition">Edition</Label>
+                                <Input id="edition" placeholder="Edition..." type="text" required v-model="form.edition" />
+                                <InputError :message="form.errors.edition" />
                             </div>
                             <div class="col-span-2 grid gap-2">
                                 <div class="flex gap-2">
@@ -433,12 +436,12 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="publisher">Publisher</Label>
-                                <Input id="publisher" type="text" required v-model="form.publisher" />
+                                <Input id="publisher" placeholder="Publisher..." type="text" required v-model="form.publisher" />
                                 <InputError :message="form.errors.publisher" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="publication_year">Copyright Date</Label>
-                                <Input id="publication_year" type="number" required v-model="form.publication_year" />
+                                <Input id="publication_year" placeholder="Copyright Date..." type="number" required v-model="form.publication_year" />
                                 <span v-if="isYearAutoSelected && !isYearOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isYearOverridden" class="text-sm text-blue-500">Overridden auto select</span>
                                 <span v-if="!isCallNumberValid && !isYearAutoSelected && form.call_number" class="text-sm text-red-500"
@@ -448,7 +451,7 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="publication_place">Publication Place</Label>
-                                <Input id="publication_place" type="text" required v-model="form.publication_place" />
+                                <Input id="publication_place" placeholder="Publication place..." type="text" required v-model="form.publication_place" />
                                 <InputError :message="form.errors.publication_place" />
                             </div>
                         </div>
