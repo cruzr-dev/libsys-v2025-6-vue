@@ -16,7 +16,7 @@ import EditorsTagsInput from '@/components/EditorsTagsInput.vue';
 import SubjectTagsInput from '@/components/SubjectTagsInput.vue';
 import PrimaryAuthorComboBox from '@/components/PrimaryAuthorComboBox.vue';
 
-// Props from Inertia
+// Props
 const props = defineProps<{
     nextAccessionNumber: number;
     ddcClassifications: { id: number; number_range: string; title: string }[];
@@ -72,6 +72,7 @@ const isDDCOverridden = ref(false);
 const isYearOverridden = ref(false);
 const isCallNumberValid = ref(true);
 const cutterNumber = ref<string | null>(null);
+const isAuthorNotFound = ref(false); // New state to track if no author was found
 
 // Function to extract DDC number from call number
 const extractDDCNumber = (callNumber: string): string | null => {
@@ -121,12 +122,10 @@ const extractYear = (callNumber: string): string | null => {
 const extractCutterNumber = (callNumber: string): string | null => {
     if (!callNumber) return null;
     const parts = callNumber.trim().split(/[\s.]/);
-    // The Cutter number is typically the part after the DDC number and before the year (if present)
     const ddcPart = parts.find(part => /^\d+(\.\d+)?$/.test(part));
     const ddcIndex = ddcPart ? parts.indexOf(ddcPart) : -1;
     if (ddcIndex !== -1 && ddcIndex + 1 < parts.length) {
         const cutterCandidate = parts[ddcIndex + 1];
-        // Basic validation for Cutter number (e.g., starts with a letter, followed by numbers)
         if (/^[A-Za-z]+\d+/.test(cutterCandidate)) {
             return cutterCandidate;
         }
@@ -135,19 +134,30 @@ const extractCutterNumber = (callNumber: string): string | null => {
 };
 
 // Watch for changes in call_number and auto-select fields
-watch(() => form.call_number, (newCallNumber: string) => {
+watch(() => form.call_number, (newCallNumber: string, oldCallNumber: string) => {
     // Reset states
     isLocationAutoSelected.value = false;
     isDDCAutoSelected.value = false;
     isYearAutoSelected.value = false;
     isCallNumberValid.value = true;
-    cutterNumber.value = null;
+    isAuthorNotFound.value = false;
+
+    // Extract new Cutter number
+    const newCutter = extractCutterNumber(newCallNumber);
+    const oldCutter = extractCutterNumber(oldCallNumber);
+
+    // Clear primary_author if Cutter number has changed
+    if (newCutter !== oldCutter) {
+        form.primary_author = '';
+        cutterNumber.value = newCutter;
+    }
 
     if (!newCallNumber) {
         form.physical_location_id = '';
         form.ddc_class_id = '';
         form.publication_year = '';
         form.primary_author = '';
+        cutterNumber.value = null;
         return;
     }
 
@@ -195,14 +205,10 @@ watch(() => form.call_number, (newCallNumber: string) => {
         isCallNumberValid.value = false;
     }
 
-    // Extract and set Cutter number - this will trigger the PrimaryAuthorComboBox to search
-    const extractedCutter = extractCutterNumber(newCallNumber);
-    if (extractedCutter) {
-        cutterNumber.value = extractedCutter;
-        // Don't set form.primary_author here - let the component handle it
-    } else {
+    // Set Cutter number
+    cutterNumber.value = newCutter;
+    if (!newCutter) {
         form.primary_author = '';
-        cutterNumber.value = null;
         isCallNumberValid.value = false;
     }
 });
@@ -227,7 +233,8 @@ watch(() => form.publication_year, (newValue, oldValue) => {
 });
 
 const handleAuthorSelected = (author: any) => {
-    form.primary_author = author.name; // Set the name string, not the object
+    form.primary_author = author ? author.name : ''; // Handle null author
+    isAuthorNotFound.value = !author; // Set not found state
 };
 
 const submit = () => {
@@ -284,6 +291,9 @@ const submit = () => {
                                 />
                                 <span v-if="cutterNumber && form.primary_author" class="text-sm text-green-500">
                                     Auto selected from Cutter number
+                                </span>
+                                <span v-if="cutterNumber && isAuthorNotFound" class="text-sm text-red-500">
+                                    No author found for Cutter number
                                 </span>
                                 <InputError :message="form.errors.primary_author" />
                             </div>

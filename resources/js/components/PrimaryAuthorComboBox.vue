@@ -18,12 +18,14 @@ const emit = defineEmits<{
 // Reactive state
 const isLoading = ref(false);
 const hasAutoSelected = ref(false);
+const authorNotFound = ref(false); // New state to track if no author was found
 
 // Auto-select author based on cutter number
 const autoSelectFromCutter = async (cutterNumber: string) => {
     if (!cutterNumber || hasAutoSelected.value) return;
 
     isLoading.value = true;
+    authorNotFound.value = false;
 
     try {
         const url = new URL('/api/authors/search', window.location.origin);
@@ -50,12 +52,25 @@ const autoSelectFromCutter = async (cutterNumber: string) => {
                 emit('update:selectedAuthor', matchingAuthor.name);
                 emit('authorSelected', matchingAuthor);
                 hasAutoSelected.value = true;
+                authorNotFound.value = false;
+            } else {
+                await nextTick();
+                emit('update:selectedAuthor', '');
+                emit('authorSelected', null); // Emit null when no author is found
+                hasAutoSelected.value = false;
+                authorNotFound.value = true; // Set not found state
             }
         } else {
             console.error('Author search failed:', response.statusText);
+            emit('update:selectedAuthor', '');
+            emit('authorSelected', null);
+            authorNotFound.value = true;
         }
     } catch (error) {
         console.error('Author search error:', error);
+        emit('update:selectedAuthor', '');
+        emit('authorSelected', null);
+        authorNotFound.value = true;
     } finally {
         isLoading.value = false;
     }
@@ -67,10 +82,13 @@ watch(
     (newCutterNumber, oldCutterNumber) => {
         if (newCutterNumber && newCutterNumber !== oldCutterNumber) {
             hasAutoSelected.value = false;
+            authorNotFound.value = false;
             autoSelectFromCutter(newCutterNumber);
         } else if (!newCutterNumber) {
             hasAutoSelected.value = false;
+            authorNotFound.value = false;
             emit('update:selectedAuthor', '');
+            emit('authorSelected', null);
         }
     },
     { immediate: true }
@@ -82,8 +100,13 @@ watch(
         <Input
             :value="selectedAuthor || ''"
             :disabled="true"
-            :placeholder="isLoading ? 'Loading...' : 'Auto-selected from Cutter number'"
-            class="bg-gray-50 text-gray-500 cursor-not-allowed"
+            :placeholder="isLoading ? 'Loading...' : authorNotFound ? 'Author Not Found' : 'Auto-selected from Cutter number'"
+            :class="[
+                'bg-gray-50',
+                selectedAuthor ? 'text-gray-900' : 'text-gray-500',
+                authorNotFound ? 'text-red-500' : '',
+                'cursor-not-allowed'
+            ]"
             readonly
         />
 
@@ -93,7 +116,7 @@ watch(
         </div>
 
         <!-- Icon when not loading and no author selected -->
-        <div v-else-if="!selectedAuthor" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+        <div v-else-if="!selectedAuthor && !isLoading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
             <BookOpen class="size-4 text-muted-foreground" />
         </div>
     </div>
