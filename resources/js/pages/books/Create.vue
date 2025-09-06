@@ -13,7 +13,7 @@ import RecordsLayout from '@/layouts/records/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 import { BookOpen, LoaderCircle } from 'lucide-vue-next';
-import { nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import CoverTypeComboBox from '@/components/CoverTypeComboBox.vue';
 import DatePicker from 'vue-datepicker-next';
 import 'vue-datepicker-next/index.css';
@@ -401,6 +401,11 @@ watch(
     },
 );
 
+const purchaseSourceId = computed(() => {
+    const purchaseSource = props.sources.find(s => s.name.toLowerCase() === 'purchased');
+    return purchaseSource?.id.toString() || null;
+});
+
 const submit = () => {
     form.post(route('books.store'));
 };
@@ -663,8 +668,8 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="source">Source</Label>
-                                <Select v-model="form.source_id" required>
-                                    <SelectTrigger id="source">
+                                <Select v-model="form.source_id" required >
+                                    <SelectTrigger id="source" class="min-w-full">
                                         <SelectValue placeholder="Select source" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -675,7 +680,7 @@ const submit = () => {
                                 </Select>
                                 <InputError :message="form.errors.source_id" />
                             </div>
-                            <template v-if="form.source_id === 'purchase'">
+                            <template v-if="form.source_id.toString() === purchaseSourceId">
                                 <div class="grid gap-2">
                                     <Label for="purchase_amount">Purchase Amount</Label>
                                     <Input id="purchase_amount" type="number" step="0.01" v-model="form.purchase_amount" />
