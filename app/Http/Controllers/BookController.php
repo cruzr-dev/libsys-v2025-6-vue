@@ -169,8 +169,11 @@ class BookController extends Controller
                 // Basic Information
                 'accession_number'      => 'required|string|max:50|unique:records,accession_number',
                 'title'                 => 'required|string|max:255',
-                'authors'               => 'required|array|min:1',
-                'authors.*'             => 'string|max:255',
+                'volume'                => 'nullable|string|max:50',
+                'edition'               => 'nullable|string|max:50',
+                'primary_author'        => 'required|string|max:255',
+                'co_authors'            => 'nullable|array',
+                'co_authors.*'          => 'string|max:255',
                 'editors'               => 'nullable|array',
                 'editors.*'             => 'string|max:255',
                 'publication_year'      => 'required|integer|min:1000|max:' . date('Y'),
@@ -180,27 +183,27 @@ class BookController extends Controller
 
                 // Classification & Location
                 'call_number'           => 'nullable|string|max:50',
-                'ddc_class_id'          => 'nullable|exists:ddc_classifications,id|required_without:lc_class_id',
-                'lc_class_id'           => 'nullable|exists:lc_classifications,id|required_without:ddc_class_id',
+                'ddc_class_id'          => 'nullable|exists:ddc_classifications,id',
                 'physical_location_id'  => 'required|exists:physical_locations,id',
 
                 // Physical Description
                 'cover_image'           => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
-                'status'                => 'required|in:available,damaged,missing,borrowed,discarded', // Added status validation
+                'cover_type_id'         => 'nullable|exists:cover_types,id',
+                'status'                => 'required|in:available,damaged,missing,borrowed,discarded',
 
                 // Administrative Information
-                'ics_number'            => 'nullable|max:50',
+                'ics_number'            => 'nullable|string|max:50',
                 'ics_date'              => 'nullable|date',
-                'pr_number'             => 'nullable|max:50',
+                'pr_number'             => 'nullable|string|max:50',
                 'pr_date'               => 'nullable|date',
-                'po_number'             => 'nullable|max:50',
+                'po_number'             => 'nullable|string|max:50',
                 'po_date'               => 'nullable|date',
-                'source_id'                => 'required|exists:sources,id',
+                'source_id'             => 'required|exists:sources,id',
                 'purchase_amount'       => 'nullable|numeric|min:0',
                 'lot_cost'              => 'nullable|numeric|min:0',
                 'supplier'              => 'nullable|string|max:255',
                 'donated_by'            => 'nullable|string|max:255',
-                'cover_type_id'           => 'nullable|exists:cover_types,id',
+                'replaced_by'           => 'nullable|string|max:255',
 
                 // Content Description
                 'table_of_contents'     => 'nullable|string',
