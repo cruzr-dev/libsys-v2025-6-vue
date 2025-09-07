@@ -655,166 +655,179 @@ const getRecordSpecificData = (record: any) => {
 
                 <!-- Record Details Modal -->
                 <Dialog v-model:open="isDialogOpen">
-                    <DialogContent class="max-h-[90dvh] grid-rows-[auto_minmax(0,1fr)_auto] p-0 sm:max-w-4xl">
-                        <DialogHeader class="p-6 pb-0">
-                            <DialogTitle class="flex items-center gap-3">
+                    <DialogContent class="sm:max-w-4xl max-h-[95dvh] p-0 bg-background rounded-lg shadow-xl overflow-x-auto">
+                        <!-- Header -->
+                        <DialogHeader class="px-4 pt-4 pb-4 border-b">
+                            <DialogTitle class="text-xl font-semibold text-foreground flex items-center gap-3">
                                 Record Details
                                 <Badge v-if="selectedRecord?.record_type" :class="getRecordTypeInfo(selectedRecord.record_type).color + ' border-0'">
                                     {{ getRecordTypeInfo(selectedRecord.record_type).label }}
                                 </Badge>
                             </DialogTitle>
-                            <DialogDescription> Viewing {{ selectedRecord?.record_type || 'record' }} information. </DialogDescription>
                         </DialogHeader>
 
-                        <div class="grid grid-cols-1 gap-6 overflow-y-auto px-6 py-4 lg:grid-cols-4">
-                            <!-- Cover/Image and QrCode -->
-                            <div class="flex flex-col items-center gap-4 lg:items-start">
+                        <!-- Main Content -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 py-0 overflow-y-auto">
+                            <!-- Cover/Image and QR Code -->
+                            <div class="flex flex-col items-center gap-4 bg-card rounded-lg p-4 border">
                                 <!-- Cover Image (mainly for books) -->
                                 <template v-if="selectedRecord?.record_type === 'book'">
                                     <img
                                         v-if="getRecordSpecificData(selectedRecord).cover_image"
                                         :src="'/storage/book_covers/' + getRecordSpecificData(selectedRecord).cover_image"
                                         alt="Book Cover"
-                                        class="h-40 w-32 rounded border object-cover shadow-md"
+                                        class="h-[225px] w-[150px] object-cover border-4 border-background shadow-lg"
                                     />
                                     <div
                                         v-else
-                                        class="flex h-40 w-32 items-center justify-center rounded border bg-muted text-muted-foreground shadow-md"
+                                        class="h-[225px] w-[150px] flex items-center justify-center bg-muted text-muted-foreground border-4 border-background shadow-lg"
                                     >
-                                        <span class="text-center text-sm">No Cover</span>
+                                        <span class="text-sm font-medium">No Cover</span>
                                     </div>
                                 </template>
-
                                 <!-- Generic placeholder for other types -->
                                 <div
                                     v-else
-                                    class="flex h-40 w-32 items-center justify-center rounded border bg-muted text-muted-foreground shadow-md"
+                                    class="h-[225px] w-[150px] flex items-center justify-center bg-muted text-muted-foreground border-4 border-background shadow-lg"
                                 >
-                                    <span class="text-center text-sm">{{ getRecordTypeInfo(selectedRecord?.record_type || '').label }}</span>
+                                    <span class="text-sm font-medium">{{ getRecordTypeInfo(selectedRecord?.record_type || '').label }}</span>
                                 </div>
 
-                                <!-- QrCode -->
-                                <div
-                                    v-if="selectedRecord && selectedRecord.book && selectedRecord.book.qrcode_path"
-                                    class="flex flex-col items-center"
-                                >
-                                    <img :src="'/storage/' + selectedRecord.book.qrcode_path" alt="QR Code" class="h-16 w-auto border shadow-md" />
-                                    <span class="mt-2 text-xs text-muted-foreground"> QR Code: {{ selectedRecord.accession_number }} </span>
-                                </div>
-
-                                <div v-else class="flex h-16 w-32 items-center justify-center border bg-muted text-muted-foreground shadow-md">
-                                    <span class="text-xs">No QrCode</span>
+                                <!-- QR Code -->
+                                <div class="flex flex-col items-center gap-2 w-full">
+                                    <div v-if="selectedRecord && selectedRecord.book && selectedRecord.book.qrcode_path" class="w-full">
+                                        <img
+                                            :src="'/storage/' + selectedRecord.book.qrcode_path"
+                                            alt="QR Code"
+                                            class="h-24 w-auto mx-auto border rounded shadow-sm"
+                                        />
+                                        <span class="text-xs text-muted-foreground mt-2 block text-center">
+                            QR Code: {{ selectedRecord.accession_number }}
+                        </span>
+                                    </div>
+                                    <div
+                                        v-else
+                                        class="h-16 w-full flex items-center justify-center bg-muted text-muted-foreground border rounded shadow-sm"
+                                    >
+                                        <span class="text-xs font-medium">No QR Code</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Record Details -->
-                            <div class="lg:col-span-3">
-                                <div v-if="selectedRecord" class="grid gap-4">
-                                    <!-- Common Fields -->
-                                    <div class="grid gap-2 text-sm">
-                                        <h3 class="mb-2 text-base font-semibold">General Information</h3>
-                                        <p><strong>Accession No.:</strong> {{ selectedRecord.accession_number }}</p>
-                                        <p><strong>Title:</strong> {{ selectedRecord.title }}</p>
-                                        <p><strong>Subject:</strong> {{ selectedRecord.subject || 'N/A' }}</p>
-                                        <p>
-                                            <strong>Status:</strong>
-                                            <span
-                                                :class="{
-                                                    'text-green-600': selectedRecord.status === 'available',
-                                                    'text-yellow-600': selectedRecord.status === 'borrowed',
-                                                    'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedRecord.status),
-                                                }"
-                                            >
-                                                {{ selectedRecord.status || 'N/A' }}
-                                            </span>
-                                        </p>
-                                        <p>
-                                            <strong>Date Received:</strong>
-                                            {{ selectedRecord.date_received ? new Date(selectedRecord.date_received).toLocaleDateString() : 'N/A' }}
-                                        </p>
-                                        <p>
-                                            <strong>Added:</strong>
-                                            {{ selectedRecord.created_at ? new Date(selectedRecord.created_at).toLocaleDateString() : 'N/A' }}
-                                        </p>
+                            <div class="md:col-span-2 space-y-4">
+                                <div v-if="selectedRecord" class="space-y-4">
+                                    <!-- General Information -->
+                                    <div class="bg-card rounded-lg p-5 border">
+                                        <h3 class="font-semibold text-lg mb-4 text-foreground">General Information</h3>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                            <p><strong class="text-foreground">Accession No.:</strong> {{ selectedRecord.accession_number }}</p>
+                                            <p><strong class="text-foreground">Title:</strong> {{ selectedRecord.title }}</p>
+                                            <p><strong class="text-foreground">Subject:</strong> {{ selectedRecord.subject || 'Not provided' }}</p>
+                                            <p>
+                                                <strong class="text-foreground">Status:</strong>
+                                                <span
+                                                    :class="{
+                                        'text-green-600': selectedRecord.status === 'available',
+                                        'text-yellow-600': selectedRecord.status === 'borrowed',
+                                        'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedRecord.status),
+                                    }"
+                                                >
+                                    {{ selectedRecord.status || 'Not provided' }}
+                                </span>
+                                            </p>
+                                            <p>
+                                                <strong class="text-foreground">Date Received:</strong>
+                                                {{ selectedRecord.date_received ? new Date(selectedRecord.date_received).toLocaleDateString() : 'Not provided' }}
+                                            </p>
+                                            <p>
+                                                <strong class="text-foreground">Added:</strong>
+                                                {{ selectedRecord.created_at ? new Date(selectedRecord.created_at).toLocaleDateString() : 'Not provided' }}
+                                            </p>
+                                        </div>
                                     </div>
 
                                     <!-- Type-specific Fields -->
-                                    <div class="grid gap-2 text-sm" v-if="selectedRecord.record_type">
-                                        <h3 class="mb-2 text-base font-semibold">
+                                    <div class="bg-card rounded-lg p-5 border" v-if="selectedRecord.record_type">
+                                        <h3 class="font-semibold text-lg mb-4 text-foreground">
                                             {{ getRecordTypeInfo(selectedRecord.record_type).label }} Details
                                         </h3>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                            <!-- Book specific fields -->
+                                            <template v-if="selectedRecord.record_type === 'book'">
+                                                <p><strong class="text-foreground">ISBN:</strong> {{ getRecordSpecificData(selectedRecord).isbn || 'Not provided' }}</p>
+                                                <p><strong class="text-foreground">Authors:</strong> {{ getRecordSpecificData(selectedRecord).authors || 'Not provided' }}</p>
+                                                <p><strong class="text-foreground">Publisher:</strong> {{ getRecordSpecificData(selectedRecord).publisher || 'Not provided' }}</p>
+                                                <p>
+                                                    <strong class="text-foreground">Publication Year:</strong>
+                                                    {{ getRecordSpecificData(selectedRecord).publication_year || 'Not provided' }}
+                                                </p>
+                                                <p><strong class="text-foreground">Category:</strong> {{ getRecordSpecificData(selectedRecord).category || 'Not provided' }}</p>
+                                                <p><strong class="text-foreground">Location:</strong> {{ getRecordSpecificData(selectedRecord).location || 'Not provided' }}</p>
+                                            </template>
 
-                                        <!-- Book specific fields -->
-                                        <template v-if="selectedRecord.record_type === 'book'">
-                                            <p><strong>ISBN:</strong> {{ getRecordSpecificData(selectedRecord).isbn || 'N/A' }}</p>
-                                            <p><strong>Authors:</strong> {{ getRecordSpecificData(selectedRecord).authors || 'N/A' }}</p>
-                                            <p><strong>Publisher:</strong> {{ getRecordSpecificData(selectedRecord).publisher || 'N/A' }}</p>
-                                            <p>
-                                                <strong>Publication Year:</strong>
-                                                {{ getRecordSpecificData(selectedRecord).publication_year || 'N/A' }}
-                                            </p>
-                                            <p><strong>Category:</strong> {{ getRecordSpecificData(selectedRecord).category || 'N/A' }}</p>
-                                            <p><strong>Location:</strong> {{ getRecordSpecificData(selectedRecord).location || 'N/A' }}</p>
-                                        </template>
+                                            <!-- Digital Resource specific fields -->
+                                            <template v-else-if="selectedRecord.record_type === 'digitalResource'">
+                                                <p>
+                                                    <strong class="text-foreground">URL:</strong>
+                                                    <a
+                                                        v-if="getRecordSpecificData(selectedRecord).url"
+                                                        :href="getRecordSpecificData(selectedRecord).url"
+                                                        target="_blank"
+                                                        class="break-all text-blue-600 hover:underline"
+                                                    >
+                                                        {{ getRecordSpecificData(selectedRecord).url }}
+                                                    </a>
+                                                    <span v-else>Not provided</span>
+                                                </p>
+                                                <p><strong class="text-foreground">File Format:</strong> {{ getRecordSpecificData(selectedRecord).file_format || 'Not provided' }}</p>
+                                                <p><strong class="text-foreground">File Size:</strong> {{ getRecordSpecificData(selectedRecord).file_size || 'Not provided' }}</p>
+                                                <p><strong class="text-foreground">Access Type:</strong> {{ getRecordSpecificData(selectedRecord).access_type || 'Not provided' }}</p>
+                                            </template>
 
-                                        <!-- Digital Resource specific fields -->
-                                        <template v-else-if="selectedRecord.record_type === 'digitalResource'">
-                                            <p>
-                                                <strong>URL:</strong>
-                                                <a
-                                                    v-if="getRecordSpecificData(selectedRecord).url"
-                                                    :href="getRecordSpecificData(selectedRecord).url"
-                                                    target="_blank"
-                                                    class="break-all text-blue-600 hover:underline"
-                                                >
-                                                    {{ getRecordSpecificData(selectedRecord).url }}
-                                                </a>
-                                                <span v-else>N/A</span>
-                                            </p>
-                                            <p><strong>File Format:</strong> {{ getRecordSpecificData(selectedRecord).file_format || 'N/A' }}</p>
-                                            <p><strong>File Size:</strong> {{ getRecordSpecificData(selectedRecord).file_size || 'N/A' }}</p>
-                                            <p><strong>Access Type:</strong> {{ getRecordSpecificData(selectedRecord).access_type || 'N/A' }}</p>
-                                        </template>
+                                            <!-- Periodical specific fields -->
+                                            <template v-else-if="selectedRecord.record_type === 'periodical'">
+                                                <p><strong class="text-foreground">ISSN:</strong> {{ getRecordSpecificData(selectedRecord).issn || 'Not provided' }}</p>
+                                                <p><strong class="text-foreground">Volume:</strong> {{ getRecordSpecificData(selectedRecord).volume || 'Not provided' }}</p>
+                                                <p><strong class="text-foreground">Issue:</strong> {{ getRecordSpecificData(selectedRecord).issue || 'Not provided' }}</p>
+                                                <p>
+                                                    <strong class="text-foreground">Publication Date:</strong>
+                                                    {{
+                                                        getRecordSpecificData(selectedRecord).publication_date
+                                                            ? new Date(getRecordSpecificData(selectedRecord).publication_date).toLocaleDateString()
+                                                            : 'Not provided'
+                                                    }}
+                                                </p>
+                                                <p><strong class="text-foreground">Frequency:</strong> {{ getRecordSpecificData(selectedRecord).frequency || 'Not provided' }}</p>
+                                            </template>
 
-                                        <!-- Periodical specific fields -->
-                                        <template v-else-if="selectedRecord.record_type === 'periodical'">
-                                            <p><strong>ISSN:</strong> {{ getRecordSpecificData(selectedRecord).issn || 'N/A' }}</p>
-                                            <p><strong>Volume:</strong> {{ getRecordSpecificData(selectedRecord).volume || 'N/A' }}</p>
-                                            <p><strong>Issue:</strong> {{ getRecordSpecificData(selectedRecord).issue || 'N/A' }}</p>
-                                            <p>
-                                                <strong>Publication Date:</strong>
-                                                {{
-                                                    getRecordSpecificData(selectedRecord).publication_date
-                                                        ? new Date(getRecordSpecificData(selectedRecord).publication_date).toLocaleDateString()
-                                                        : 'N/A'
-                                                }}
-                                            </p>
-                                            <p><strong>Frequency:</strong> {{ getRecordSpecificData(selectedRecord).frequency || 'N/A' }}</p>
-                                        </template>
-
-                                        <!-- Thesis specific fields -->
-                                        <template v-else-if="selectedRecord.record_type === 'thesis'">
-                                            <p>
-                                                <strong>Degree Program:</strong> {{ getRecordSpecificData(selectedRecord).degree_program || 'N/A' }}
-                                            </p>
-                                            <p><strong>Advisor:</strong> {{ getRecordSpecificData(selectedRecord).advisor || 'N/A' }}</p>
-                                            <p><strong>Department:</strong> {{ getRecordSpecificData(selectedRecord).department || 'N/A' }}</p>
-                                            <p>
-                                                <strong>Year Submitted:</strong> {{ getRecordSpecificData(selectedRecord).year_submitted || 'N/A' }}
-                                            </p>
-                                        </template>
+                                            <!-- Thesis specific fields -->
+                                            <template v-else-if="selectedRecord.record_type === 'thesis'">
+                                                <p>
+                                                    <strong class="text-foreground">Degree Program:</strong>
+                                                    {{ getRecordSpecificData(selectedRecord).degree_program || 'Not provided' }}
+                                                </p>
+                                                <p><strong class="text-foreground">Advisor:</strong> {{ getRecordSpecificData(selectedRecord).advisor || 'Not provided' }}</p>
+                                                <p><strong class="text-foreground">Department:</strong> {{ getRecordSpecificData(selectedRecord).department || 'Not provided' }}</p>
+                                                <p>
+                                                    <strong class="text-foreground">Year Submitted:</strong>
+                                                    {{ getRecordSpecificData(selectedRecord).year_submitted || 'Not provided' }}
+                                                </p>
+                                            </template>
+                                        </div>
                                     </div>
                                 </div>
-                                <div v-else class="text-muted-foreground">
-                                    <p>No record selected.</p>
+                                <div v-else class="text-muted-foreground p-4 text-center">
+                                    <p class="text-sm">No record selected.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <DialogFooter class="p-6 pt-0">
-                            <div class="flex w-full justify-between">
-                                <Button variant="outline" @click="isDialogOpen = false">Close</Button>
-                                <Button @click="handleEdit(selectedRecord?.id, selectedRecord?.record_type)">
+                        <!-- Footer -->
+                        <DialogFooter class="p-6 border-t bg-background">
+                            <div class="flex justify-between w-full">
+                                <Button variant="outline" @click="isDialogOpen = false" class="px-6">Close</Button>
+                                <Button @click="handleEdit(selectedRecord?.id, selectedRecord?.record_type)" class="px-6">
                                     Edit {{ getRecordTypeInfo(selectedRecord?.record_type || '').label }} Details
                                 </Button>
                             </div>
