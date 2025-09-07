@@ -2,6 +2,7 @@
 import type { LucideIcon } from "lucide-vue-next"
 import { ChevronRight } from "lucide-vue-next"
 import { Link, usePage } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
 import {
     Collapsible,
     CollapsibleContent,
@@ -19,7 +20,7 @@ import {
 } from "@/components/ui/sidebar"
 import { User } from '@/types';
 
-defineProps<{
+const props = defineProps<{
     items: {
         title: string
         url: string
@@ -36,6 +37,36 @@ defineProps<{
 const page = usePage();
 const user = page.props.auth.user as User;
 
+// Track which collapsible is currently open
+const openCollapsible = ref<string | null>(null);
+
+// Initialize with the active item on mount
+const initializeOpenCollapsible = () => {
+    for (const item of props.items) {
+        if (item.isActive && item.items?.length) {
+            openCollapsible.value = item.title;
+            break;
+        }
+    }
+};
+
+// Initialize on component mount
+initializeOpenCollapsible();
+
+// Watch for changes in props to reinitialize if needed
+watch(() => props.items, initializeOpenCollapsible, { deep: true });
+
+const toggleCollapsible = (itemTitle: string) => {
+    if (openCollapsible.value === itemTitle) {
+        openCollapsible.value = null; // Close if already open
+    } else {
+        openCollapsible.value = itemTitle; // Open this one and close others
+    }
+};
+
+const isCollapsibleOpen = (itemTitle: string) => {
+    return openCollapsible.value === itemTitle;
+};
 </script>
 
 <template>
@@ -47,7 +78,8 @@ const user = page.props.auth.user as User;
                 <Collapsible
                     v-if="item.items?.length"
                     as-child
-                    :default-open="item.isActive"
+                    :open="isCollapsibleOpen(item.title)"
+                    @update:open="() => toggleCollapsible(item.title)"
                     class="group/collapsible"
                 >
                     <SidebarMenuItem>
@@ -61,7 +93,12 @@ const user = page.props.auth.user as User;
                             >
                                 <component :is="item.icon" v-if="item.icon" />
                                 <span>{{ item.title }}</span>
-                                <ChevronRight class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                <ChevronRight
+                                    class="ml-auto transition-transform duration-200"
+                                    :class="{
+                                        'rotate-90': isCollapsibleOpen(item.title)
+                                    }"
+                                />
                             </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
