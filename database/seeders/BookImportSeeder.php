@@ -194,41 +194,6 @@ class BookImportSeeder extends Seeder
     }
 
     /**
-     * Parse author number from call number.
-     *
-     * @param mixed $callNumber
-     * @return string|null
-     */
-    private function parseAuthorNumber($callNumber): ?string
-    {
-        if (empty($callNumber) || !is_string($callNumber)) {
-            return null;
-        }
-
-        // Normalize the call number
-        $callNumber = trim(strtoupper($callNumber));
-        if ($callNumber === '') {
-            return null;
-        }
-
-        // Split the call number into parts based on spaces
-        $parts = explode(' ', $callNumber);
-        if (count($parts) < 3) {
-            Log::warning("Invalid call number format for author number extraction: {$callNumber}");
-            return null;
-        }
-
-        // The author number is typically the third part (e.g., E57h in GR 808.8 E57h 1937)
-        $authorNumber = $parts[2] ?? null;
-        if ($authorNumber && preg_match('/^[A-Z][0-9]+[A-Z]?$/', $authorNumber)) {
-            return $authorNumber;
-        }
-
-        Log::warning("Invalid author number format in call number: {$callNumber}");
-        return null;
-    }
-
-    /**
      * Parse author data from a CSV row.
      *
      * @param array $row
@@ -237,8 +202,6 @@ class BookImportSeeder extends Seeder
     private function parseAuthorData(array $row): array
     {
         $authorNames = $this->parseAuthors($row[4] ?? null);
-        $callNumber = $row[3] ?? null;
-        $authorNumber = $this->parseAuthorNumber($callNumber);
 
         if (empty($authorNames)) {
             return [];
@@ -248,8 +211,6 @@ class BookImportSeeder extends Seeder
         foreach ($authorNames as $index => $authorName) {
             $authors[] = [
                 'name' => $authorName,
-                // Only assign author_number to the primary author (first in array)
-                'author_number' => $index === 0 ? $authorNumber : null,
                 // Dynamic role assignment: 'primary author' for first, 'co-author' for others
                 'role' => $index === 0 ? 'primary author' : 'co-author'
             ];
@@ -259,7 +220,7 @@ class BookImportSeeder extends Seeder
     }
 
     /**
-     * Attach authors to a book with their roles and author number.
+     * Attach authors to a book with their roles.
      *
      * @param mixed $book
      * @param array $authorData
@@ -270,17 +231,8 @@ class BookImportSeeder extends Seeder
             // Find or create the author
             $author = Author::firstOrCreate(
                 ['name' => $authorInfo['name']],
-                [
-                    'name' => $authorInfo['name'],
-                    'author_number' => $authorInfo['author_number'] // Save author_number (null for co-authors)
-                ]
+                ['name' => $authorInfo['name']]
             );
-
-            // Update author_number only if it exists in the current data and is different
-            // Only primary authors should have author_number updated
-            if (!empty($authorInfo['author_number']) && $author->author_number !== $authorInfo['author_number']) {
-                $author->update(['author_number' => $authorInfo['author_number']]);
-            }
 
             // Attach author to book with role
             $book->authors()->attach($author->id, [

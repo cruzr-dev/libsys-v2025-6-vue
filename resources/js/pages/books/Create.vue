@@ -164,10 +164,6 @@ const isLocationOverridden = ref(false);
 const isDDCOverridden = ref(false);
 const isYearOverridden = ref(false);
 const isCallNumberValid = ref(true);
-const cutterNumber = ref<string | null>(null);
-const isAuthorNotFound = ref(false);
-const isLoadingAuthor = ref(false);
-const hasAutoSelectedAuthor = ref(false);
 
 // Function to extract DDC number from call number
 const extractDDCNumber = (callNumber: string): string | null => {
@@ -213,101 +209,19 @@ const extractYear = (callNumber: string): string | null => {
     return null;
 };
 
-// Function to extract Cutter number from call number
-const extractCutterNumber = (callNumber: string): string | null => {
-    if (!callNumber) return null;
-    const parts = callNumber.trim().split(/[\s.]/);
-    const ddcPart = parts.find((part) => /^\d+(\.\d+)?$/.test(part));
-    const ddcIndex = ddcPart ? parts.indexOf(ddcPart) : -1;
-    if (ddcIndex !== -1 && ddcIndex + 1 < parts.length) {
-        const cutterCandidate = parts[ddcIndex + 1];
-        if (/^[A-Za-z]+\d+/.test(cutterCandidate)) {
-            return cutterCandidate;
-        }
-    }
-    return null;
-};
-
-// Auto-select author based on cutter number
-const autoSelectFromCutter = async (cutterNumber: string) => {
-    if (!cutterNumber || hasAutoSelectedAuthor.value) return;
-
-    isLoadingAuthor.value = true;
-    isAuthorNotFound.value = false;
-
-    try {
-        const url = new URL('/api/authors/search', window.location.origin);
-        url.searchParams.append('cutter_number', cutterNumber);
-
-        const response = await fetch(url, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            const authors = data.authors || data || [];
-
-            const matchingAuthor = authors.find((author) => author.author_number?.toLowerCase() === cutterNumber.toLowerCase());
-
-            if (matchingAuthor) {
-                await nextTick();
-                form.primary_author = matchingAuthor.name;
-                handleAuthorSelected(matchingAuthor);
-                hasAutoSelectedAuthor.value = true;
-                isAuthorNotFound.value = false;
-            } else {
-                await nextTick();
-                form.primary_author = '';
-                handleAuthorSelected(null);
-                hasAutoSelectedAuthor.value = false;
-                isAuthorNotFound.value = true;
-            }
-        } else {
-            console.error('Author search failed:', response.statusText);
-            form.primary_author = '';
-            handleAuthorSelected(null);
-            isAuthorNotFound.value = true;
-        }
-    } catch (error) {
-        console.error('Author search error:', error);
-        form.primary_author = '';
-        handleAuthorSelected(null);
-        isAuthorNotFound.value = true;
-    } finally {
-        isLoadingAuthor.value = false;
-    }
-};
-
 // Watch for changes in call_number and auto-select fields
 watch(
     () => form.call_number,
-    (newCallNumber: string, oldCallNumber: string) => {
+    (newCallNumber: string) => {
         isLocationAutoSelected.value = false;
         isDDCAutoSelected.value = false;
         isYearAutoSelected.value = false;
         isCallNumberValid.value = true;
-        isAuthorNotFound.value = false;
-
-        const newCutter = extractCutterNumber(newCallNumber);
-        const oldCutter = extractCutterNumber(oldCallNumber);
-
-        if (newCutter !== oldCutter) {
-            form.primary_author = '';
-            cutterNumber.value = newCutter;
-            hasAutoSelectedAuthor.value = false;
-        }
 
         if (!newCallNumber) {
             form.physical_location_id = '';
             form.ddc_class_id = '';
             form.publication_year = '';
-            form.primary_author = '';
-            cutterNumber.value = null;
-            hasAutoSelectedAuthor.value = false;
-            isAuthorNotFound.value = false;
             return;
         }
 
@@ -346,47 +260,6 @@ watch(
         } else {
             form.publication_year = '';
             isCallNumberValid.value = false;
-        }
-
-        cutterNumber.value = newCutter;
-        if (!newCutter) {
-            form.primary_author = '';
-            isCallNumberValid.value = false;
-            isAuthorNotFound.value = false;
-        }
-    },
-);
-
-const handleAuthorSelected = (author: any) => {
-    form.primary_author = author ? author.name : '';
-    isAuthorNotFound.value = !author && !form.primary_author;
-};
-
-// Watch for cutterNumber changes
-watch(
-    () => cutterNumber.value,
-    (newCutterNumber, oldCutterNumber) => {
-        if (newCutterNumber && newCutterNumber !== oldCutterNumber) {
-            hasAutoSelectedAuthor.value = false;
-            isAuthorNotFound.value = false;
-            autoSelectFromCutter(newCutterNumber);
-        } else if (!newCutterNumber) {
-            hasAutoSelectedAuthor.value = false;
-            isAuthorNotFound.value = false;
-            form.primary_author = '';
-            handleAuthorSelected(null);
-        }
-    },
-    { immediate: true },
-);
-
-// Watch for manual changes to primary_author
-watch(
-    () => form.primary_author,
-    (newValue, oldValue) => {
-        if (isAuthorNotFound.value && newValue !== oldValue) {
-            hasAutoSelectedAuthor.value = false; // Reset auto-selection on manual input
-            isAuthorNotFound.value = !newValue; // Update not found state based on input
         }
     },
 );
@@ -484,45 +357,12 @@ const submit = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="primary_author">Primary Author</Label>
-                                <div class="relative">
-                                    <Input
-                                        v-model="form.primary_author"
-                                        :disabled="isLoadingAuthor || (hasAutoSelectedAuthor && !isAuthorNotFound)"
-                                        :placeholder="
-                                            isLoadingAuthor
-                                                ? 'Loading...'
-                                                : isAuthorNotFound
-                                                  ? 'Enter author name'
-                                                  : hasAutoSelectedAuthor
-                                                    ? 'Auto-selected from Cutter number'
-                                                    : 'Enter or auto-select from Cutter number'
-                                        "
-                                        :class="[
-                                            isAuthorNotFound ? 'bg-white' : 'bg-gray-50',
-                                            form.primary_author ? 'text-gray-900' : 'text-gray-500',
-                                            isAuthorNotFound ? 'text-gray-900' : '',
-                                            isLoadingAuthor || (hasAutoSelectedAuthor && !isAuthorNotFound) ? 'cursor-not-allowed' : 'cursor-text',
-                                        ]"
-                                    />
-                                    <div v-if="isLoadingAuthor" class="absolute top-1/2 right-3 -translate-y-1/2 transform">
-                                        <div class="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"></div>
-                                    </div>
-                                    <div
-                                        v-else-if="!form.primary_author && !isLoadingAuthor"
-                                        class="absolute top-1/2 right-3 -translate-y-1/2 transform"
-                                    >
-                                        <BookOpen class="size-4 text-muted-foreground" />
-                                    </div>
-                                </div>
-                                <span
-                                    v-if="cutterNumber && form.primary_author && hasAutoSelectedAuthor && !isAuthorNotFound"
-                                    class="text-sm text-green-500"
-                                >
-                                    Auto selected from Cutter number
-                                </span>
-                                <span v-if="cutterNumber && isAuthorNotFound" class="text-sm text-red-500">
-                                    No author found for Cutter number, please enter manually
-                                </span>
+                                <Input
+                                    v-model="form.primary_author"
+                                    placeholder="Enter author name"
+                                    id="primary_author"
+                                    type="text"
+                                />
                                 <InputError :message="form.errors.primary_author" />
                             </div>
                             <div class="col-span-2 grid gap-2">

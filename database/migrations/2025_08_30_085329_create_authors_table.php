@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('authors', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
-            $table->string('author_number')->nullable();
             $table->timestamps();
         });
     }
