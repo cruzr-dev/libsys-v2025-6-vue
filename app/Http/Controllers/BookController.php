@@ -12,6 +12,7 @@ use App\Models\DdcClassification;
 use App\Models\PhysicalLocation;
 use App\Models\Record;
 use App\Models\Source;
+use App\Services\QrCodeService;
 use App\Services\BookCoverImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -161,7 +162,11 @@ class BookController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, BookCoverImageService $imageService): \Illuminate\Http\RedirectResponse
+    public function store(
+        Request $request,
+        BookCoverImageService $imageService,
+        QrCodeService $qrCodeService
+    ): \Illuminate\Http\RedirectResponse
     {
         // 1. Validation
         $validated = $request->validate([
