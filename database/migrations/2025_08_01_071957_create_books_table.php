@@ -34,6 +34,7 @@ return new class extends Migration
             $table->foreignId('cover_type_id')->nullable()
                 ->constrained('cover_types')->onDelete('set null');
             $table->string('cover_image')->nullable();
+            $table->string('qrcode_path')->nullable();
 
             $table->string('ics_number')->nullable();
             $table->date('ics_date')->nullable();
