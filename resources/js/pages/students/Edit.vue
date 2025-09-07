@@ -61,7 +61,7 @@ const props = defineProps<{
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
     { title: 'Students', href: '/users/students' },
-    { title: 'Edit Student', href: `/users/students/${props.student.id}/edit` },
+    { title: 'Edit Graduate', href: `/users/students/${props.student.id}/edit` },
 ];
 
 // Initialize the form with student data - DON'T include profile_image in the initial form data

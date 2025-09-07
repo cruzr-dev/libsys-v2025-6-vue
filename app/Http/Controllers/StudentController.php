@@ -117,7 +117,7 @@ class StudentController extends Controller
         $studentType = UserType::where('key', 'student')->first();
         if (! $studentType) {
             return back()->withInput()
-                ->with('error', 'Student user type not found. Please contact the system administrator.');
+                ->with('error', 'Graduate user type not found. Please contact the system administrator.');
         }
 
         // 3. Transaction
@@ -153,10 +153,10 @@ class StudentController extends Controller
             });
 
             return to_route('students.index')
-                ->with('success', 'You successfully created a new Student with barcode');
+                ->with('success', 'You successfully created a new Graduate with barcode');
 
         } catch (\Throwable $e) {
-            \Log::error('Error creating Student: ' . $e->getMessage(), [
+            \Log::error('Error creating Graduate: ' . $e->getMessage(), [
                 'library_id' => $validated['library_id'],
                 'email'      => $validated['email'],
             ]);
@@ -274,10 +274,10 @@ class StudentController extends Controller
             });
 
             return to_route('students.index')
-                ->with('success', 'Student updated successfully');
+                ->with('success', 'Graduate updated successfully');
 
         } catch (\Throwable $e) {
-            \Log::error('Error updating Student: ' . $e->getMessage(), [
+            \Log::error('Error updating Graduate: ' . $e->getMessage(), [
                 'user_id'    => $user->id,
                 'library_id' => $validated['library_id'],
                 'email'      => $validated['email'],
@@ -297,7 +297,7 @@ class StudentController extends Controller
 
             return redirect()
                 ->route('students.index')
-                ->with('success', 'Student deleted successfully.');
+                ->with('success', 'Graduate deleted successfully.');
         } catch (\Exception $e) {
             return redirect()
                 ->route('students.index')

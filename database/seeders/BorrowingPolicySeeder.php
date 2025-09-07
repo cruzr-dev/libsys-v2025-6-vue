@@ -22,7 +22,7 @@ class BorrowingPolicySeeder extends Seeder
 
         $policies = [
             [
-                'name' => 'Undergraduate Student Policy',
+                'name' => 'Undergraduate Graduate Policy',
                 'user_type_id' => $studentType->id,
                 'college_type' => 'undergraduate',
                 'max_items' => 5,
@@ -39,7 +39,7 @@ class BorrowingPolicySeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Graduate Student Policy',
+                'name' => 'Graduate Graduate Policy',
                 'user_type_id' => $studentType->id,
                 'college_type' => 'undergraduate',
                 'max_items' => 10,

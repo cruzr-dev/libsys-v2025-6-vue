@@ -199,7 +199,7 @@ class UserController extends Controller
                                 } else {
                                     $student_type = 'Graduate';
                                 }
-                                $user_type = 'Student';
+                                $user_type = 'Graduate';
                             }
                             $user_type_from_db = UserType::where('name', $user_type)->first();
                             if ($user_type_from_db) {
