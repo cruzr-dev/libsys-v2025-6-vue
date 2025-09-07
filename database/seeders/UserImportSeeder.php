@@ -57,7 +57,8 @@ class UserImportSeeder extends Seeder
     private function getUserTypeIds(): array
     {
         return [
-            'student' => UserType::where('key', 'student')->firstOrFail()->id,
+            'undergraduate' => UserType::where('key', 'undergraduate')->firstOrFail()->id,
+            'graduate_school' => UserType::where('key', 'graduate_school')->firstOrFail()->id,
             'faculty' => UserType::where('key', 'faculty')->firstOrFail()->id,
             'staff' => UserType::where('key', 'staff')->firstOrFail()->id,
         ];
@@ -88,7 +89,7 @@ class UserImportSeeder extends Seeder
                 $userData = $this->parseUserData($row, $userTypeIds);
                 $user = User::create($userData);
 
-                if ($user->user_type_id == $userTypeIds['student']) {
+                if (in_array($user->user_type_id, [$userTypeIds['undergraduate'], $userTypeIds['graduate_school']])) {
                     $this->createStudentRecord($user, $row);
                 }
 
@@ -216,8 +217,8 @@ class UserImportSeeder extends Seeder
         if (!empty($value) && is_string($value)) {
             $userType = ucwords($value);
             return match ($userType) {
-                'Undergraduate' => $userTypeIds['student'],
-                'Graduate', 'Graduate School' => $userTypeIds['student'],
+                'Undergraduate' => $userTypeIds['undergraduate'],
+                'Graduate', 'Graduate School' => $userTypeIds['graduate_school'],
                 'Faculty' => $userTypeIds['faculty'],
                 'Staff' => $userTypeIds['staff'],
                 default => null,
@@ -227,12 +228,12 @@ class UserImportSeeder extends Seeder
     }
 
     /**
-     * Create student record for a user.
+     * Create undergraduate record for a user.
      *
      * @param User $user
      * @param array $row
      */
-    private function createStudentRecord(User $user, array $row): void
+    private function createUndergraduateRecord(User $user, array $row): void
     {
         try {
             // Get a random college
@@ -269,14 +270,67 @@ class UserImportSeeder extends Seeder
         }
 
         $contactNumber = $this->parseContactNumber($row[7] ?? null);
-        $studentData = [
+        $undergraduateData = [
             'college_id' => $collegeId,
             'course_id' => $courseId,
             'major_id' => $majorId,
             'contact_number' => $contactNumber,
         ];
 
-        $user->student()->create($studentData);
+        $user->undergraduate()->create($undergraduateData);
+    }
+
+    /**
+     * Create graduate school record for a user.
+     *
+     * @param User $user
+     * @param array $row
+     */
+    private function createGraduateSchoolRecord(User $user, array $row): void
+    {
+        try {
+            // Get a random college
+            $college = College::inRandomOrder()->first();
+
+            if (!$college) {
+                Log::error('No colleges found in database');
+                $collegeId = null;
+                $courseId = null;
+                $majorId = null;
+            } else {
+                $collegeId = $college->id;
+
+                // Get a random course from the selected college
+                $course = $college->courses()->inRandomOrder()->first();
+
+                if (!$course) {
+                    Log::error("No courses found for college: {$college->code}");
+                    $courseId = null;
+                    $majorId = null;
+                } else {
+                    $courseId = $course->id;
+
+                    // Get a random major from the selected course (if any exist)
+                    $major = $course->majors()->inRandomOrder()->first();
+                    $majorId = $major ? $major->id : null;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error selecting random college/course: ' . $e->getMessage());
+            $collegeId = null;
+            $courseId = null;
+            $majorId = null;
+        }
+
+        $contactNumber = $this->parseContactNumber($row[7] ?? null);
+        $graduateSchoolData = [
+            'college_id' => $collegeId,
+            'course_id' => $courseId,
+            'major_id' => $majorId,
+            'contact_number' => $contactNumber,
+        ];
+
+        $user->graduateSchool()->create($graduateSchoolData);
     }
 
     /**
