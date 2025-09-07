@@ -23,20 +23,19 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
 </script>
 
 <template>
-    <div class="p-2">
+    <div class="p-4 pt-2">
         <header class="flex flex-wrap items-center justify-between gap-2">
             <nav class="flex flex-wrap gap-1">
-                <Button v-for="item in sidebarNavItems" :key="item.href" variant="ghost" size="sm" :class="{ 'bg-muted': currentPath.startsWith(item.href) }" as-child>
+                <Button v-for="item in sidebarNavItems" :key="item.href" variant="ghost" size="sm" :class="{ 'bg-primary text-background': currentPath.startsWith(item.href) }" as-child>
                     <Link :href="item.href">{{ item.title }}</Link>
                 </Button>
             </nav>
             <nav class="flex flex-wrap gap-1">
-                <Button v-for="item in rightNavItems" :key="item.href" variant="ghost" size="sm" :class="{ 'bg-muted': currentPath.startsWith(item.href) }" as-child>
+                <Button v-for="item in rightNavItems" :key="item.href" variant="ghost" size="sm" :class="{ 'bg-primary text-background': currentPath.startsWith(item.href) }" as-child>
                     <Link :href="item.href">{{ item.title }}</Link>
                 </Button>
             </nav>
         </header>
-        <Separator class="my-1" />
         <main class="min-h-0"><slot /></main>
     </div>
 </template>
