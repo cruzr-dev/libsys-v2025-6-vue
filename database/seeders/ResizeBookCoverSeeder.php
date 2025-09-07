@@ -18,25 +18,32 @@ class ResizeBookCoverSeeder extends Seeder
         // Get all files in the resized_book_covers directory
         $files = Storage::disk('public')->files('raw_book_covers');
 
-        $this->command->info('Starting to resize book covers...');
+        $totalFiles = count($files);
+        $successCount = 0;
+        $errorCount = 0;
+
+        $this->command->info("Starting to resize {$totalFiles} book covers...");
 
         foreach ($files as $filePath) {
             // Extract just the filename with extension
             $filename = basename($filePath);
 
-            $this->command->info("Resizing: {$filename}");
-
             try {
                 // Use the resize method from BookCoverImageService
                 $resizedFilename = $bookCoverService->resize($filename);
+                $successCount++;
 
-                $this->command->info("Successfully resized: {$resizedFilename}");
+                // Only show progress every 10 files or for errors
+                if ($successCount % 10 === 0) {
+                    $this->command->info("Progress: {$successCount}/{$totalFiles} completed");
+                }
 
             } catch (\Exception $e) {
+                $errorCount++;
                 $this->command->error("Failed to resize {$filename}: " . $e->getMessage());
             }
         }
 
-        $this->command->info('Book cover resizing completed!');
+        $this->command->info("Book cover resizing completed! Success: {$successCount}, Errors: {$errorCount}");
     }
 }

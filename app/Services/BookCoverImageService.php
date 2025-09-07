@@ -45,6 +45,13 @@ class BookCoverImageService
      */
     public function resize(string $filename_with_extension): string
     {
+        $resizedPath = "resized_book_covers/{$filename_with_extension}";
+
+        // Check if resized version already exists
+        if (Storage::disk('public')->exists($resizedPath)) {
+            return $filename_with_extension; // Already resized, return early
+        }
+
         $path = "raw_book_covers/{$filename_with_extension}";
 
         // Check if the source file exists in storage
@@ -64,8 +71,8 @@ class BookCoverImageService
         // Encode as JPG (quality 85 for better cover detail)
         $encoded = $image->encode(new JpegEncoder(quality: 85));
 
-        // Save back to storage with same filename
-        Storage::disk('public')->put('resized_book_covers', (string) $encoded);
+        // Save to resized folder with the filename
+        Storage::disk('public')->put($resizedPath, (string) $encoded);
 
         return $filename_with_extension;
     }
