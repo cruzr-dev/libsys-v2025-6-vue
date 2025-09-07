@@ -65,7 +65,7 @@ class BookCoverImageService
         $encoded = $image->encode(new JpegEncoder(quality: 85));
 
         // Save back to storage with same filename
-        Storage::disk('public')->put($path, (string) $encoded);
+        Storage::disk('public')->put('book_covers', (string) $encoded);
 
         return $filename_with_extension;
     }
