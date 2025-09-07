@@ -69,12 +69,12 @@ const mainNavItems = computed((): NavItem[] => [
         ]),
         items: [
             {
-                title: "Genesis",
+                title: "Users",
                 url: "/test",
                 isActive: isRouteActive('/test'),
             },
             {
-                title: "Explorer",
+                title: "Collection",
                 url: "/explorer",
                 isActive: isRouteActive('/explorer'),
             },
