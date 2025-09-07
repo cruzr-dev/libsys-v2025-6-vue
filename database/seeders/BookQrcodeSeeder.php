@@ -45,7 +45,6 @@ class BookQrcodeSeeder extends Seeder
                         // File exists, just update the book record with the path
                         $book->update(['qrcode_path' => $filename]);
                         $skippedCount++;
-                        $this->command->info("\nQR code already exists for accession: {$book->record->accession_number}");
                     } else {
                         // Generate QR code from accession number
                         $qrCode = QrCode::create($book->record->accession_number)

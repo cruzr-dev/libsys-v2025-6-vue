@@ -38,7 +38,6 @@ class UserBarcodeSeeder extends Seeder
                         // File exists, just update the user record with the path
                         $user->update(['barcode_path' => $filename]);
                         $skippedCount++;
-                        $this->command->info("\nBarcode already exists for card: {$user->card_number}");
                     } else {
                         // Generate barcode
                         $barcodeData = $generator->getBarcode($user->card_number, $generator::TYPE_CODE_128);
