@@ -14,7 +14,8 @@ class BorrowingPolicySeeder extends Seeder
      */
     public function run(): void
     {
-        $studentType = UserType::where('key', 'student')->firstOrFail();
+        $undergradStudentType = UserType::where('key', 'undergraduate_student')->firstOrFail();
+        $gradStudentType = UserType::where('key', 'graduate_student')->firstOrFail();
         $facultyType = UserType::where('key', 'faculty')->firstOrFail();
         $staffType = UserType::where('key', 'staff')->firstOrFail();
         $staffAdminType = UserType::where('key', 'library_staff')->firstOrFail();
@@ -22,9 +23,8 @@ class BorrowingPolicySeeder extends Seeder
 
         $policies = [
             [
-                'name' => 'UndergraduateStudent GraduateStudent Policy',
-                'user_type_id' => $studentType->id,
-                'college_type' => 'undergraduate',
+                'name' => 'Undergraduate Student Policy',
+                'user_type_id' => $undergradStudentType->id,
                 'max_items' => 5,
                 'loan_period_days' => 3,
                 'renewal_limit' => 2,
@@ -39,9 +39,8 @@ class BorrowingPolicySeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'name' => 'GraduateStudent GraduateStudent Policy',
-                'user_type_id' => $studentType->id,
-                'college_type' => 'undergraduate',
+                'name' => 'Graduate Student Policy',
+                'user_type_id' => $gradStudentType->id,
                 'max_items' => 10,
                 'loan_period_days' => 7,
                 'renewal_limit' => 3,
@@ -58,7 +57,6 @@ class BorrowingPolicySeeder extends Seeder
             [
                 'name' => 'Faculty Policy',
                 'user_type_id' => $facultyType->id,
-                'college_type' => null,
                 'max_items' => 15,
                 'loan_period_days' => 120,
                 'renewal_limit' => 5,
@@ -75,7 +73,6 @@ class BorrowingPolicySeeder extends Seeder
             [
                 'name' => 'Staff Admin Policy',
                 'user_type_id' => $staffAdminType->id,
-                'college_type' => null,
                 'max_items' => 10,
                 'loan_period_days' => 120,
                 'renewal_limit' => 3,
@@ -92,7 +89,6 @@ class BorrowingPolicySeeder extends Seeder
             [
                 'name' => 'Staff Policy',
                 'user_type_id' => $staffType->id,
-                'college_type' => null,
                 'max_items' => 10,
                 'loan_period_days' => 120,
                 'renewal_limit' => 3,
@@ -109,7 +105,6 @@ class BorrowingPolicySeeder extends Seeder
             [
                 'name' => 'Super Admin Policy',
                 'user_type_id' => $superAdminType->id,
-                'college_type' => null,
                 'max_items' => 20,
                 'loan_period_days' => 240,
                 'renewal_limit' => 10,
@@ -126,7 +121,6 @@ class BorrowingPolicySeeder extends Seeder
             [
                 'name' => 'Borrow Inside Policy',
                 'user_type_id' => null,
-                'college_type' => null,
                 'max_items' => 5,
                 'loan_period_days' => 1,
                 'renewal_limit' => 3,
@@ -144,5 +138,4 @@ class BorrowingPolicySeeder extends Seeder
 
         DB::table('borrowing_policies')->insert($policies);
     }
-
 }

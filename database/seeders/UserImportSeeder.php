@@ -280,7 +280,7 @@ class UserImportSeeder extends Seeder
             'contact_number' => $contactNumber,
         ];
 
-        $user->undergraduate()->create($undergraduateData);
+        $user->undergraduateStudent()->create($undergraduateData);
     }
 
     /**
@@ -333,7 +333,7 @@ class UserImportSeeder extends Seeder
             'contact_number' => $contactNumber,
         ];
 
-        $user->graduateSchool()->create($graduateSchoolData);
+        $user->graduateStudent()->create($graduateSchoolData);
     }
 
     /**
