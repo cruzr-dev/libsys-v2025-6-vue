@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import { ref, onMounted, watch } from "vue"
 import { Check, ChevronsUpDown } from "lucide-vue-next"
 import {
     Combobox,
@@ -19,32 +19,39 @@ interface CoverType {
     name: string
 }
 
+// Emit selected key
+const emit = defineEmits<{
+    (e: "update:coverTypeId", value: string | null): void
+}>()
+
 // Reactive state for cover types and selected item
 const coverTypes = ref<CoverType[]>([])
 const selected = ref<CoverType | null>(null)
 
+// Watch and emit the cover_type id whenever selection changes
+watch(selected, (val) => {
+    emit("update:coverTypeId", val?.key ?? null)
+})
+
 // Fetch cover types from API
 const fetchCoverTypes = async () => {
     try {
-        // Replace with your actual API endpoint
-        const response = await fetch('/api/books/cover-types', {
+        const response = await fetch("/api/books/cover-types", {
             headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            }
-        });
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        })
         if (!response.ok) {
-            throw new Error('Failed to fetch cover types')
+            throw new Error("Failed to fetch cover types")
         }
         const data = await response.json()
-        // Assuming API returns an array of { key: string, name: string }
         coverTypes.value = data
     } catch (error) {
-        console.error('Error fetching cover types:', error)
+        console.error("Error fetching cover types:", error)
     }
 }
 
-// Fetch data when component is mounted
 onMounted(fetchCoverTypes)
 </script>
 

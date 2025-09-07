@@ -460,7 +460,7 @@ const submit = () => {
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div class="grid gap-2">
                                 <Label for="cover_type">Cover Type</Label>
-                                <CoverTypeComboBox />
+                                <CoverTypeComboBox v-model:coverTypeId="form.cover_type_id"/>
                             </div>
                             <div class="grid gap-2">
                                 <Label for="cover_image">Cover Page</Label>
