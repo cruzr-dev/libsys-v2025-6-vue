@@ -89,9 +89,12 @@ class UserImportSeeder extends Seeder
                 $userData = $this->parseUserData($row, $userTypeIds);
                 $user = User::create($userData);
 
-                if (in_array($user->user_type_id, [$userTypeIds['undergraduate'], $userTypeIds['graduate_school']])) {
-                    $this->createStudentRecord($user, $row);
+                if ($user->user_type_id === $userTypeIds['undergraduate']) {
+                    $this->createUndergraduateRecord($user, $row);
+                } elseif ($user->user_type_id === $userTypeIds['graduate_school']) {
+                    $this->createGraduateSchoolRecord($user, $row);
                 }
+
 
                 $importedCount++;
             } catch (\Exception $e) {
