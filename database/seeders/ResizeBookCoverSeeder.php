@@ -18,11 +18,14 @@ class ResizeBookCoverSeeder extends Seeder
         // Get all files in the resized_book_covers directory
         $files = Storage::disk('public')->files('raw_book_covers');
 
-        $totalFiles = count($files);
         $successCount = 0;
         $errorCount = 0;
 
-        $this->command->info("Starting to resize {$totalFiles} book covers...");
+        $this->command->info("Starting to resize book covers...");
+
+        // Create progress bar
+        $progressBar = $this->command->getOutput()->createProgressBar(count($files));
+        $progressBar->start();
 
         foreach ($files as $filePath) {
             // Extract just the filename with extension
@@ -33,17 +36,18 @@ class ResizeBookCoverSeeder extends Seeder
                 $resizedFilename = $bookCoverService->resize($filename);
                 $successCount++;
 
-                // Only show progress every 10 files or for errors
-                if ($successCount % 10 === 0) {
-                    $this->command->info("Progress: {$successCount}/{$totalFiles} completed");
-                }
-
             } catch (\Exception $e) {
                 $errorCount++;
+                // Show error on new line without breaking progress bar
+                $progressBar->clear();
                 $this->command->error("Failed to resize {$filename}: " . $e->getMessage());
+                $progressBar->display();
             }
+
+            $progressBar->advance();
         }
 
+        $progressBar->finish();
+        $this->command->newLine(2);
         $this->command->info("Book cover resizing completed! Success: {$successCount}, Errors: {$errorCount}");
-    }
-}
+    }}

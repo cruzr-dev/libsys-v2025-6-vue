@@ -32,6 +32,7 @@ class BookImportSeeder extends Seeder
         }
 
         $this->call(BookQrcodeSeeder::class);
+        $this->call(ResizeBookCoverSeeder::class);
     }
 
     /**
