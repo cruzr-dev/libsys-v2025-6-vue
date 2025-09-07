@@ -28,7 +28,7 @@ class BookCoverImageService
         $image = $this->imageManager->read($file->getRealPath());
 
         // Resize proportionally to fit max width/height (e.g., 600x900)
-        $image = $image->scaleDown(600, 900);
+        $image = $image->cover(600, 900);
 
         // Encode as JPG (quality 85 for better cover detail)
         $encoded = $image->encode(new JpegEncoder(quality: 85));
