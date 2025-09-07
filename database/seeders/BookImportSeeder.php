@@ -30,6 +30,8 @@ class BookImportSeeder extends Seeder
         } catch (\Exception $e) {
             $this->handleException($e);
         }
+
+        $this->call(BookQrcodeSeeder::class);
     }
 
     /**
