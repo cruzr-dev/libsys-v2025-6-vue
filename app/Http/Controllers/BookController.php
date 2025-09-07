@@ -166,8 +166,7 @@ class BookController extends Controller
         Request $request,
         BookCoverImageService $imageService,
         QrCodeService $qrCodeService
-    ): \Illuminate\Http\RedirectResponse
-    {
+    ): \Illuminate\Http\RedirectResponse {
         // 1. Validation
         $validated = $request->validate([
             // Basic Information
@@ -222,30 +221,37 @@ class BookController extends Controller
 
         // 2. Transaction
         try {
-            DB::transaction(function () use ($validated, $request, $imageService) {
+            DB::transaction(function () use ($validated, $request, $imageService, $qrCodeService) {
                 $coverImagePath = null;
 
                 if ($request->hasFile('cover_image')) {
-                    $coverImagePath = $imageService->store($request->file('cover_image'), $validated['accession_number']);
+                    $coverImagePath = $imageService->store(
+                        $request->file('cover_image'),
+                        $validated['accession_number']
+                    );
                 }
 
                 $subject = null;
                 if (!empty($validated['subject_headings'])) {
                     $subject = collect($validated['subject_headings'])
                         ->map(fn($heading, $i) => ($i + 1) . '. ' . trim($heading) . '.')
-                        ->implode(' '); // join into one string
+                        ->implode(' ');
                 }
 
                 $record = Record::create([
                     'accession_number' => $validated['accession_number'],
                     'title'            => $validated['title'],
-                    'subject'          => $subject, // <-- formatted string
+                    'subject'          => $subject,
                     'status'           => $validated['status'],
                     'date_received'    => now(),
                     'added_by'         => auth()->id(),
                 ]);
 
-                // Create book record (without author/editor fields)
+                // Generate QR Code for accession number
+                $qrCodePath = $qrCodeService->store($validated['accession_number']);
+                $record->update(['qr_code_path' => $qrCodePath]);
+
+                // Create book record
                 $book = $record->book()->create([
                     'volume'               => $validated['volume'],
                     'edition'              => $validated['edition'],
@@ -295,7 +301,7 @@ class BookController extends Controller
             });
 
             return to_route('books.index')
-                ->with('success', 'Book record created successfully.');
+                ->with('success', 'Book record created successfully with QR code.');
         } catch (\Throwable $e) {
             Log::error('Error creating Book: ' . $e->getMessage(), [
                 'accession_number' => $validated['accession_number'],
