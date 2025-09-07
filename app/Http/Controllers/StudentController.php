@@ -117,7 +117,7 @@ class StudentController extends Controller
         $studentType = UserType::where('key', 'student')->first();
         if (! $studentType) {
             return back()->withInput()
-                ->with('error', 'Graduate user type not found. Please contact the system administrator.');
+                ->with('error', 'GraduateStudent user type not found. Please contact the system administrator.');
         }
 
         // 3. Transaction
@@ -153,10 +153,10 @@ class StudentController extends Controller
             });
 
             return to_route('students.index')
-                ->with('success', 'You successfully created a new Graduate with barcode');
+                ->with('success', 'You successfully created a new GraduateStudent with barcode');
 
         } catch (\Throwable $e) {
-            \Log::error('Error creating Graduate: ' . $e->getMessage(), [
+            \Log::error('Error creating GraduateStudent: ' . $e->getMessage(), [
                 'library_id' => $validated['library_id'],
                 'email'      => $validated['email'],
             ]);
@@ -274,10 +274,10 @@ class StudentController extends Controller
             });
 
             return to_route('students.index')
-                ->with('success', 'Graduate updated successfully');
+                ->with('success', 'GraduateStudent updated successfully');
 
         } catch (\Throwable $e) {
-            \Log::error('Error updating Graduate: ' . $e->getMessage(), [
+            \Log::error('Error updating GraduateStudent: ' . $e->getMessage(), [
                 'user_id'    => $user->id,
                 'library_id' => $validated['library_id'],
                 'email'      => $validated['email'],
@@ -297,7 +297,7 @@ class StudentController extends Controller
 
             return redirect()
                 ->route('students.index')
-                ->with('success', 'Graduate deleted successfully.');
+                ->with('success', 'GraduateStudent deleted successfully.');
         } catch (\Exception $e) {
             return redirect()
                 ->route('students.index')

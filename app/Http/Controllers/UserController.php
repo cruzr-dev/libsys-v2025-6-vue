@@ -193,13 +193,13 @@ class UserController extends Controller
                         $student_type = null;
                         if (!empty($row[11]) && is_string($row[11]) && $row[11] !== '') {
                             $user_type = ucwords($row[11]);
-                            if($user_type === 'Undergraduate' || $user_type === 'Graduate') {
-                                if ($user_type === 'Undergraduate') {
-                                    $student_type = 'Undergraduate';
+                            if($user_type === 'UndergraduateStudent' || $user_type === 'GraduateStudent') {
+                                if ($user_type === 'UndergraduateStudent') {
+                                    $student_type = 'UndergraduateStudent';
                                 } else {
-                                    $student_type = 'Graduate';
+                                    $student_type = 'GraduateStudent';
                                 }
-                                $user_type = 'Graduate';
+                                $user_type = 'GraduateStudent';
                             }
                             $user_type_from_db = UserType::where('name', $user_type)->first();
                             if ($user_type_from_db) {

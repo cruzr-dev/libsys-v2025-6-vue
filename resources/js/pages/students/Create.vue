@@ -43,7 +43,7 @@ const props = defineProps<{
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
     { title: 'Students', href: '/users/students' },
-    { title: 'Add Graduate', href: '/users/students/create' },
+    { title: 'Add GraduateStudent', href: '/users/students/create' },
 ];
 
 // Initialize the form with all necessary fields (pre-filled with incremented values)

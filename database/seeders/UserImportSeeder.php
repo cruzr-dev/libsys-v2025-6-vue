@@ -220,8 +220,8 @@ class UserImportSeeder extends Seeder
         if (!empty($value) && is_string($value)) {
             $userType = ucwords($value);
             return match ($userType) {
-                'Undergraduate' => $userTypeIds['undergraduate'],
-                'Graduate', 'Graduate School' => $userTypeIds['graduate_school'],
+                'UndergraduateStudent' => $userTypeIds['undergraduate'],
+                'GraduateStudent', 'GraduateStudent School' => $userTypeIds['graduate_school'],
                 'Faculty' => $userTypeIds['faculty'],
                 'Staff' => $userTypeIds['staff'],
                 default => null,

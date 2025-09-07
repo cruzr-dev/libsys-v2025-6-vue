@@ -18,8 +18,8 @@ class PhysicalLocationSeeder extends Seeder
             ['symbol' => 'Fic', 'name' => 'Fiction'],
             ['symbol' => 'Fil', 'name' => 'Filipiniana'],
             ['symbol' => 'Gr', 'name' => 'General References'],
-            ['symbol' => 'Gs', 'name' => 'Graduate School'],
-            ['symbol' => 'Gs/Fil', 'name' => 'Graduate School/Filipiniana'],
+            ['symbol' => 'Gs', 'name' => 'GraduateStudent School'],
+            ['symbol' => 'Gs/Fil', 'name' => 'GraduateStudent School/Filipiniana'],
             ['symbol' => null, 'name' => 'PCARRD'],
             ['symbol' => 'Res', 'name' => 'Reserve'],
         ];

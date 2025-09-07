@@ -150,7 +150,7 @@ class AcademicSeeder extends Seeder
 
         $gsars = College::create([
             'code' => 'GSARS',
-            'name' => 'Graduate School of Agriculture and Related Sciences',
+            'name' => 'GraduateStudent School of Agriculture and Related Sciences',
             'college_type' => 'graduate',
         ]);
 
@@ -195,7 +195,7 @@ class AcademicSeeder extends Seeder
 
         $gsoe = College::create([
             'code' => 'GSOE',
-            'name' => 'Graduate School of Engineering',
+            'name' => 'GraduateStudent School of Engineering',
             'college_type' => 'graduate',
         ]);
 
@@ -216,7 +216,7 @@ class AcademicSeeder extends Seeder
 
         $gstet = College::create([
             'code' => 'GSTET',
-            'name' => 'Graduate School of Teacher Education and Technology',
+            'name' => 'GraduateStudent School of Teacher Education and Technology',
             'college_type' => 'graduate',
         ]);
 

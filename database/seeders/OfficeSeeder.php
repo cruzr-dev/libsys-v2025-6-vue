@@ -16,7 +16,7 @@ class OfficeSeeder extends Seeder
         DB::table('offices')->insert([
             [
                 'acronym' => 'OSAS',
-                'name' => 'Office of Graduate Affairs and Services',
+                'name' => 'Office of GraduateStudent Affairs and Services',
             ],
             [
                 'acronym' => 'OF1',

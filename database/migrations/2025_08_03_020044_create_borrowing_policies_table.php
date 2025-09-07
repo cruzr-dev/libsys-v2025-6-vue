@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('borrowing_policies', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // e.g., 'Graduate Policy', 'Faculty Policy'
+            $table->string('name'); // e.g., 'GraduateStudent Policy', 'Faculty Policy'
             $table->foreignId('user_type_id')->nullable()
                 ->constrained('user_types')->nullOnDelete();
             $table->enum('college_type', ['undergraduate', 'graduate'])->nullable();
