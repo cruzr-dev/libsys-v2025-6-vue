@@ -181,7 +181,12 @@ class BookController extends Controller
             'isbn'                  => 'required|string|max:20|unique:books,isbn',
 
             // Classification & Location
-            'call_number'           => 'nullable|string|max:50',
+            'call_number' => [
+                'nullable',
+                'string',
+                'max:50',
+                'regex:/^(?:[a-z]{2,10}\s+)?\d{1,3}(\.\d+)?\s*[A-Z]\d{1,4}(\s*\d{4})?$/i'
+            ],
             'ddc_class_id'          => 'nullable|exists:ddc_classifications,id',
             'physical_location_id'  => 'required|exists:physical_locations,id',
 
