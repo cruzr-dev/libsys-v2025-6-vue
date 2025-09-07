@@ -13,9 +13,8 @@ return new class extends Migration
     {
         Schema::create('book_editor', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('book_id')->constrained('books')->onDelete('cascade');
-            $table->foreignId('editor_id')->constrained('editors')->onDelete('cascade');
-            $table->string('role')->nullable(); // e.g., "lead editor", "copy editor"
+            $table->foreignId('book_id')->constrained()->onDelete('cascade');
+            $table->foreignId('author_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AcademicPeriod;
+use App\Models\Author;
 use App\Models\LcClassification;
 use App\Models\Status;
 use App\Models\Book;
@@ -234,10 +235,8 @@ class BookController extends Controller
                     'added_by'         => auth()->id(),
                 ]);
 
-                $record->book()->create([
-                    'primary_author'       => $validated['primary_author'],
-                    'co_authors'           => $validated['co_authors'],
-                    'editors'              => $validated['editors'],
+                // Create book record (without author/editor fields)
+                $book = $record->book()->create([
                     'volume'               => $validated['volume'],
                     'edition'              => $validated['edition'],
                     'publication_year'     => $validated['publication_year'],
@@ -263,6 +262,26 @@ class BookController extends Controller
                     'replaced_by'          => $validated['replaced_by'],
                     'table_of_contents'    => $validated['table_of_contents'],
                 ]);
+
+                // Handle Primary Author
+                $primaryAuthor = $this->findOrCreateAuthor($validated['primary_author']);
+                $book->authors()->attach($primaryAuthor->id, ['role' => 'primary author']);
+
+                // Handle Co-Authors
+                if (!empty($validated['co_authors'])) {
+                    foreach ($validated['co_authors'] as $coAuthorName) {
+                        $coAuthor = $this->findOrCreateAuthor($coAuthorName);
+                        $book->authors()->attach($coAuthor->id, ['role' => 'co-author']);
+                    }
+                }
+
+                // Handle Editors
+                if (!empty($validated['editors'])) {
+                    foreach ($validated['editors'] as $editorName) {
+                        $editor = $this->findOrCreateAuthor($editorName);
+                        $book->editors()->attach($editor->id);
+                    }
+                }
             });
 
             return to_route('books.index')
@@ -277,6 +296,16 @@ class BookController extends Controller
         }
     }
 
+    /**
+     * Find or create an author by name
+     */
+    private function findOrCreateAuthor(string $name): Author
+    {
+        return Author::firstOrCreate(
+            ['name' => trim($name)],
+            ['name' => trim($name)]
+        );
+    }
     /**
      * Display the specified resource.
      */
