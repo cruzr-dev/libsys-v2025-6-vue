@@ -31,26 +31,38 @@ class BookQrcodeSeeder extends Seeder
         $progressBar->start();
 
         $writer = new PngWriter();
+        $skippedCount = 0;
+        $generatedCount = 0;
 
         foreach ($books as $book) {
             // Access accession_number from the related record
             if ($book->record && $book->record->accession_number) {
                 try {
-                    // Generate QR code from accession number
-                    $qrCode = QrCode::create($book->record->accession_number)
-                        ->setSize(300)        // size in px
-                        ->setMargin(10);      // margin around QR
-
-                    $qrResult = $writer->write($qrCode);
-
-                    // Save QR code
                     $filename = 'qrcodes/' . $book->record->accession_number . '.png';
-                    Storage::put($filename, $qrResult->getString());
 
-                    // Update book record
-                    $book->update(['qrcode_path' => $filename]);
+                    // Check if QR code already exists in storage
+                    if (Storage::exists($filename)) {
+                        // File exists, just update the book record with the path
+                        $book->update(['qrcode_path' => $filename]);
+                        $skippedCount++;
+                        $this->command->info("\nQR code already exists for accession: {$book->record->accession_number}");
+                    } else {
+                        // Generate QR code from accession number
+                        $qrCode = QrCode::create($book->record->accession_number)
+                            ->setSize(300)        // size in px
+                            ->setMargin(10);      // margin around QR
+
+                        $qrResult = $writer->write($qrCode);
+
+                        // Save QR code
+                        Storage::put($filename, $qrResult->getString());
+
+                        // Update book record
+                        $book->update(['qrcode_path' => $filename]);
+                        $generatedCount++;
+                    }
                 } catch (\Exception $e) {
-                    $this->command->error("Failed to generate QR code for book {$book->id}: " . $e->getMessage());
+                    $this->command->error("Failed to process QR code for book {$book->id}: " . $e->getMessage());
                 }
             }
 
@@ -58,6 +70,8 @@ class BookQrcodeSeeder extends Seeder
         }
 
         $progressBar->finish();
-        $this->command->info("\nQR code generation for books completed!");
+        $this->command->info("\nQR code processing completed!");
+        $this->command->info("Generated: {$generatedCount} new QR codes");
+        $this->command->info("Skipped: {$skippedCount} existing QR codes");
     }
 }

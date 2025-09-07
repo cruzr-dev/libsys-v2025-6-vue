@@ -25,22 +25,34 @@ class UserBarcodeSeeder extends Seeder
         $progressBar->start();
 
         $generator = new BarcodeGeneratorPNG();
+        $skippedCount = 0;
+        $generatedCount = 0;
 
         foreach ($users as $user) {
             if ($user->card_number) {
                 try {
-                    // Generate barcode
-                    $barcodeData = $generator->getBarcode($user->card_number, $generator::TYPE_CODE_128);
-
-                    // Save barcode (removed extra slash)
                     $filename = 'barcodes/' . $user->card_number . '.png';
-                    Storage::put($filename, $barcodeData);
 
-                    // Update user
-                    $user->update(['barcode_path' => $filename]);
+                    // Check if barcode already exists in storage
+                    if (Storage::exists($filename)) {
+                        // File exists, just update the user record with the path
+                        $user->update(['barcode_path' => $filename]);
+                        $skippedCount++;
+                        $this->command->info("\nBarcode already exists for card: {$user->card_number}");
+                    } else {
+                        // Generate barcode
+                        $barcodeData = $generator->getBarcode($user->card_number, $generator::TYPE_CODE_128);
+
+                        // Save barcode
+                        Storage::put($filename, $barcodeData);
+
+                        // Update user
+                        $user->update(['barcode_path' => $filename]);
+                        $generatedCount++;
+                    }
 
                 } catch (\Exception $e) {
-                    $this->command->error("Failed to generate barcode for user {$user->id}: " . $e->getMessage());
+                    $this->command->error("Failed to process barcode for user {$user->id}: " . $e->getMessage());
                 }
             }
 
@@ -48,6 +60,8 @@ class UserBarcodeSeeder extends Seeder
         }
 
         $progressBar->finish();
-        $this->command->info("\nBarcode generation completed!");
+        $this->command->info("\nBarcode processing completed!");
+        $this->command->info("Generated: {$generatedCount} new barcodes");
+        $this->command->info("Skipped: {$skippedCount} existing barcodes");
     }
 }
