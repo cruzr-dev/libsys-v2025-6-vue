@@ -6,8 +6,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 
 const sidebarNavItems: NavItem[] = [
     { title: 'All Patrons', href: '/users/all' },
-    { title: 'Undergraduate', href: '/users/students' },
-    { title: 'Graduate', href: '/users/graduate' },
+    { title: 'Student', href: '/users/students' },
     { title: 'Faculty', href: '/users/faculties' },
     { title: 'Staff', href: '/users/staff' },
 ];
