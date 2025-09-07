@@ -2,30 +2,35 @@
 
 namespace App\Services;
 
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class QrCodeService
 {
     /**
-     * Generate and store a QR code image for a given card number.
+     * Generate and store a QR code for the given accession number.
      *
-     * @param string|int $accessionNumber
-     * @return string The stored relative path (e.g. /qrcodes/123.png)
+     * @param  string  $accessionNumber
+     * @return string  Relative storage path
      */
-    public function store($accessionNumber): string
+    public function store(string $accessionNumber): string
     {
-        // Generate QR code as PNG binary data
-        $qrCodeData = QrCode::format('png')
-            ->size(300) // adjust size as needed
-            ->margin(2)
-            ->generate((string) $accessionNumber);
+        // Build QR code with GD backend (PngWriter)
+        $result = Builder::create()
+            ->writer(new PngWriter()) // <-- ensures GD backend
+            ->data($accessionNumber)
+            ->size(300)
+            ->margin(10)
+            ->build();
 
-        // Store file in storage/app/qrcodes/
-        $path = 'qrcodes/' . $accessionNumber . '.png';
-        Storage::put($path, $qrCodeData);
+        // Define path
+        $filename = $accessionNumber . '.png';
+        $path = 'qrcodes/' . $filename;
 
-        // Store with leading slash in DB for easy retrieval
-        return '/' . $path;
+        // Save to storage/app/public/qrcodes
+        Storage::disk('public')->put($path, $result->getString());
+
+        return $path;
     }
 }
