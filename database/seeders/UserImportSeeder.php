@@ -57,8 +57,8 @@ class UserImportSeeder extends Seeder
     private function getUserTypeIds(): array
     {
         return [
-            'undergraduate' => UserType::where('key', 'undergraduate')->firstOrFail()->id,
-            'graduate_school' => UserType::where('key', 'graduate_school')->firstOrFail()->id,
+            'undergraduate_student' => UserType::where('key', 'undergraduate_student')->firstOrFail()->id,
+            'graduate_student' => UserType::where('key', 'graduate_student')->firstOrFail()->id,
             'faculty' => UserType::where('key', 'faculty')->firstOrFail()->id,
             'staff' => UserType::where('key', 'staff')->firstOrFail()->id,
         ];
@@ -89,9 +89,9 @@ class UserImportSeeder extends Seeder
                 $userData = $this->parseUserData($row, $userTypeIds);
                 $user = User::create($userData);
 
-                if ($user->user_type_id === $userTypeIds['undergraduate']) {
+                if ($user->user_type_id === $userTypeIds['undergraduate_student']) {
                     $this->createUndergraduateRecord($user, $row);
-                } elseif ($user->user_type_id === $userTypeIds['graduate_school']) {
+                } elseif ($user->user_type_id === $userTypeIds['graduate_student']) {
                     $this->createGraduateSchoolRecord($user, $row);
                 }
 
@@ -220,8 +220,8 @@ class UserImportSeeder extends Seeder
         if (!empty($value) && is_string($value)) {
             $userType = ucwords($value);
             return match ($userType) {
-                'UndergraduateStudent' => $userTypeIds['undergraduate'],
-                'GraduateStudent', 'GraduateStudent School' => $userTypeIds['graduate_school'],
+                'UndergraduateStudent' => $userTypeIds['undergraduate_student'],
+                'Graduate', 'Graduate School' => $userTypeIds['graduate_student'],
                 'Faculty' => $userTypeIds['faculty'],
                 'Staff' => $userTypeIds['staff'],
                 default => null,
