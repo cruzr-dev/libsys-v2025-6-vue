@@ -727,7 +727,7 @@ console.log(data);
                                 <!-- Book Cover Image -->
                                 <img
                                     v-if="selectedBook?.cover_image"
-                                    :src="'/storage/book_covers/' + selectedBook.cover_image"
+                                    :src="'/storage/resized_book_covers/' + selectedBook.cover_image"
                                     alt="Book Cover"
                                     class="h-40 w-32 object-cover border shadow-md rounded"
                                 />

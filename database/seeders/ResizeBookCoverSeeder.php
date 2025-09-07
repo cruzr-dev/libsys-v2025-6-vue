@@ -15,7 +15,7 @@ class ResizeBookCoverSeeder extends Seeder
     {
         $bookCoverService = new BookCoverImageService();
 
-        // Get all files in the book_covers directory
+        // Get all files in the resized_book_covers directory
         $files = Storage::disk('public')->files('raw_book_covers');
 
         $this->command->info('Starting to resize book covers...');

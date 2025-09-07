@@ -34,7 +34,7 @@ class BookCoverImageService
         $encoded = $image->encode(new JpegEncoder(quality: 85));
 
         // Save to storage
-        $path = "book_covers/{$filename}";
+        $path = "resized_book_covers/{$filename}";
         Storage::disk('public')->put($path, (string) $encoded);
 
         return $filename;
@@ -65,7 +65,7 @@ class BookCoverImageService
         $encoded = $image->encode(new JpegEncoder(quality: 85));
 
         // Save back to storage with same filename
-        Storage::disk('public')->put('book_covers', (string) $encoded);
+        Storage::disk('public')->put('resized_book_covers', (string) $encoded);
 
         return $filename_with_extension;
     }
@@ -76,7 +76,7 @@ class BookCoverImageService
     public function delete(string $bookId): bool
     {
         $filename = $bookId . '.jpg';
-        $path = "book_covers/{$filename}";
+        $path = "resized_book_covers/{$filename}";
 
         if (Storage::disk('public')->exists($path)) {
             return Storage::disk('public')->delete($path);

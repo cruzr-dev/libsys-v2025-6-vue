@@ -674,7 +674,7 @@ const getRecordSpecificData = (record: any) => {
                                 <template v-if="selectedRecord?.record_type === 'book'">
                                     <img
                                         v-if="getRecordSpecificData(selectedRecord).cover_image"
-                                        :src="'/storage/book_covers/' + getRecordSpecificData(selectedRecord).cover_image"
+                                        :src="'/storage/resized_book_covers/' + getRecordSpecificData(selectedRecord).cover_image"
                                         alt="Book Cover"
                                         class="h-[225px] w-[150px] border-4 border-background object-cover shadow-lg"
                                     />
