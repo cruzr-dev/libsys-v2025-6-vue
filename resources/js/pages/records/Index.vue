@@ -1,32 +1,19 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import { ArrowUpDown, Search, X, Loader2, Eye, ChevronDown, Plus } from 'lucide-vue-next';
-import { h, ref, onMounted, watch, nextTick } from 'vue';
-import type { ColumnDef, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
-import {
-    FlexRender,
-    getCoreRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    getFilteredRowModel,
-    useVueTable,
-} from '@tanstack/vue-table';
+import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table';
+import { FlexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useVueTable } from '@tanstack/vue-table';
+import { ArrowUpDown, ChevronDown, Eye, Loader2, Plus, Search, X } from 'lucide-vue-next';
+import { h, nextTick, onMounted, ref, watch } from 'vue';
 
 // Utility function for debouncing
 function debounce(func: Function, wait: number) {
@@ -67,11 +54,11 @@ const statusTypes = [
 ];
 
 const getRecordTypeInfo = (type: string) => {
-    return recordTypes.find(rt => rt.value === type) || { value: type, label: type, color: 'bg-gray-100 text-gray-800' };
+    return recordTypes.find((rt) => rt.value === type) || { value: type, label: type, color: 'bg-gray-100 text-gray-800' };
 };
 
 const getStatusInfo = (status: string) => {
-    return statusTypes.find(s => s.key === status) || { key: status, label: status, color: 'bg-gray-100 text-gray-800' };
+    return statusTypes.find((s) => s.key === status) || { key: status, label: status, color: 'bg-gray-100 text-gray-800' };
 };
 
 // Reactive state
@@ -118,7 +105,7 @@ const restoreScrollPosition = () => {
     nextTick(() => {
         window.scrollTo({
             top: scrollPosition.value,
-            behavior: 'instant'
+            behavior: 'instant',
         });
     });
 };
@@ -135,7 +122,7 @@ const handleEdit = (id: string | number, recordType: string) => {
         book: 'records.books.edit',
         digitalResource: 'records.digital-resources.edit',
         periodical: 'records.periodicals.edit',
-        thesis: 'records.theses.edit'
+        thesis: 'records.theses.edit',
     };
 
     const routeName = routes[recordType as keyof typeof routes] || 'records.books.edit';
@@ -155,18 +142,14 @@ const columns: ColumnDef<any>[] = [
     {
         accessorKey: 'accession_number',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Acc. No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', row.getValue('accession_number')),
         enableHiding: false,
     },
     {
         accessorKey: 'title',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-sm' }, row.getValue('title')),
         enableHiding: false,
     },
@@ -176,9 +159,13 @@ const columns: ColumnDef<any>[] = [
         cell: ({ row }) => {
             const status = row.getValue('status') as string;
             const statusInfo = getStatusInfo(status);
-            return h(Badge, {
-                class: `${statusInfo.color} border-0 font-medium text-xs px-2 py-1`
-            }, () => statusInfo.label);
+            return h(
+                Badge,
+                {
+                    class: `${statusInfo.color} border-0 font-medium text-xs px-2 py-1`,
+                },
+                () => statusInfo.label,
+            );
         },
         enableHiding: false,
     },
@@ -188,18 +175,20 @@ const columns: ColumnDef<any>[] = [
         cell: ({ row }) => {
             const recordType = row.getValue('record_type') as string;
             const typeInfo = getRecordTypeInfo(recordType);
-            return h(Badge, {
-                class: `${typeInfo.color} border-0 font-medium text-xs px-2 py-1`
-            }, () => typeInfo.label);
+            return h(
+                Badge,
+                {
+                    class: `${typeInfo.color} border-0 font-medium text-xs px-2 py-1`,
+                },
+                () => typeInfo.label,
+            );
         },
         enableHiding: false,
     },
     {
         accessorKey: 'date_received',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Date Received', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Date Received', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const value = row.getValue('date_received') as string | null;
             return h('div', value ? new Date(value).toLocaleDateString() : 'N/A');
@@ -211,19 +200,17 @@ const columns: ColumnDef<any>[] = [
         header: 'Action',
         enableHiding: false,
         cell: ({ row }) =>
-            h(Button,
+            h(
+                Button,
                 {
                     variant: 'outline',
                     size: 'sm',
                     onClick: () => handleShow(row.original),
-                    class: 'flex items-center gap-2'
+                    class: 'flex items-center gap-2',
                 },
-                () => [
-                    h(Eye, { class: 'h-4 w-4 text-muted-foreground' }),
-                    'Show'
-                ]
-            )
-    }
+                () => [h(Eye, { class: 'h-4 w-4 text-muted-foreground' }), 'Show'],
+            ),
+    },
 ];
 
 // Apply search filter
@@ -280,7 +267,7 @@ const fetchData = async () => {
         }
 
         // Filters
-        columnFilters.value.forEach(filter => {
+        columnFilters.value.forEach((filter) => {
             if (Array.isArray(filter.value) && filter.value.length > 0) {
                 params.append(filter.id, filter.value.join(','));
             } else if (filter.value !== '' && filter.value !== null && filter.value !== undefined) {
@@ -291,10 +278,10 @@ const fetchData = async () => {
         // Make API request
         const response = await fetch(`/api/records?${params.toString()}`, {
             headers: {
-                'Accept': 'application/json',
+                Accept: 'application/json',
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-            }
+            },
         });
 
         if (!response.ok) {
@@ -312,7 +299,6 @@ const fetchData = async () => {
         // Update pagination state to match API response
         pagination.value.pageIndex = (result.current_page || 1) - 1;
         pagination.value.pageSize = result.per_page || 10;
-
     } catch (err) {
         console.error('API fetch error:', err);
         error.value = err instanceof Error ? err.message : 'An error occurred while fetching data';
@@ -424,7 +410,9 @@ const initializeFromURL = () => {
 
 // Table instance
 const table = useVueTable({
-    get data() { return data.value; },
+    get data() {
+        return data.value;
+    },
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -440,10 +428,7 @@ const table = useVueTable({
     onSortingChange: handleSortingChange,
     onColumnFiltersChange: handleFilterChange,
     onColumnVisibilityChange: (updaterOrValue) => {
-        columnVisibility.value =
-            typeof updaterOrValue === 'function'
-                ? updaterOrValue(columnVisibility.value)
-                : updaterOrValue;
+        columnVisibility.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility.value) : updaterOrValue;
     },
     state: {
         get pagination() {
@@ -468,10 +453,13 @@ onMounted(() => {
 });
 
 // Watch for external changes
-watch(() => window.location.search, () => {
-    initializeFromURL();
-    fetchData();
-});
+watch(
+    () => window.location.search,
+    () => {
+        initializeFromURL();
+        fetchData();
+    },
+);
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
@@ -497,14 +485,14 @@ const getRecordSpecificData = (record: any) => {
                 category: typeData.category?.name,
                 location: typeData.location,
                 cover_image: typeData.cover_image,
-                authors: typeData.authors?.map((a: any) => a.name).join(', ')
+                authors: typeData.authors?.map((a: any) => a.name).join(', '),
             };
         case 'digitalResource':
             return {
                 url: typeData.url,
                 file_format: typeData.file_format,
                 file_size: typeData.file_size,
-                access_type: typeData.access_type
+                access_type: typeData.access_type,
             };
         case 'periodical':
             return {
@@ -512,20 +500,19 @@ const getRecordSpecificData = (record: any) => {
                 volume: typeData.volume,
                 issue: typeData.issue,
                 publication_date: typeData.publication_date,
-                frequency: typeData.frequency
+                frequency: typeData.frequency,
             };
         case 'thesis':
             return {
                 degree_program: typeData.degree_program,
                 advisor: typeData.advisor,
                 year_submitted: typeData.year_submitted,
-                department: typeData.department
+                department: typeData.department,
             };
         default:
             return {};
     }
 };
-
 </script>
 
 <template>
@@ -534,44 +521,26 @@ const getRecordSpecificData = (record: any) => {
         <Layout>
             <div class="w-full">
                 <!-- Error message -->
-                <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                <div v-if="error" class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
                     <p>{{ error }}</p>
-                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2">
-                        Retry
-                    </Button>
+                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2"> Retry </Button>
                 </div>
 
                 <!-- Filters -->
                 <div class="flex items-center justify-between gap-4 py-4">
                     <!-- Search -->
                     <div class="relative">
-                        <Input
-                            ref="searchInputRef"
-                            class="w-[380px] pr-8"
-                            placeholder="Search by acc no. or title..."
-                            v-model="filterInput"
-                        />
-                        <Button
-                            v-if="filterInput"
-                            variant="ghost"
-                            class="absolute top-0 right-0 h-full px-2"
-                            @click="clearFilter"
-                        >
+                        <Input ref="searchInputRef" class="w-[380px] pr-8" placeholder="Search by acc no. or title..." v-model="filterInput" />
+                        <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
                             <X class="h-4 w-4" />
                         </Button>
-                        <div
-                            v-else
-                            class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none"
-                        >
+                        <div v-else class="pointer-events-none absolute top-0 right-0 flex h-full items-center justify-center px-2">
                             <Search class="h-4 w-4 text-foreground" />
                         </div>
                     </div>
 
                     <div class="flex gap-2">
-
-                        <Button variant="secondary">
-                            <Plus class="w-4 h-4" /> Import Collection
-                        </Button>
+                        <Button variant="secondary"> <Plus class="h-4 w-4" /> Import Collection </Button>
 
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
@@ -620,8 +589,8 @@ const getRecordSpecificData = (record: any) => {
                             </template>
                             <TableRow v-else-if="isLoading">
                                 <TableCell :colspan="columns.length" class="h-24 text-center">
-                                    <div class="flex justify-center items-center">
-                                        <Loader2 class="h-4 w-4 animate-spin mr-2" />
+                                    <div class="flex items-center justify-center">
+                                        <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                                         Loading...
                                     </div>
                                 </TableCell>
@@ -640,11 +609,7 @@ const getRecordSpecificData = (record: any) => {
                     </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
-                        <Select
-                            :model-value="pagination.pageSize.toString()"
-                            @update:model-value="handlePageSizeChange"
-                            :disabled="isLoading"
-                        >
+                        <Select :model-value="pagination.pageSize.toString()" @update:model-value="handlePageSizeChange" :disabled="isLoading">
                             <SelectTrigger class="h-8 w-[80px]">
                                 <SelectValue :placeholder="pagination.pageSize.toString()" />
                             </SelectTrigger>
@@ -673,12 +638,7 @@ const getRecordSpecificData = (record: any) => {
                             >
                                 <ChevronLeftIcon class="h-4 w-4" />
                             </Button>
-                            <Button
-                                variant="outline"
-                                class="h-8 w-8 p-0"
-                                :disabled="!table.getCanNextPage() || isLoading"
-                                @click="goToNextPage"
-                            >
+                            <Button variant="outline" class="h-8 w-8 p-0" :disabled="!table.getCanNextPage() || isLoading" @click="goToNextPage">
                                 <ChevronRightIcon class="h-4 w-4" />
                             </Button>
                             <Button
@@ -695,65 +655,55 @@ const getRecordSpecificData = (record: any) => {
 
                 <!-- Record Details Modal -->
                 <Dialog v-model:open="isDialogOpen">
-                    <DialogContent class="sm:max-w-4xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+                    <DialogContent class="max-h-[90dvh] grid-rows-[auto_minmax(0,1fr)_auto] p-0 sm:max-w-4xl">
                         <DialogHeader class="p-6 pb-0">
                             <DialogTitle class="flex items-center gap-3">
                                 Record Details
-                                <Badge
-                                    v-if="selectedRecord?.record_type"
-                                    :class="getRecordTypeInfo(selectedRecord.record_type).color + ' border-0'"
-                                >
+                                <Badge v-if="selectedRecord?.record_type" :class="getRecordTypeInfo(selectedRecord.record_type).color + ' border-0'">
                                     {{ getRecordTypeInfo(selectedRecord.record_type).label }}
                                 </Badge>
                             </DialogTitle>
-                            <DialogDescription>
-                                Viewing {{ selectedRecord?.record_type || 'record' }} information.
-                            </DialogDescription>
+                            <DialogDescription> Viewing {{ selectedRecord?.record_type || 'record' }} information. </DialogDescription>
                         </DialogHeader>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 py-4 px-6 overflow-y-auto">
-                            <!-- Cover/Image and Barcode -->
-                            <div class="flex flex-col items-center lg:items-start gap-4">
+                        <div class="grid grid-cols-1 gap-6 overflow-y-auto px-6 py-4 lg:grid-cols-4">
+                            <!-- Cover/Image and QrCode -->
+                            <div class="flex flex-col items-center gap-4 lg:items-start">
                                 <!-- Cover Image (mainly for books) -->
                                 <template v-if="selectedRecord?.record_type === 'book'">
                                     <img
                                         v-if="getRecordSpecificData(selectedRecord).cover_image"
                                         :src="'/storage/book_covers/' + getRecordSpecificData(selectedRecord).cover_image"
                                         alt="Book Cover"
-                                        class="h-40 w-32 object-cover border shadow-md rounded"
+                                        class="h-40 w-32 rounded border object-cover shadow-md"
                                     />
                                     <div
                                         v-else
-                                        class="h-40 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md rounded"
+                                        class="flex h-40 w-32 items-center justify-center rounded border bg-muted text-muted-foreground shadow-md"
                                     >
-                                        <span class="text-sm text-center">No Cover</span>
+                                        <span class="text-center text-sm">No Cover</span>
                                     </div>
                                 </template>
 
                                 <!-- Generic placeholder for other types -->
                                 <div
                                     v-else
-                                    class="h-40 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md rounded"
+                                    class="flex h-40 w-32 items-center justify-center rounded border bg-muted text-muted-foreground shadow-md"
                                 >
-                                    <span class="text-sm text-center">{{ getRecordTypeInfo(selectedRecord?.record_type || '').label }}</span>
+                                    <span class="text-center text-sm">{{ getRecordTypeInfo(selectedRecord?.record_type || '').label }}</span>
                                 </div>
 
-                                <!-- Barcode -->
-                                <div v-if="selectedRecord?.barcode_path" class="flex flex-col items-center">
-                                    <img
-                                        :src="'/storage/' + selectedRecord.barcode_path"
-                                        alt="Barcode"
-                                        class="h-16 w-auto border shadow-md"
-                                    />
-                                    <span class="text-xs text-muted-foreground mt-2">
-                                        Barcode: {{ selectedRecord.accession_number }}
-                                    </span>
-                                </div>
+                                <!-- QrCode -->
                                 <div
-                                    v-else
-                                    class="h-16 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
+                                    v-if="selectedRecord && selectedRecord.book && selectedRecord.book.qrcode_path"
+                                    class="flex flex-col items-center"
                                 >
-                                    <span class="text-xs">No Barcode</span>
+                                    <img :src="'/storage/' + selectedRecord.book.qrcode_path" alt="QR Code" class="h-16 w-auto border shadow-md" />
+                                    <span class="mt-2 text-xs text-muted-foreground"> QR Code: {{ selectedRecord.accession_number }} </span>
+                                </div>
+
+                                <div v-else class="flex h-16 w-32 items-center justify-center border bg-muted text-muted-foreground shadow-md">
+                                    <span class="text-xs">No QrCode</span>
                                 </div>
                             </div>
 
@@ -762,44 +712,61 @@ const getRecordSpecificData = (record: any) => {
                                 <div v-if="selectedRecord" class="grid gap-4">
                                     <!-- Common Fields -->
                                     <div class="grid gap-2 text-sm">
-                                        <h3 class="font-semibold text-base mb-2">General Information</h3>
+                                        <h3 class="mb-2 text-base font-semibold">General Information</h3>
                                         <p><strong>Accession No.:</strong> {{ selectedRecord.accession_number }}</p>
                                         <p><strong>Title:</strong> {{ selectedRecord.title }}</p>
                                         <p><strong>Subject:</strong> {{ selectedRecord.subject || 'N/A' }}</p>
-                                        <p><strong>Status:</strong>
-                                            <span :class="{
-                                                'text-green-600': selectedRecord.status === 'available',
-                                                'text-yellow-600': selectedRecord.status === 'borrowed',
-                                                'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedRecord.status)
-                                            }">
+                                        <p>
+                                            <strong>Status:</strong>
+                                            <span
+                                                :class="{
+                                                    'text-green-600': selectedRecord.status === 'available',
+                                                    'text-yellow-600': selectedRecord.status === 'borrowed',
+                                                    'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedRecord.status),
+                                                }"
+                                            >
                                                 {{ selectedRecord.status || 'N/A' }}
                                             </span>
                                         </p>
-                                        <p><strong>Date Received:</strong> {{ selectedRecord.date_received ? new Date(selectedRecord.date_received).toLocaleDateString() : 'N/A' }}</p>
-                                        <p><strong>Added:</strong> {{ selectedRecord.created_at ? new Date(selectedRecord.created_at).toLocaleDateString() : 'N/A' }}</p>
+                                        <p>
+                                            <strong>Date Received:</strong>
+                                            {{ selectedRecord.date_received ? new Date(selectedRecord.date_received).toLocaleDateString() : 'N/A' }}
+                                        </p>
+                                        <p>
+                                            <strong>Added:</strong>
+                                            {{ selectedRecord.created_at ? new Date(selectedRecord.created_at).toLocaleDateString() : 'N/A' }}
+                                        </p>
                                     </div>
 
                                     <!-- Type-specific Fields -->
                                     <div class="grid gap-2 text-sm" v-if="selectedRecord.record_type">
-                                        <h3 class="font-semibold text-base mb-2">{{ getRecordTypeInfo(selectedRecord.record_type).label }} Details</h3>
+                                        <h3 class="mb-2 text-base font-semibold">
+                                            {{ getRecordTypeInfo(selectedRecord.record_type).label }} Details
+                                        </h3>
 
                                         <!-- Book specific fields -->
                                         <template v-if="selectedRecord.record_type === 'book'">
                                             <p><strong>ISBN:</strong> {{ getRecordSpecificData(selectedRecord).isbn || 'N/A' }}</p>
                                             <p><strong>Authors:</strong> {{ getRecordSpecificData(selectedRecord).authors || 'N/A' }}</p>
                                             <p><strong>Publisher:</strong> {{ getRecordSpecificData(selectedRecord).publisher || 'N/A' }}</p>
-                                            <p><strong>Publication Year:</strong> {{ getRecordSpecificData(selectedRecord).publication_year || 'N/A' }}</p>
+                                            <p>
+                                                <strong>Publication Year:</strong>
+                                                {{ getRecordSpecificData(selectedRecord).publication_year || 'N/A' }}
+                                            </p>
                                             <p><strong>Category:</strong> {{ getRecordSpecificData(selectedRecord).category || 'N/A' }}</p>
                                             <p><strong>Location:</strong> {{ getRecordSpecificData(selectedRecord).location || 'N/A' }}</p>
                                         </template>
 
                                         <!-- Digital Resource specific fields -->
                                         <template v-else-if="selectedRecord.record_type === 'digitalResource'">
-                                            <p><strong>URL:</strong>
-                                                <a v-if="getRecordSpecificData(selectedRecord).url"
-                                                   :href="getRecordSpecificData(selectedRecord).url"
-                                                   target="_blank"
-                                                   class="text-blue-600 hover:underline break-all">
+                                            <p>
+                                                <strong>URL:</strong>
+                                                <a
+                                                    v-if="getRecordSpecificData(selectedRecord).url"
+                                                    :href="getRecordSpecificData(selectedRecord).url"
+                                                    target="_blank"
+                                                    class="break-all text-blue-600 hover:underline"
+                                                >
                                                     {{ getRecordSpecificData(selectedRecord).url }}
                                                 </a>
                                                 <span v-else>N/A</span>
@@ -814,16 +781,27 @@ const getRecordSpecificData = (record: any) => {
                                             <p><strong>ISSN:</strong> {{ getRecordSpecificData(selectedRecord).issn || 'N/A' }}</p>
                                             <p><strong>Volume:</strong> {{ getRecordSpecificData(selectedRecord).volume || 'N/A' }}</p>
                                             <p><strong>Issue:</strong> {{ getRecordSpecificData(selectedRecord).issue || 'N/A' }}</p>
-                                            <p><strong>Publication Date:</strong> {{ getRecordSpecificData(selectedRecord).publication_date ? new Date(getRecordSpecificData(selectedRecord).publication_date).toLocaleDateString() : 'N/A' }}</p>
+                                            <p>
+                                                <strong>Publication Date:</strong>
+                                                {{
+                                                    getRecordSpecificData(selectedRecord).publication_date
+                                                        ? new Date(getRecordSpecificData(selectedRecord).publication_date).toLocaleDateString()
+                                                        : 'N/A'
+                                                }}
+                                            </p>
                                             <p><strong>Frequency:</strong> {{ getRecordSpecificData(selectedRecord).frequency || 'N/A' }}</p>
                                         </template>
 
                                         <!-- Thesis specific fields -->
                                         <template v-else-if="selectedRecord.record_type === 'thesis'">
-                                            <p><strong>Degree Program:</strong> {{ getRecordSpecificData(selectedRecord).degree_program || 'N/A' }}</p>
+                                            <p>
+                                                <strong>Degree Program:</strong> {{ getRecordSpecificData(selectedRecord).degree_program || 'N/A' }}
+                                            </p>
                                             <p><strong>Advisor:</strong> {{ getRecordSpecificData(selectedRecord).advisor || 'N/A' }}</p>
                                             <p><strong>Department:</strong> {{ getRecordSpecificData(selectedRecord).department || 'N/A' }}</p>
-                                            <p><strong>Year Submitted:</strong> {{ getRecordSpecificData(selectedRecord).year_submitted || 'N/A' }}</p>
+                                            <p>
+                                                <strong>Year Submitted:</strong> {{ getRecordSpecificData(selectedRecord).year_submitted || 'N/A' }}
+                                            </p>
                                         </template>
                                     </div>
                                 </div>
@@ -834,7 +812,7 @@ const getRecordSpecificData = (record: any) => {
                         </div>
 
                         <DialogFooter class="p-6 pt-0">
-                            <div class="flex justify-between w-full">
+                            <div class="flex w-full justify-between">
                                 <Button variant="outline" @click="isDialogOpen = false">Close</Button>
                                 <Button @click="handleEdit(selectedRecord?.id, selectedRecord?.record_type)">
                                     Edit {{ getRecordTypeInfo(selectedRecord?.record_type || '').label }} Details
