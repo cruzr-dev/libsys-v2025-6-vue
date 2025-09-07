@@ -247,10 +247,6 @@ class BookController extends Controller
                     'added_by'         => auth()->id(),
                 ]);
 
-                // Generate QR Code for accession number
-                $qrCodePath = $qrCodeService->store($validated['accession_number']);
-                $record->update(['qr_code_path' => $qrCodePath]);
-
                 // Create book record
                 $book = $record->book()->create([
                     'volume'               => $validated['volume'],
@@ -278,6 +274,10 @@ class BookController extends Controller
                     'replaced_by'          => $validated['replaced_by'],
                     'table_of_contents'    => $validated['table_of_contents'],
                 ]);
+
+                // Generate QR Code for accession number
+                $qrCodePath = $qrCodeService->store($validated['accession_number']);
+                $book->update(['qrcode_path' => $qrCodePath]);
 
                 // Handle Primary Author
                 $primaryAuthor = $this->findOrCreateAuthor($validated['primary_author']);
