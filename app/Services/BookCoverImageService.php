@@ -41,6 +41,36 @@ class BookCoverImageService
     }
 
     /**
+     * Resize an existing image from a given path.
+     */
+    public function resize(string $filename_with_extension): string
+    {
+        $path = "raw_book_covers/{$filename_with_extension}";
+
+        // Check if the source file exists in storage
+        if (!Storage::disk('public')->exists($path)) {
+            throw new \InvalidArgumentException("Source file does not exist: {$path}");
+        }
+
+        // Get the full path to the file
+        $fullPath = Storage::disk('public')->path($path);
+
+        // Load image from storage
+        $image = $this->imageManager->read($fullPath);
+
+        // Resize proportionally to fit max width/height (600x900)
+        $image = $image->cover(600, 900);
+
+        // Encode as JPG (quality 85 for better cover detail)
+        $encoded = $image->encode(new JpegEncoder(quality: 85));
+
+        // Save back to storage with same filename
+        Storage::disk('public')->put($path, (string) $encoded);
+
+        return $filename_with_extension;
+    }
+
+    /**
      * Delete book cover from storage.
      */
     public function delete(string $bookId): bool
