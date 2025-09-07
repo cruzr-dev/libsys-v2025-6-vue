@@ -3,32 +3,29 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Storage;
-use Picqer\Barcode\BarcodeGeneratorPNG;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class QrCodeService
 {
-    protected BarcodeGeneratorPNG $generator;
-
-    public function __construct()
-    {
-        $this->generator = new BarcodeGeneratorPNG();
-    }
-
     /**
-     * Generate and store a barcode image for a given card number.
+     * Generate and store a QR code image for a given card number.
      *
-     * @param string|int $cardNumber
-     * @return string The stored relative path (e.g. /barcodes/123.png)
+     * @param string|int $accessionNumber
+     * @return string The stored relative path (e.g. /qrcodes/123.png)
      */
-    public function store($cardNumber): string
+    public function store($accessionNumber): string
     {
-        $barcodeData = $this->generator->getBarcode($cardNumber, $this->generator::TYPE_CODE_128);
+        // Generate QR code as PNG binary data
+        $qrCodeData = QrCode::format('png')
+            ->size(300) // adjust size as needed
+            ->margin(2)
+            ->generate((string) $accessionNumber);
 
-        $path = 'barcodes/' . $cardNumber . '.png';
+        // Store file in storage/app/qrcodes/
+        $path = 'qrcodes/' . $accessionNumber . '.png';
+        Storage::put($path, $qrCodeData);
 
-        Storage::put($path, $barcodeData);
-
-        // store with leading slash in DB
+        // Store with leading slash in DB for easy retrieval
         return '/' . $path;
     }
 }
