@@ -15,25 +15,26 @@ import {
 
 // Define the interface for cover types
 interface CoverType {
+    id: number
     key: string
     name: string
 }
 
-// Emit selected key
+// Emit selected id
 const emit = defineEmits<{
-    (e: "update:coverTypeId", value: string | null): void
+    (e: "update:coverTypeId", value: number | null): void
 }>()
 
-// Reactive state for cover types and selected item
+// Reactive state
 const coverTypes = ref<CoverType[]>([])
 const selected = ref<CoverType | null>(null)
 
-// Watch and emit the cover_type id whenever selection changes
+// Emit id when selection changes
 watch(selected, (val) => {
-    emit("update:coverTypeId", val?.key ?? null)
+    emit("update:coverTypeId", val?.id ?? null)
 })
 
-// Fetch cover types from API
+// Fetch cover types
 const fetchCoverTypes = async () => {
     try {
         const response = await fetch("/api/books/cover-types", {
@@ -42,9 +43,7 @@ const fetchCoverTypes = async () => {
                 "X-Requested-With": "XMLHttpRequest",
             },
         })
-        if (!response.ok) {
-            throw new Error("Failed to fetch cover types")
-        }
+        if (!response.ok) throw new Error("Failed to fetch cover types")
         const data = await response.json()
         coverTypes.value = data
     } catch (error) {
@@ -56,7 +55,7 @@ onMounted(fetchCoverTypes)
 </script>
 
 <template>
-    <Combobox v-model="selected" by="key" class="w-full">
+    <Combobox v-model="selected" by="id" class="w-full">
         <ComboboxAnchor class="w-full">
             <div
                 class="relative w-full flex items-center rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
@@ -80,7 +79,7 @@ onMounted(fetchCoverTypes)
             <ComboboxGroup>
                 <ComboboxItem
                     v-for="cover in coverTypes"
-                    :key="cover.key"
+                    :key="cover.id"
                     :value="cover"
                     class="flex items-center gap-2"
                 >

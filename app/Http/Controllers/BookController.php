@@ -153,7 +153,7 @@ class BookController extends Controller
 
     public function fetchCoverTypes(): \Illuminate\Http\JsonResponse
     {
-        $coverTypes = CoverType::select('key', 'name')->get();
+        $coverTypes = CoverType::select('id', 'key', 'name')->get();
 
         return response()->json($coverTypes);
     }

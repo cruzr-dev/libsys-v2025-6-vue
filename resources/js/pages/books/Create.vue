@@ -461,6 +461,7 @@ const submit = () => {
                             <div class="grid gap-2">
                                 <Label for="cover_type">Cover Type</Label>
                                 <CoverTypeComboBox v-model:coverTypeId="form.cover_type_id"/>
+                                <InputError :message="form.errors.cover_type_id" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="cover_image">Cover Page</Label>
