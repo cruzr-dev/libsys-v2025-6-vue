@@ -187,7 +187,7 @@ class BookController extends Controller
 
             // Physical Description
             'cover_image'           => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
-            'cover_type_id'         => 'nullable|exists:cover_types,id',
+            'cover_type_id'         => 'required|exists:cover_types,id',
             'status'                => 'required|in:available,damaged,missing,borrowed,discarded',
 
             // Administrative Information

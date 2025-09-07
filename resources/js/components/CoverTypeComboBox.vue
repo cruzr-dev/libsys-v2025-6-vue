@@ -61,6 +61,7 @@ onMounted(fetchCoverTypes)
                 class="relative w-full flex items-center rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
             >
                 <ComboboxInput
+                    required
                     :display-value="(val) => val?.name ?? ''"
                     placeholder="Select cover type..."
                     class="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
