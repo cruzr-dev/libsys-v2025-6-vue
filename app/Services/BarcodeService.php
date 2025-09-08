@@ -31,4 +31,24 @@ class BarcodeService
         // store with leading slash in DB
         return '/' . $path;
     }
+
+    /**
+     * Delete a barcode image from storage.
+     *
+     * @param string $path The stored relative path (e.g. /barcodes/123.png)
+     * @return bool True if deletion was successful or file doesn't exist, false otherwise
+     */
+    public function delete(string $path): bool
+    {
+        // Remove leading slash for Storage::delete
+        $path = ltrim($path, '/');
+
+        // Check if file exists before attempting deletion
+        if (Storage::exists($path)) {
+            return Storage::delete($path);
+        }
+
+        // Return true if file doesn't exist (no action needed)
+        return true;
+    }
 }
