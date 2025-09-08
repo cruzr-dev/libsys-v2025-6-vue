@@ -739,9 +739,9 @@ console.log(data);
                                 </div>
 
                                 <!-- Barcode -->
-                                <div v-if="selectedBook?.barcode_path" class="flex flex-col items-center">
+                                <div v-if="selectedBook.book?.qrcode_path" class="flex flex-col items-center">
                                     <img
-                                        :src="'/storage/' + selectedBook.barcode_path"
+                                        :src="'/storage/' + selectedBook.book.qrcode_path"
                                         alt="Book Barcode"
                                         class="h-16 w-auto border shadow-md"
                                     />
