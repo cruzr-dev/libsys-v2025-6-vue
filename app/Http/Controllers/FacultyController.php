@@ -282,11 +282,11 @@ class FacultyController extends Controller
 
             return redirect()
                 ->route('faculties.index')
-                ->with('success', 'Student deleted successfully.');
+                ->with('success', 'Faculty deleted successfully.');
         } catch (\Exception $e) {
             return redirect()
                 ->route('faculties.index')
-                ->with('error', 'Failed to delete the student.');
+                ->with('error', 'Failed to delete the faculty.');
         }
 
     }
