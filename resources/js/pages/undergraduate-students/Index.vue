@@ -469,8 +469,8 @@ const initializeFromURL = () => {
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Users', href: '/users' },
-    { title: 'Students', href: '/users/undergraduate' },
+    { title: 'Patrons', href: '/users' },
+    { title: 'Undergraduate Students', href: '/users/undergraduate' },
 ];
 
 // Lifecycle
