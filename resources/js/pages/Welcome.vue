@@ -367,8 +367,8 @@ watch(() => window.location.search, () => {
             </div>
 
             <!-- Statistics section -->
-            <div class="flex gap-4 px-16 py-12 pb-0">
-                <Card v-for="stat in stats" :key="stat.title" class="p-4 w-full transition hover:shadow-md">
+            <div class="flex gap-8 px-12 py-8 pb-0 justify-center">
+                <Card v-for="stat in stats" :key="stat.title" class="p-4 w-80 transition hover:shadow-md">
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 p-0">
                         <CardTitle class="text-sm font-medium text-muted-foreground">
                             {{ stat.title }}
