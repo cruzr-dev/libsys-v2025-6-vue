@@ -12,7 +12,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
 import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table';
 import { FlexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useVueTable } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, Eye, Loader2, Plus, Search, X } from 'lucide-vue-next';
+import { ArrowUpDown, Book, FileText, Newspaper, Disc, File, ChevronDown, Eye, Loader2, Plus, Search, X } from 'lucide-vue-next';
 import { h, nextTick, onMounted, ref, watch } from 'vue';
 
 // Utility function for debouncing
@@ -468,51 +468,19 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 // Helper function to get record type specific data
-const getRecordSpecificData = (record: any) => {
-    if (!record || !record.record_type) return {};
+// Map record_type → icon component
+const recordTypeIcons: Record<string, any> = {
+    book: Book,
+    digitalResource: Disc,
+    periodical: Newspaper,
+    thesis: FileText,
+    default: File,
+}
 
-    const typeKey = record.record_type;
-    const typeData = record[typeKey];
+const getRecordTypeIcon = (type: string) => {
+    return recordTypeIcons[type] || recordTypeIcons.default
+}
 
-    if (!typeData) return {};
-
-    switch (typeKey) {
-        case 'book':
-            return {
-                isbn: typeData.isbn,
-                publisher: typeData.publisher,
-                publication_year: typeData.publication_year,
-                category: typeData.category?.name,
-                location: typeData.location,
-                cover_image: typeData.cover_image,
-                authors: typeData.authors?.map((a: any) => a.name).join(', '),
-            };
-        case 'digitalResource':
-            return {
-                url: typeData.url,
-                file_format: typeData.file_format,
-                file_size: typeData.file_size,
-                access_type: typeData.access_type,
-            };
-        case 'periodical':
-            return {
-                issn: typeData.issn,
-                volume: typeData.volume,
-                issue: typeData.issue,
-                publication_date: typeData.publication_date,
-                frequency: typeData.frequency,
-            };
-        case 'thesis':
-            return {
-                degree_program: typeData.degree_program,
-                advisor: typeData.advisor,
-                year_submitted: typeData.year_submitted,
-                department: typeData.department,
-            };
-        default:
-            return {};
-    }
-};
 </script>
 
 <template>
@@ -668,50 +636,12 @@ const getRecordSpecificData = (record: any) => {
 
                         <!-- Main Content -->
                         <div class="grid grid-cols-1 gap-4 overflow-y-auto p-4 py-0 md:grid-cols-3">
-                            <!-- Cover/Image and QR Code -->
-                            <div class="flex flex-col items-center gap-4 rounded-lg border bg-card p-4">
-                                <!-- Cover Image (mainly for books) -->
-                                <template v-if="selectedRecord?.record_type === 'book'">
-                                    <img
-                                        v-if="getRecordSpecificData(selectedRecord).cover_image"
-                                        :src="'/storage/resized_book_covers/' + getRecordSpecificData(selectedRecord).cover_image"
-                                        alt="Book Cover"
-                                        class="h-[225px] w-[150px] border-4 border-background object-cover shadow-lg"
-                                    />
-                                    <div
-                                        v-else
-                                        class="flex h-[225px] w-[150px] items-center justify-center border-4 border-background bg-muted text-muted-foreground shadow-lg"
-                                    >
-                                        <span class="text-sm font-medium">No Cover</span>
-                                    </div>
-                                </template>
-                                <!-- Generic placeholder for other types -->
-                                <div
-                                    v-else
-                                    class="flex h-[225px] w-[150px] items-center justify-center border-4 border-background bg-muted text-muted-foreground shadow-lg"
-                                >
-                                    <span class="text-sm font-medium">{{ getRecordTypeInfo(selectedRecord?.record_type || '').label }}</span>
-                                </div>
-
-                                <!-- QR Code -->
-                                <div class="flex w-full flex-col items-center gap-2">
-                                    <div v-if="selectedRecord && selectedRecord.book && selectedRecord.book.qrcode_path" class="w-full">
-                                        <img
-                                            :src="'/storage/' + selectedRecord.book.qrcode_path"
-                                            alt="QR Code"
-                                            class="mx-auto h-24 w-auto rounded border shadow-sm"
-                                        />
-                                        <span class="mt-2 block text-center text-xs text-muted-foreground">
-                                            QR Code: {{ selectedRecord.accession_number }}
-                                        </span>
-                                    </div>
-                                    <div
-                                        v-else
-                                        class="flex h-16 w-full items-center justify-center rounded border bg-muted text-muted-foreground shadow-sm"
-                                    >
-                                        <span class="text-xs font-medium">No QR Code</span>
-                                    </div>
-                                </div>
+                            <!-- Icon Placeholder -->
+                            <div class="flex flex-col items-center justify-center gap-4 rounded-lg border bg-card p-6">
+                                <component :is="getRecordTypeIcon(selectedRecord?.record_type || '')" class="h-24 w-24 text-muted-foreground" />
+                                <span class="text-sm font-medium text-muted-foreground">
+                                    {{ getRecordTypeInfo(selectedRecord?.record_type || '').label }}
+                                </span>
                             </div>
 
                             <!-- Record Details -->
