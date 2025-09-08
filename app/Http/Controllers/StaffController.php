@@ -145,14 +145,6 @@ class StaffController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Staff $staff)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit($id): \Inertia\Response

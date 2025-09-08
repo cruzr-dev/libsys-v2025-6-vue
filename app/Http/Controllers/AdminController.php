@@ -25,7 +25,7 @@ class AdminController extends Controller
 
     public function fetchAll(Request $request)
     {
-        $query = User::with('userType');
+        $query = User::with(['userType', 'admin']);
 
         $query->whereHas('userType', function ($q) {
             $q->where('key', 'library_staff');
@@ -150,19 +150,15 @@ class AdminController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Admin $admin)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Admin $admin)
+    public function edit($id)
     {
-        //
+        $admin = User::with('admin')->find($id);
+
+        return Inertia::render('admins/Edit', [
+            'admin' =>  $admin,
+        ]);
     }
 
     /**

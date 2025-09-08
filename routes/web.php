@@ -41,6 +41,7 @@ Route::middleware($middleware)->group(function () {
             Route::get('/admins',[AdminController::class, 'index'])->name('admins.index');
             Route::get('/admins/create', [AdminController::class, 'create'])->name('admins.create');
             Route::post('/admins', [AdminController::class, 'store'])->name('admins.store');
+            Route::get('/admins/{id}/edit', [AdminController::class, 'edit'])->name('admins.edit');
             Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->name('admins.destroy');
         });
         // faculty

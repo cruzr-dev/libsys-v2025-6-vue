@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/users/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
 import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
 import {
@@ -482,6 +482,10 @@ watch(() => window.location.search, () => {
     initializeFromURL();
     fetchData();
 });
+
+const handleEdit = (id) => {
+    router.get(route('admins.edit', id));
+}
 </script>
 
 <template>
@@ -723,6 +727,19 @@ watch(() => window.location.search, () => {
                                     </div>
                                 </div>
 
+                                <!-- staff Information -->
+                                <div class="rounded-lg border bg-card p-5">
+                                    <h3 class="mb-4 text-lg font-semibold text-foreground">Staff Information</h3>
+                                    <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+                                        <p>
+                                            <strong class="text-foreground">Office:</strong>
+                                            <span v-if="selectedUser.admin?.office">
+                                                {{ selectedUser.admin.office }}
+                                            </span>
+                                            <span v-else class="text-muted-foreground">Not assigned</span>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             <div v-else class="text-muted-foreground p-4 text-center">
                                 <p class="text-sm">No library staff selected.</p>
