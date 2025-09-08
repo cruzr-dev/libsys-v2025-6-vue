@@ -48,12 +48,12 @@ Route::middleware($middleware)->group(function () {
         Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
-        Route::get('/students', [StudentController::class, 'index'])->name('students.index');
-        Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
-        Route::post('/students', [StudentController::class, 'store'])->name('students.store');
-        Route::get('/students/{id}/edit', [StudentController::class, 'edit'])->name('students.edit');
-        Route::patch('/students/{id}', [StudentController::class, 'update'])->name('students.update');
-        Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('students.destroy');
+        Route::get('/undergraduate', [StudentController::class, 'index'])->name('undergraduate.index');
+        Route::get('/undergraduate/create', [StudentController::class, 'create'])->name('undergraduate.create');
+        Route::post('/undergraduate', [StudentController::class, 'store'])->name('undergraduate.store');
+        Route::get('/undergraduate/{id}/edit', [StudentController::class, 'edit'])->name('undergraduate.edit');
+        Route::patch('/undergraduate/{id}', [StudentController::class, 'update'])->name('undergraduate.update');
+        Route::delete('/undergraduate/{id}', [StudentController::class, 'destroy'])->name('undergraduate.destroy');
     });
     Route::prefix('records')->group(function () {
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
