@@ -5,6 +5,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\BorrowingTransactionController;
 use App\Http\Controllers\DigitalResourceController;
 use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\GraduateStudentController;
 use App\Http\Controllers\LibraryVisitController;
 use App\Http\Controllers\PeriodicalController;
 use App\Http\Controllers\RecordController;
@@ -38,6 +39,7 @@ Route::get('/borrowings/users/search', [BorrowingTransactionController::class, '
 
 Route::get('/users/', [UserController::class, 'fetchAll']);
 Route::get('/undergraduate/', [UndergraduateStudentController::class, 'fetchAll']);
+Route::get('/graduate/', [GraduateStudentController::class, 'fetchAll']);
 Route::get('/faculties/', [FacultyController::class, 'fetchAll']);
 Route::get('/staff/', [StaffController::class, 'fetchAll']);
 Route::get('/admins/', [AdminController::class, 'fetchAll']);

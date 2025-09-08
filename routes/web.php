@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DigitalResourceController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\GradSchoolStudentController;
+use App\Http\Controllers\GraduateStudentController;
 use App\Http\Controllers\LibraryVisitController;
 use App\Http\Controllers\PeriodicalController;
 use App\Http\Controllers\ProductController;
@@ -49,6 +50,7 @@ Route::middleware($middleware)->group(function () {
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
         Route::get('/undergraduate', [UndergraduateStudentController::class, 'index'])->name('undergraduate.index');
+        Route::get('/graduate', [GraduateStudentController::class, 'index'])->name('undergraduate.index');
         Route::get('/undergraduate/create', [UndergraduateStudentController::class, 'create'])->name('undergraduate.create');
         Route::post('/undergraduate', [UndergraduateStudentController::class, 'store'])->name('undergraduate.store');
         Route::get('/undergraduate/{id}/edit', [UndergraduateStudentController::class, 'edit'])->name('undergraduate.edit');
