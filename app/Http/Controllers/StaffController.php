@@ -167,9 +167,91 @@ class StaffController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Staff $staff)
-    {
-        //
+    public function update(
+        Request $request,
+                $id,
+        ProfileImageService $imageService,
+        BarcodeService $barcodeService
+    ): \Illuminate\Http\RedirectResponse {
+
+        $user = User::findOrFail($id);
+
+        try {
+            $validated = $request->validate([
+                'library_id'     => 'required|integer|digits_between:1,10|unique:users,library_id,' . $user->id,
+                'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number,' . $user->id,
+                'first_name'     => 'required|string|max:50',
+                'middle_initial' => 'nullable|string|max:1',
+                'last_name'      => 'required|string|max:50',
+                'sex'            => 'required|in:m,f',
+                'profile_image'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+                'email'          => 'required|string|lowercase|email|max:255|unique:users,email,' . $user->id,
+                'office'         => 'required|string|max:50',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withInput()
+                ->withErrors($e->validator)
+                ->with('error', 'Please correct the errors in the form.');
+        }
+
+        // Ensure staff user type exists
+        $staffType = UserType::where('key', 'staff')->first();
+        if (!$staffType) {
+            return back()->withInput()
+                ->with('error', 'Staff user type not found. Please contact the system administrator.');
+        }
+
+        try {
+            DB::transaction(function () use ($validated, $staffType, $request, $imageService, $barcodeService, $user) {
+                // Prepare user update data
+                $userUpdateData = [
+                    'library_id'     => $validated['library_id'],
+                    'card_number'    => $validated['card_number'],
+                    'first_name'     => $validated['first_name'],
+                    'middle_initial' => $validated['middle_initial'],
+                    'last_name'      => $validated['last_name'],
+                    'sex'            => $validated['sex'],
+                    'email'          => $validated['email'],
+                    'user_type_id'   => $staffType->id,
+                ];
+
+                // Handle profile image update
+                if ($request->hasFile('profile_image') && $request->file('profile_image')->isValid()) {
+                    if ($user->profile_image) {
+                        $imageService->delete($user->profile_image);
+                    }
+                    $filename = $imageService->store($request->file('profile_image'), $validated['library_id']);
+                    $userUpdateData['profile_image'] = $filename;
+                }
+
+                // Update user core data
+                $user->update($userUpdateData);
+
+                // Update staff-specific data
+                $user->staff()->update([
+                    'office' => $validated['office'],
+                ]);
+
+                // Regenerate barcode if card number changed
+                if ($user->wasChanged('card_number')) {
+                    if ($user->barcode_path) {
+                        $barcodeService->delete($user->barcode_path);
+                    }
+                    $barcodeFile = $barcodeService->store($validated['card_number']);
+                    $user->update(['barcode_path' => $barcodeFile]);
+                }
+            });
+
+            return to_route('staff.index')
+                ->with('success', 'Staff updated successfully');
+        } catch (\Throwable $e) {
+            \Log::error('Error updating Staff: ' . $e->getMessage(), [
+                'user_id'    => $user->id,
+                'library_id' => $validated['library_id'],
+                'email'      => $validated['email'],
+            ]);
+            return back()->withInput()->with('error', 'Failed to update staff. Please try again.');
+        }
     }
 
     /**

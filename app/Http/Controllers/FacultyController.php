@@ -178,7 +178,6 @@ class FacultyController extends Controller
             ->orderBy('name')
             ->get();
 
-
         return Inertia::render('faculties/Edit', [
             'colleges' => $colleges,
             'faculty' =>  $faculty,
