@@ -461,7 +461,7 @@ const goBack = () => {
 
                     <!-- Submit Button -->
                     <div class="flex justify-between pt-4">
-                        <Button variant="link" @click="handleDelete()" type="button">Delete</Button>
+                        <Button variant="link" @click="handleDelete()" type="button">Delete Account</Button>
                         <Button type="submit" class="w-full px-8 py-2 md:w-auto" :tabindex="13" :disabled="form.processing">
                             <LoaderCircle v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                             Update Student Account

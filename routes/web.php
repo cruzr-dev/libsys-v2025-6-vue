@@ -58,7 +58,9 @@ Route::middleware($middleware)->group(function () {
         Route::get('/undergraduate/{id}/edit', [UndergraduateStudentController::class, 'edit'])->name('undergraduate.edit');
         Route::get('/graduate/{id}/edit', [GraduateStudentController::class, 'edit'])->name('graduate.edit');
         Route::patch('/undergraduate/{id}', [UndergraduateStudentController::class, 'update'])->name('undergraduate.update');
+        Route::patch('/graduate/{id}', [GraduateStudentController::class, 'update'])->name('graduate.update');
         Route::delete('/undergraduate/{id}', [UndergraduateStudentController::class, 'destroy'])->name('undergraduate.destroy');
+        Route::delete('/graduate/{id}', [GraduateStudentController::class, 'destroy'])->name('graduate.destroy');
     });
     Route::prefix('records')->group(function () {
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
