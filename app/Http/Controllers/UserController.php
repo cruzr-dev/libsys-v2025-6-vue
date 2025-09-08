@@ -26,9 +26,15 @@ class UserController extends Controller
             return redirect()->route('users.index')->with('error', 'User not found');
         }
 
-        // Check if user has a UserType and is a student
-        if ($user->UserType && $user->UserType->key === 'student') {
-            return to_route('undergraduate.edit', ['id' => $id]);
+        if ($user->UserType) {
+            return match ($user->UserType->key) {
+                'undergraduate_student' => to_route('undergraduate.edit', ['id' => $id]),
+                'graduate_student'      => to_route('graduate.edit', ['id' => $id]),
+                'faculty'               => to_route('faculties.edit', ['id' => $id]),
+                'staff'                 => to_route('staff.edit', ['id' => $id]),
+                'library_staff'         => to_route('admins.edit', ['id' => $id]),
+                default                 => abort(404, 'User type not supported'),
+            };
         }
 
         // Fallback for non-student users
