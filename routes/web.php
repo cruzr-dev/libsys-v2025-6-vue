@@ -54,6 +54,7 @@ Route::middleware($middleware)->group(function () {
         Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+        Route::get('/staff/{id}/edit', [StaffController::class, 'edit'])->name('staff.edit');
         // Undergraduate Students
         Route::get('/undergraduate', [UndergraduateStudentController::class, 'index'])->name('undergraduate.index');
         Route::get('/undergraduate/create', [UndergraduateStudentController::class, 'create'])->name('undergraduate.create');

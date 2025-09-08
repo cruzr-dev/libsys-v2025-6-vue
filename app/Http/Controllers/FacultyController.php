@@ -167,7 +167,7 @@ class FacultyController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit($id): \Inertia\Response
     {
         $faculty = User::with('faculty')->find($id);
 

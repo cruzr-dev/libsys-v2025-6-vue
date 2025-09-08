@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\College;
 use App\Models\Staff;
 use App\Models\User;
 use App\Models\UserType;
@@ -23,7 +24,7 @@ class StaffController extends Controller
 
     public function fetchAll(Request $request)
     {
-        $query = User::with('userType');
+        $query = User::with(['userType', 'staff']);
 
         $query->whereHas('userType', function ($q) {
             $q->where('key', 'staff');
@@ -154,9 +155,13 @@ class StaffController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Staff $staff)
+    public function edit($id): \Inertia\Response
     {
-        //
+        $staff = User::with('staff')->find($id);
+
+        return Inertia::render('staff/Edit', [
+            'staff' =>  $staff,
+        ]);
     }
 
     /**
