@@ -6,15 +6,29 @@ use App\Models\BorrowingTransaction;
 use App\Models\LibraryVisit;
 use App\Models\Record;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class WelcomeController extends Controller
 {
-    public function  index(Request $request)
+    public function index(Request $request)
     {
+        $totalCollections = Record::count();
+
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+        $newThisMonth = Record::whereYear('created_at', $currentYear)
+            ->whereMonth('created_at', $currentMonth)
+            ->count();
+
+        $totalBorrowings = BorrowingTransaction::count();
+
         return Inertia::render('Welcome', [
+            'totalCollections' => $totalCollections,
+            'newThisMonth' => $newThisMonth,
+            'totalBorrowings' => $totalBorrowings,
         ]);
     }
 
