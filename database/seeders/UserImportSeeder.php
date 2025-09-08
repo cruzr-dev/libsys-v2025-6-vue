@@ -240,7 +240,9 @@ class UserImportSeeder extends Seeder
     {
         try {
             // Get a random college
-            $college = College::inRandomOrder()->first();
+            $college = College::where('college_type', 'undergraduate')
+                ->inRandomOrder()
+                ->first();
 
             if (!$college) {
                 Log::error('No colleges found in database');
@@ -293,7 +295,9 @@ class UserImportSeeder extends Seeder
     {
         try {
             // Get a random college
-            $college = College::inRandomOrder()->first();
+            $college = College::where('college_type', 'graduate')
+                ->inRandomOrder()
+                ->first();
 
             if (!$college) {
                 Log::error('No colleges found in database');
