@@ -24,7 +24,7 @@ class FacultyController extends Controller
 
     public function fetchAll(Request $request)
     {
-        $query = User::with('userType');
+        $query = User::with(['userType', 'faculty.college', 'faculty.course']);
 
         $query->whereHas('userType', function ($q) {
             $q->where('key', 'faculty');
