@@ -88,37 +88,43 @@ class UndergraduateStudentController extends Controller
         ProfileImageService $imageService,
         BarcodeService $barcodeService
     ): \Illuminate\Http\RedirectResponse {
-        // 1. Validation
-        $validated = $request->validate([
-            'library_id'     => 'required|integer|min:1|max:9999999999|unique:users,library_id',
-            'first_name'     => 'required|string|max:50',
-            'middle_initial' => 'nullable|string|max:1',
-            'last_name'      => 'required|string|max:50',
-            'sex'            => 'required|in:m,f',
-            'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
-            'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
-            'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
-            'college_id'     => 'required|exists:colleges,id',
-            'course_id'      => 'required|exists:courses,id',
-            'major_id' => [
-                'nullable',
-                'exists:majors,id',
-                function ($attribute, $value, $fail) use ($request) {
-                    $course = Course::find($request->input('course_id'));
 
-                    if ($course && Major::where('course_id', $course->id)->exists() && is_null($value)) {
-                        $fail('The major field is required when the selected course has majors.');
-                    }
-                },
-            ],
-            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+        try {
+            // 1. Validation
+            $validated = $request->validate([
+                'library_id'     => 'required|integer|min:1|max:9999999999|unique:users,library_id',
+                'first_name'     => 'required|string|max:50',
+                'middle_initial' => 'nullable|string|max:1',
+                'last_name'      => 'required|string|max:50',
+                'sex'            => 'required|in:m,f',
+                'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
+                'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
+                'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
+                'college_id'     => 'required|exists:colleges,id',
+                'course_id'      => 'required|exists:courses,id',
+                'major_id' => [
+                    'nullable',
+                    'exists:majors,id',
+                    function ($attribute, $value, $fail) use ($request) {
+                        $course = Course::find($request->input('course_id'));
+
+                        if ($course && Major::where('course_id', $course->id)->exists() && is_null($value)) {
+                            $fail('The major field is required when the selected course has majors.');
+                        }
+                    },
+                ],
+                'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withInput()->withErrors($e->validator)->with('error', 'Please correct the errors in the form.');
+        }
 
         // 2. Ensure user type exists
-        $studentType = UserType::where('key', 'student')->first();
+        $studentType = UserType::where('key', 'undergraduate_student')->first();
         if (! $studentType) {
             return back()->withInput()
-                ->with('error', 'GraduateStudent user type not found. Please contact the system administrator.');
+                ->with('error', 'Undergraduate user type not found. Please contact the system administrator.');
         }
 
         // 3. Transaction
@@ -142,7 +148,7 @@ class UndergraduateStudentController extends Controller
                     'profile_image'  => $filename,
                 ]);
 
-                $user->student()->create([
+                $user->undergraduateStudent()->create([
                     'contact_number' => $validated['contact_number'],
                     'college_id'     => $validated['college_id'],
                     'course_id'      => $validated['course_id'],
@@ -153,7 +159,7 @@ class UndergraduateStudentController extends Controller
                 $user->update(['barcode_path' => $barcodeFile]);
             });
 
-            return to_route('undergraduate-students.index')
+            return to_route('undergraduate.index')
                 ->with('success', 'You successfully created a new GraduateStudent with barcode');
 
         } catch (\Throwable $e) {
