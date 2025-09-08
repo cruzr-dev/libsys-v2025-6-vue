@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import WelcomeRecordDialog from '@/components/WelcomeRecordDialog.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import { Activity, AlertCircle, CreditCard, DollarSign, Users, X } from 'lucide-vue-next';
+import { Book, AlertCircle, PlusCircle, Repeat, X } from 'lucide-vue-next';
 import { onMounted, ref, watch, nextTick } from 'vue';
 import WelcomeFooter from '@/components/WelcomeFooter.vue';
 import CollectionSearchComboBox from '@/components/CollectionSearchComboBox.vue';
@@ -250,19 +250,19 @@ const stats = [
         title: 'Collections',
         value: '15,821',
         change: 'Book, CDs, Magazines, Thesis, etc.',
-        icon: DollarSign,
+        icon: Book, // represents books/collections
     },
     {
         title: 'New Arrivals',
         value: '+234',
         change: '+19% from last month',
-        icon: CreditCard,
+        icon: PlusCircle, // represents additions or new items
     },
     {
         title: 'Borrowing Transactions',
         value: '+73',
         change: '+20 since last week',
-        icon: Activity,
+        icon: Repeat, // represents ongoing transactions or borrowing/returning
     },
 ];
 
@@ -376,7 +376,7 @@ watch(() => window.location.search, () => {
                         <component :is="stat.icon" class="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent class="p-0">
-                        <div class="text-4xl text-center font-bold">{{ stat.value }}</div>
+                        <div class="text-4xl text-primary text-center font-bold">{{ stat.value }}</div>
                         <p class="text-sm mt-2 text-center text-muted-foreground">{{ stat.change }}</p>
                     </CardContent>
                 </Card>
