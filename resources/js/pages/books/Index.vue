@@ -1,26 +1,19 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Layout from '@/layouts/records/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import { ArrowUpDown, Search, X, Loader2, Eye, ChevronDown, Plus } from 'lucide-vue-next';
+import type { ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
+import { FlexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useVueTable } from '@tanstack/vue-table';
+import { ArrowUpDown, ChevronDown, Eye, Loader2, Plus, Search, X } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
-import { h, ref, onMounted, watch, nextTick } from 'vue';
-import type { ColumnDef, VisibilityState, SortingState, ColumnFiltersState } from '@tanstack/vue-table';
-import {
-    FlexRender,
-    getCoreRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    getFilteredRowModel,
-    useVueTable,
-} from '@tanstack/vue-table';
+import { h, nextTick, onMounted, ref, watch } from 'vue';
 
 // Utility function for debouncing
 function debounce(func: Function, wait: number) {
@@ -66,7 +59,6 @@ const columnVisibility = ref<VisibilityState>({
     physical_location: true,
 });
 
-
 // Modal dialog state
 const isDialogOpen = ref(false);
 const selectedBook = ref<any | null>(null);
@@ -93,7 +85,7 @@ const restoreScrollPosition = () => {
     nextTick(() => {
         window.scrollTo({
             top: scrollPosition.value,
-            behavior: 'instant'
+            behavior: 'instant',
         });
     });
 };
@@ -121,27 +113,21 @@ const columns: ColumnDef<any>[] = [
     {
         accessorKey: 'accession_number',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Acc. #', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Acc. #', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', row.getValue('accession_number')),
         enableHiding: false, // Always show accession number
     },
     {
         accessorKey: 'title',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Title', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'truncate max-w-80' }, row.getValue('title')),
         enableHiding: false, // Always show title
     },
     {
         id: 'volume',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Volume', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Volume', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const volume = row.original.book?.volume;
             return h('div', volume || 'N/A');
@@ -151,9 +137,7 @@ const columns: ColumnDef<any>[] = [
     {
         id: 'edition',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Edition', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Edition', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const edition = row.original.book?.edition;
             return h('div', edition || 'N/A');
@@ -163,9 +147,7 @@ const columns: ColumnDef<any>[] = [
     {
         id: 'publisher',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Publisher', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Publisher', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const publisher = row.original.book?.publisher;
             return h('div', publisher || 'N/A');
@@ -175,9 +157,7 @@ const columns: ColumnDef<any>[] = [
     {
         id: 'isbn',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['ISBN', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const isbn = row.original.book?.isbn;
             return h('div', isbn || 'N/A');
@@ -187,9 +167,7 @@ const columns: ColumnDef<any>[] = [
     {
         id: 'call_number',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Call No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Call No.', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const callNumber = row.original.book?.call_number;
             return h('div', callNumber || 'N/A');
@@ -199,9 +177,7 @@ const columns: ColumnDef<any>[] = [
     {
         id: 'ddc_classification',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'DDC', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['DDC', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const ddc = row.original.ddc_classification;
             return h('div', ddc || 'N/A');
@@ -211,9 +187,7 @@ const columns: ColumnDef<any>[] = [
     {
         id: 'physical_location',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Location', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Location', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const location = row.original.physical_location;
             return h('div', location || 'N/A');
@@ -241,9 +215,7 @@ const columns: ColumnDef<any>[] = [
     {
         id: 'publication_year', // use id instead of accessorKey since it's nested
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => [
-                'Year', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })
-            ]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Year', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => {
             const year = row.original.book?.publication_year;
             return h('div', year || 'N/A');
@@ -255,19 +227,17 @@ const columns: ColumnDef<any>[] = [
         header: 'Action',
         enableHiding: false,
         cell: ({ row }) =>
-            h(Button,
+            h(
+                Button,
                 {
                     variant: 'outline',
                     size: 'sm',
                     onClick: () => handleShow(row.original),
-                    class: 'flex items-center gap-2'
+                    class: 'flex items-center gap-2',
                 },
-                () => [
-                    h(Eye, { class: 'h-4 w-4 text-muted-foreground' }),
-                    'Show'
-                ]
-            )
-    }
+                () => [h(Eye, { class: 'h-4 w-4 text-muted-foreground' }), 'Show'],
+            ),
+    },
 ];
 
 // Apply search filter
@@ -324,7 +294,7 @@ const fetchData = async () => {
         }
 
         // Filters
-        columnFilters.value.forEach(filter => {
+        columnFilters.value.forEach((filter) => {
             if (Array.isArray(filter.value) && filter.value.length > 0) {
                 params.append(filter.id, filter.value.join(','));
             } else if (filter.value !== '' && filter.value !== null && filter.value !== undefined) {
@@ -344,10 +314,10 @@ const fetchData = async () => {
         // Make API request
         const response = await fetch(`/api/books?${params.toString()}`, {
             headers: {
-                'Accept': 'application/json',
+                Accept: 'application/json',
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-            }
+            },
         });
 
         if (!response.ok) {
@@ -365,7 +335,6 @@ const fetchData = async () => {
         // Update pagination state to match API response
         pagination.value.pageIndex = (result.current_page || 1) - 1;
         pagination.value.pageSize = result.per_page || 10;
-
     } catch (err) {
         console.error('API fetch error:', err);
         error.value = err instanceof Error ? err.message : 'An error occurred while fetching data';
@@ -493,7 +462,9 @@ const initializeFromURL = () => {
 
 // Table instance
 const table = useVueTable({
-    get data() { return data.value; },
+    get data() {
+        return data.value;
+    },
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -532,10 +503,13 @@ onMounted(() => {
 });
 
 // Watch for external changes
-watch(() => window.location.search, () => {
-    initializeFromURL();
-    fetchData();
-});
+watch(
+    () => window.location.search,
+    () => {
+        initializeFromURL();
+        fetchData();
+    },
+);
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
@@ -552,11 +526,9 @@ console.log(data);
         <Layout>
             <div class="w-full">
                 <!-- Error message -->
-                <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                <div v-if="error" class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
                     <p>{{ error }}</p>
-                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2">
-                        Retry
-                    </Button>
+                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2"> Retry </Button>
                 </div>
 
                 <!-- Search and Controls -->
@@ -568,18 +540,10 @@ console.log(data);
                             placeholder="Search by acc no., title, author, or editor..."
                             v-model="filterInput"
                         />
-                        <Button
-                            v-if="filterInput"
-                            variant="ghost"
-                            class="absolute top-0 right-0 h-full px-2"
-                            @click="clearFilter"
-                        >
+                        <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
                             <X class="h-4 w-4" />
                         </Button>
-                        <div
-                            v-else
-                            class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none"
-                        >
+                        <div v-else class="pointer-events-none absolute top-0 right-0 flex h-full items-center justify-center px-2">
                             <Search class="h-4 w-4 text-foreground" />
                         </div>
                     </div>
@@ -587,9 +551,7 @@ console.log(data);
                     <!-- Column Visibility Dropdown -->
                     <div class="flex gap-2">
                         <Link href="/records/books/create">
-                            <Button variant="secondary">
-                                <Plus class="w-4 h-4" /> Add Book
-                            </Button>
+                            <Button variant="secondary"> <Plus class="h-4 w-4" /> Add Book </Button>
                         </Link>
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
@@ -606,12 +568,12 @@ console.log(data);
                                     @update:checked="(value) => column.toggleVisibility(!!value)"
                                     class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
                                 >
-                                <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                                    <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span>
-                                    {{ column.id.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                                    <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                                        <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </span>
+                                    {{ column.id.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase()) }}
                                 </DropdownMenuCheckboxItem>
                             </DropdownMenuContent>
                         </DropdownMenuRoot>
@@ -638,8 +600,8 @@ console.log(data);
                             </template>
                             <TableRow v-else-if="isLoading">
                                 <TableCell :colspan="columns.length" class="h-24 text-center">
-                                    <div class="flex justify-center items-center">
-                                        <Loader2 class="h-4 w-4 animate-spin mr-2" />
+                                    <div class="flex items-center justify-center">
+                                        <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                                         Loading...
                                     </div>
                                 </TableCell>
@@ -658,11 +620,7 @@ console.log(data);
                     </div>
                     <div class="flex items-center space-x-2">
                         <p class="text-sm font-medium">Rows per page</p>
-                        <Select
-                            :model-value="pagination.pageSize.toString()"
-                            @update:model-value="handlePageSizeChange"
-                            :disabled="isLoading"
-                        >
+                        <Select :model-value="pagination.pageSize.toString()" @update:model-value="handlePageSizeChange" :disabled="isLoading">
                             <SelectTrigger class="h-8 w-[80px]">
                                 <SelectValue :placeholder="pagination.pageSize.toString()" />
                             </SelectTrigger>
@@ -691,12 +649,7 @@ console.log(data);
                             >
                                 <ChevronLeftIcon class="h-4 w-4" />
                             </Button>
-                            <Button
-                                variant="outline"
-                                class="h-8 w-8 p-0"
-                                :disabled="!table.getCanNextPage() || isLoading"
-                                @click="goToNextPage"
-                            >
+                            <Button variant="outline" class="h-8 w-8 p-0" :disabled="!table.getCanNextPage() || isLoading" @click="goToNextPage">
                                 <ChevronRightIcon class="h-4 w-4" />
                             </Button>
                             <Button
@@ -713,106 +666,140 @@ console.log(data);
 
                 <!-- Book Details Modal -->
                 <Dialog v-model:open="isDialogOpen">
-                    <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
-                        <DialogHeader class="p-6 pb-0">
-                            <DialogTitle>Book Details</DialogTitle>
-                            <DialogDescription>
-                                Viewing book information.
-                            </DialogDescription>
+                    <DialogContent class="max-h-[95dvh] overflow-x-auto rounded-lg bg-background p-0 shadow-xl sm:max-w-4xl">
+                        <!-- Header -->
+                        <DialogHeader class="border-b px-4 pt-4 pb-4">
+                            <DialogTitle class="text-xl font-semibold text-foreground">Book Details</DialogTitle>
                         </DialogHeader>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
-                            <!-- Book Cover and Barcode -->
-                            <div class="flex flex-col items-center md:items-start gap-4">
+                        <!-- Main Content -->
+                        <div class="grid grid-cols-1 gap-4 overflow-y-auto p-4 py-0 md:grid-cols-3">
+                            <!-- Book Cover Card -->
+                            <div class="flex flex-col items-center gap-4 rounded-lg border bg-card p-4">
                                 <!-- Book Cover Image -->
-                                <img
-                                    v-if="selectedBook?.cover_image"
-                                    :src="'/storage/resized_book_covers/' + selectedBook.cover_image"
-                                    alt="Book Cover"
-                                    class="h-40 w-32 object-cover border shadow-md rounded"
-                                />
-                                <div
-                                    v-else
-                                    class="h-40 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md rounded"
-                                >
-                                    <span class="text-sm text-center">No Cover</span>
-                                </div>
-
-                                <!-- Barcode -->
-                                <div v-if="selectedBook.book?.qrcode_path" class="flex flex-col items-center">
+                                <div class="relative w-full">
                                     <img
-                                        :src="'/storage/' + selectedBook.book.qrcode_path"
-                                        alt="Book Barcode"
-                                        class="h-16 w-auto border shadow-md"
+                                        v-if="selectedBook?.cover_image"
+                                        :src="'/storage/resized_book_covers/' + selectedBook.cover_image"
+                                        alt="Book Cover"
+                                        class=" w-full rounded-lg border-4 border-background object-cover shadow-lg"
                                     />
-                                    <span class="text-xs text-muted-foreground mt-2">
-                                        Barcode: {{ selectedBook.accession_number }}
-                                    </span>
-                                </div>
-                                <div
-                                    v-else
-                                    class="h-16 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
-                                >
-                                    <span class="text-xs">No Barcode</span>
+                                    <div
+                                        v-else
+                                        class="flex h-64 w-full items-center justify-center rounded-lg border-4 border-background bg-muted text-muted-foreground shadow-lg"
+                                    >
+                                        <span class="text-sm font-medium">No Cover</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Book Details -->
-                            <div class="md:col-span-2">
-                                <div v-if="selectedBook" class="grid gap-2 text-sm">
-                                    <p><strong>Accession No.:</strong> {{ selectedBook.accession_number }}</p>
-                                    <p><strong>Title:</strong> {{ selectedBook.title }}</p>
-
-                                    <!-- Authors Section -->
-                                    <div>
-                                        <strong>Authors:</strong>
-                                        <div v-if="selectedBook.book?.authors && selectedBook.book.authors.length > 0" class="mt-1">
-                                            <span v-for="(author, index) in selectedBook.book.authors" :key="author.id">
-                                                {{ author.name }}<span v-if="index < selectedBook.book.authors.length - 1">, </span>
-                                            </span>
+                            <!-- Details Section -->
+                            <div class="space-y-4 md:col-span-2">
+                                <div v-if="selectedBook" class="space-y-4">
+                                    <!-- Book Information -->
+                                    <div class="relative rounded-lg border bg-card p-5">
+                                        <!-- Barcode in Top Right Corner -->
+                                        <div class="absolute top-5 right-5">
+                                            <div v-if="selectedBook.book?.qrcode_path" class="flex flex-col items-center">
+                                                <img
+                                                    :src="'/storage/' + selectedBook.book.qrcode_path"
+                                                    alt="Book Barcode"
+                                                    class="h-12 w-auto rounded border shadow-sm"
+                                                />
+                                            </div>
+                                            <div
+                                                v-else
+                                                class="flex h-12 w-24 items-center justify-center rounded border bg-muted text-muted-foreground shadow-sm"
+                                            >
+                                                <span class="text-xs font-medium">No Barcode</span>
+                                            </div>
                                         </div>
-                                        <span v-else class="text-muted-foreground">No authors listed</span>
+                                        <h3 class="mb-4 text-lg font-semibold text-foreground">Book Information</h3>
+                                        <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+                                            <p><strong class="text-foreground">Accession No.:</strong> {{ selectedBook.accession_number }}</p>
+                                            <p><strong class="text-foreground">Title:</strong> {{ selectedBook.title }}</p>
+                                            <p>
+                                                <strong class="text-foreground">Authors:</strong>
+                                                <span v-if="selectedBook.book?.authors && selectedBook.book.authors.length > 0">
+                                                    <span v-for="(author, index) in selectedBook.book.authors" :key="author.id">
+                                                        {{ author.name }}<span v-if="index < selectedBook.book.authors.length - 1">, </span>
+                                                    </span>
+                                                </span>
+                                                <span v-else class="text-muted-foreground">No authors listed</span>
+                                            </p>
+                                            <p>
+                                                <strong class="text-foreground">Editors:</strong>
+                                                <span v-if="selectedBook.book?.editors && selectedBook.book.editors.length > 0">
+                                                    <span v-for="(editor, index) in selectedBook.book.editors" :key="editor.id">
+                                                        {{ editor.name }}<span v-if="index < selectedBook.book.editors.length - 1">, </span>
+                                                    </span>
+                                                </span>
+                                                <span v-else class="text-muted-foreground">No editors listed</span>
+                                            </p>
+                                            <p><strong class="text-foreground">ISBN:</strong> {{ selectedBook.book?.isbn || 'Not provided' }}</p>
+                                            <p>
+                                                <strong class="text-foreground">Publisher:</strong>
+                                                {{ selectedBook.book?.publisher || 'Not provided' }}
+                                            </p>
+                                            <p>
+                                                <strong class="text-foreground">Publication Year:</strong>
+                                                {{ selectedBook.book?.publication_year || 'Not provided' }}
+                                            </p>
+                                            <p>
+                                                <strong class="text-foreground">Category:</strong>
+                                                {{ selectedBook.book?.category?.name || 'Not provided' }}
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    <!-- Editors Section -->
-                                    <div>
-                                        <strong>Editors:</strong>
-                                        <div v-if="selectedBook.book?.editors && selectedBook.book.editors.length > 0" class="mt-1">
-                                            <span v-for="(editor, index) in selectedBook.book.editors" :key="editor.id">
-                                                {{ editor.name }}<span v-if="index < selectedBook.book.editors.length - 1">, </span>
-                                            </span>
+                                    <!-- Additional Information -->
+                                    <div class="rounded-lg border bg-card p-5">
+                                        <h3 class="mb-4 text-lg font-semibold text-foreground">Additional Information</h3>
+                                        <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+                                            <p>
+                                                <strong class="text-foreground">Location:</strong> {{ selectedBook.book?.location || 'Not provided' }}
+                                            </p>
+                                            <p><strong class="text-foreground">Subject:</strong> {{ selectedBook.subject || 'Not provided' }}</p>
+                                            <p>
+                                                <strong class="text-foreground">Status:</strong>
+                                                <span
+                                                    :class="{
+                                                        'text-green-600': selectedBook.status === 'available',
+                                                        'text-yellow-600': selectedBook.status === 'borrowed',
+                                                        'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedBook.status),
+                                                    }"
+                                                >
+                                                    {{ selectedBook.status || 'Not provided' }}
+                                                </span>
+                                            </p>
+                                            <p>
+                                                <strong class="text-foreground">Date Received:</strong>
+                                                {{
+                                                    selectedBook.date_received
+                                                        ? new Date(selectedBook.date_received).toLocaleDateString()
+                                                        : 'Not provided'
+                                                }}
+                                            </p>
+                                            <p>
+                                                <strong class="text-foreground">Added:</strong>
+                                                {{
+                                                    selectedBook.created_at ? new Date(selectedBook.created_at).toLocaleDateString() : 'Not provided'
+                                                }}
+                                            </p>
                                         </div>
-                                        <span v-else class="text-muted-foreground">No editors listed</span>
                                     </div>
-
-                                    <p><strong>ISBN:</strong> {{ selectedBook.book?.isbn || 'N/A' }}</p>
-                                    <p><strong>Publisher:</strong> {{ selectedBook.book?.publisher || 'N/A' }}</p>
-                                    <p><strong>Publication Year:</strong> {{ selectedBook.book?.publication_year || 'N/A' }}</p>
-                                    <p><strong>Category:</strong> {{ selectedBook.book?.category?.name || 'N/A' }}</p>
-                                    <p><strong>Location:</strong> {{ selectedBook.book?.location || 'N/A' }}</p>
-                                    <p><strong>Subject:</strong> {{ selectedBook.subject || 'N/A' }}</p>
-                                    <p><strong>Status:</strong>
-                                        <span :class="{
-                                            'text-green-600': selectedBook.status === 'available',
-                                            'text-yellow-600': selectedBook.status === 'borrowed',
-                                            'text-red-600': ['damaged', 'missing', 'discarded'].includes(selectedBook.status)
-                                        }">
-                                            {{ selectedBook.status || 'N/A' }}
-                                        </span>
-                                    </p>
-                                    <p><strong>Date Received:</strong> {{ selectedBook.date_received ? new Date(selectedBook.date_received).toLocaleDateString() : 'N/A' }}</p>
-                                    <p><strong>Added:</strong> {{ selectedBook.created_at ? new Date(selectedBook.created_at).toLocaleDateString() : 'N/A' }}</p>
                                 </div>
-                                <div v-else class="text-muted-foreground">
-                                    <p>No book selected.</p>
+                                <div v-else class="p-4 text-center text-muted-foreground">
+                                    <p class="text-sm">No book selected.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <DialogFooter class="p-6 pt-0">
-                            <div class="flex justify-between w-full">
-                                <Button variant="outline" @click="isDialogOpen = false">Close</Button>
-                                <Button @click="handleEdit(selectedBook?.id)">Edit Book Details</Button>
+                        <!-- Footer -->
+                        <DialogFooter class="border-t bg-background p-6">
+                            <div class="flex w-full justify-between">
+                                <Button variant="outline" @click="isDialogOpen = false" class="px-6">Close</Button>
+                                <Button @click="handleEdit(selectedBook?.id)" class="px-6">Edit Book Details</Button>
                             </div>
                         </DialogFooter>
                     </DialogContent>
