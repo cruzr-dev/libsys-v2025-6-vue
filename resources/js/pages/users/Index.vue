@@ -29,6 +29,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from '@/components/ui/badge';
 
 // API Data Interface
 interface ApiResponse {
@@ -480,6 +481,18 @@ const initializeFromURL = () => {
     });
 };
 
+const userTypes = [
+    { value: 'undergraduate_student', label: 'Undergraduate Student', color: 'bg-blue-100 text-blue-800' },
+    { value: 'graduate_student', label: 'Graduate Student', color: 'bg-green-100 text-green-800' },
+    { value: 'faculty', label: 'Faculty', color: 'bg-purple-100 text-purple-800' },
+    { value: 'staff', label: 'Staff', color: 'bg-orange-100 text-orange-800' },
+    { value: 'library_staff', label: 'Library Staff', color: 'bg-pink-100 text-pink-800' },
+];
+
+const getUserTypeInfo = (type: string) => {
+    return userTypes.find((ut) => ut.value === type) || { value: type, label: type, color: 'bg-gray-100 text-gray-800' };
+};
+
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
@@ -671,7 +684,12 @@ watch(() => window.location.search, () => {
                 <DialogContent class="sm:max-w-4xl max-h-[95dvh] p-0 bg-background rounded-lg shadow-xl overflow-x-auto">
                     <!-- Header -->
                     <DialogHeader class="px-4 pt-4 pb-4 border-b">
-                        <DialogTitle class="text-xl font-semibold text-foreground">User Details</DialogTitle>
+                        <DialogTitle class="text-xl font-semibold text-foreground">
+                            User Details
+                            <Badge v-if="selectedUser?.user_type.key" :class="getUserTypeInfo(selectedUser.user_type.key).color + ' border-0'">
+                                {{ getUserTypeInfo(selectedUser.user_type.key).label }}
+                            </Badge>
+                        </DialogTitle>
                     </DialogHeader>
 
                     <!-- Main Content -->
@@ -732,7 +750,6 @@ watch(() => window.location.search, () => {
                                         <p><strong class="text-foreground">Email:</strong> {{ selectedUser.email }}</p>
                                         <p><strong class="text-foreground">Contact:</strong> {{ selectedUser.contact_number || 'Not provided' }}</p>
                                         <p><strong class="text-foreground">Sex:</strong> {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}</p>
-                                        <p><strong class="text-foreground">User Type:</strong> {{ selectedUser.user_type?.name }}</p>
                                     </div>
                                 </div>
                             </div>
