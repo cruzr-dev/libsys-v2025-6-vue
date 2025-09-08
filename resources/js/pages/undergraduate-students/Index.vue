@@ -522,7 +522,7 @@ watch(() => window.location.search, () => {
                     <div class="flex gap-2">
                         <Link href="/users/undergraduate/create">
                             <Button variant="secondary">
-                                <Plus class="w-4 h-4" /> Add Student
+                                <Plus class="w-4 h-4" /> Add Undergraduate Student
                             </Button>
                         </Link>
                         <DropdownMenuRoot>
