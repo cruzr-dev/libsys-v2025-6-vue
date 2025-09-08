@@ -276,8 +276,19 @@ class FacultyController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Faculty $faculty)
+    public function destroy($id)
     {
-        //
+        try {
+            User::findOrFail($id)->delete();
+
+            return redirect()
+                ->route('faculties.index')
+                ->with('success', 'Student deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('faculties.index')
+                ->with('error', 'Failed to delete the student.');
+        }
+
     }
 }

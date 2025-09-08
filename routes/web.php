@@ -49,6 +49,7 @@ Route::middleware($middleware)->group(function () {
         Route::post('/faculties', [FacultyController::class, 'store'])->name('faculties.store');
         Route::get('/faculties/{id}/edit', [FacultyController::class, 'edit'])->name('faculties.edit');
         Route::patch('/faculties/{id}', [FacultyController::class, 'update'])->name('faculties.update');
+        Route::delete('/faculties/{id}', [FacultyController::class, 'destroy'])->name('faculties.destroy');
         // staff
         Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
