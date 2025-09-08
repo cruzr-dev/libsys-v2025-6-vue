@@ -25,7 +25,7 @@ class GraduateStudentController extends Controller
 
     public function fetchAll(Request $request)
     {
-        $query = User::with(['userType', 'graduateStudent.college', 'undergraduateStudent.course', 'undergraduateStudent.major']);
+        $query = User::with(['userType', 'graduateStudent.college', 'undergraduateStudent.course', 'graduateStudent.major']);
 
         $query->whereHas('userType', function ($q) {
             $q->where('key', 'graduate_student');
@@ -61,7 +61,7 @@ class GraduateStudentController extends Controller
      */
     public function create(): \Inertia\Response
     {
-        $colleges = College::where('college_type', 'undergraduate')
+        $colleges = College::where('college_type', 'graduate')
         ->with([
             'courses:id,college_id,code,name',
             'courses.majors:id,course_id,name'
@@ -73,7 +73,7 @@ class GraduateStudentController extends Controller
         $maxLibraryId = User::max('library_id') ?? 0;
         $maxCardNumber = User::max('card_number') ?? 0;
 
-        return Inertia::render('undergraduate-students/Create', [
+        return Inertia::render('graduate-students/Create', [
             'colleges' => $colleges,
             'nextLibraryId' => $maxLibraryId + 1,
             'nextCardNumber' => $maxCardNumber + 1,
@@ -121,10 +121,10 @@ class GraduateStudentController extends Controller
         }
 
         // 2. Ensure user type exists
-        $studentType = UserType::where('key', 'undergraduate_student')->first();
+        $studentType = UserType::where('key', 'graduate_student')->first();
         if (! $studentType) {
             return back()->withInput()
-                ->with('error', 'Undergraduate user type not found. Please contact the system administrator.');
+                ->with('error', 'graduate user type not found. Please contact the system administrator.');
         }
 
         // 3. Transaction
@@ -148,7 +148,7 @@ class GraduateStudentController extends Controller
                     'profile_image'  => $filename,
                 ]);
 
-                $user->undergraduateStudent()->create([
+                $user->graduateStudent()->create([
                     'contact_number' => $validated['contact_number'],
                     'college_id'     => $validated['college_id'],
                     'course_id'      => $validated['course_id'],
@@ -159,7 +159,7 @@ class GraduateStudentController extends Controller
                 $user->update(['barcode_path' => $barcodeFile]);
             });
 
-            return to_route('undergraduate.index')
+            return to_route('graduate.index')
                 ->with('success', 'You successfully created a new GraduateStudent with barcode');
 
         } catch (\Throwable $e) {
@@ -176,9 +176,9 @@ class GraduateStudentController extends Controller
      */
     public function edit($id)
     {
-        $student = User::with('undergraduateStudent')->find($id);
+        $student = User::with('graduateStudent')->find($id);
 
-        $colleges = College::where('college_type', 'undergraduate')
+        $colleges = College::where('college_type', 'graduate')
         ->with([
             'courses:id,college_id,code,name',
             'courses.majors:id,course_id,name'
@@ -186,7 +186,7 @@ class GraduateStudentController extends Controller
             ->orderBy('name')
             ->get();
 
-        return Inertia::render('undergraduate-students/Edit', [
+        return Inertia::render('graduate-students/Edit', [
             'colleges' => $colleges,
             'student' => $student,
         ]);
@@ -267,7 +267,7 @@ class GraduateStudentController extends Controller
                 $user->update($userUpdateData);
 
                 // Update student data
-                $user->undergraduateStudent()->update([
+                $user->graduateStudent()->update([
                     'contact_number' => $validated['contact_number'] ?? null,
                     'college_id'     => $validated['college_id'],
                     'course_id'      => $validated['course_id'],
@@ -286,7 +286,7 @@ class GraduateStudentController extends Controller
                 }
             });
 
-            return to_route('undergraduate.index')
+            return to_route('graduate.index')
                 ->with('success', 'GraduateStudent updated successfully');
 
         } catch (\Throwable $e) {
@@ -308,11 +308,11 @@ class GraduateStudentController extends Controller
             User::findOrFail($id)->delete();
 
             return redirect()
-                ->route('undergraduate.index')
+                ->route('graduate.index')
                 ->with('success', 'Student deleted successfully.');
         } catch (\Exception $e) {
             return redirect()
-                ->route('undergraduate.index')
+                ->route('graduate.index')
                 ->with('error', 'Failed to delete the student.');
         }
     }
