@@ -204,31 +204,36 @@ class UndergraduateStudentController extends Controller
 
         $user = User::find($id);
 
-        // 1. Validation
-        $validated = $request->validate([
-            'library_id'     => 'required|integer|min:1|max:9999999999|unique:users,library_id,' . $user->id,
-            'first_name'     => 'required|string|max:50',
-            'middle_initial' => 'nullable|string|max:1',
-            'last_name'      => 'required|string|max:50',
-            'sex'            => 'required|in:m,f',
-            'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
-            'email'          => 'required|string|lowercase|email|max:255|unique:users,email,' . $user->id,
-            'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number,' . $user->id,
-            'college_id'     => 'required|exists:colleges,id',
-            'course_id'      => 'required|exists:courses,id',
-            'major_id' => [
-                'nullable',
-                'exists:majors,id',
-                function ($attribute, $value, $fail) use ($request) {
-                    $course = Course::find($request->input('course_id'));
+        try {
 
-                    if ($course && Major::where('course_id', $course->id)->exists() && is_null($value)) {
-                        $fail('The major field is required when the selected course has majors.');
-                    }
-                },
-            ],
-            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+            $validated = $request->validate([
+                'library_id'     => 'required|integer|min:1|max:9999999999|unique:users,library_id,' . $user->id,
+                'first_name'     => 'required|string|max:50',
+                'middle_initial' => 'nullable|string|max:1',
+                'last_name'      => 'required|string|max:50',
+                'sex'            => 'required|in:m,f',
+                'contact_number' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
+                'email'          => 'required|string|lowercase|email|max:255|unique:users,email,' . $user->id,
+                'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number,' . $user->id,
+                'college_id'     => 'required|exists:colleges,id',
+                'course_id'      => 'required|exists:courses,id',
+                'major_id' => [
+                    'nullable',
+                    'exists:majors,id',
+                    function ($attribute, $value, $fail) use ($request) {
+                        $course = Course::find($request->input('course_id'));
+
+                        if ($course && Major::where('course_id', $course->id)->exists() && is_null($value)) {
+                            $fail('The major field is required when the selected course has majors.');
+                        }
+                    },
+                ],
+                'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withInput()->withErrors($e->validator)->with('error', 'Please correct the errors in the form.');
+        }
 
         // 2. Transaction
         try {
@@ -262,7 +267,7 @@ class UndergraduateStudentController extends Controller
                 $user->update($userUpdateData);
 
                 // Update student data
-                $user->student()->update([
+                $user->undergraduateStudent()->update([
                     'contact_number' => $validated['contact_number'] ?? null,
                     'college_id'     => $validated['college_id'],
                     'course_id'      => $validated['course_id'],
@@ -281,7 +286,7 @@ class UndergraduateStudentController extends Controller
                 }
             });
 
-            return to_route('undergraduate-students.index')
+            return to_route('undergraduate.index')
                 ->with('success', 'GraduateStudent updated successfully');
 
         } catch (\Throwable $e) {
