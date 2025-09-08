@@ -25,7 +25,6 @@ import { h, ref, onMounted, watch, nextTick } from 'vue';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Imports
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -228,7 +227,7 @@ const fetchData = async () => {
         });
 
         // Make API request
-        const response = await fetch(`/api/students?${params.toString()}`, {
+        const response = await fetch(`/api/undergraduate?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -520,7 +519,7 @@ watch(() => window.location.search, () => {
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <Link href="/users/students/create">
+                        <Link href="/users/undergraduate/create">
                             <Button variant="secondary">
                                 <Plus class="w-4 h-4" /> Add Student
                             </Button>
@@ -727,22 +726,22 @@ watch(() => window.location.search, () => {
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                         <p>
                                             <strong class="text-foreground">College:</strong>
-                                            <span v-if="selectedUser.student?.college">
-                                    {{ selectedUser.student.college.code }} - {{ selectedUser.student.college.name }}
+                                            <span v-if="selectedUser.undergraduateStudent?.college">
+                                    {{ selectedUser.undergraduateStudent.college.code }} - {{ selectedUser.undergraduateStudent.college.name }}
                                 </span>
                                             <span v-else class="text-muted-foreground">Not assigned</span>
                                         </p>
                                         <p>
                                             <strong class="text-foreground">Course:</strong>
-                                            <span v-if="selectedUser.student?.course">
-                                    {{ selectedUser.student.course.code }} - {{ selectedUser.student.course.name }}
+                                            <span v-if="selectedUser.undergraduateStudent?.course">
+                                    {{ selectedUser.undergraduateStudent.course.code }} - {{ selectedUser.undergraduateStudent.course.name }}
                                 </span>
                                             <span v-else class="text-muted-foreground">Not assigned</span>
                                         </p>
                                         <p>
                                             <strong class="text-foreground">Major:</strong>
-                                            <span v-if="selectedUser.student?.major">
-                                    {{ selectedUser.student.major.name }}
+                                            <span v-if="selectedUser.undergraduateStudent?.major">
+                                    {{ selectedUser.undergraduateStudent.major.name }}
                                 </span>
                                             <span v-else class="text-muted-foreground">Not assigned</span>
                                         </p>

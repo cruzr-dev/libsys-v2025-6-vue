@@ -25,10 +25,10 @@ class UndergraduateStudentController extends Controller
 
     public function fetchAll(Request $request)
     {
-        $query = User::with(['userType', 'student.college', 'student.course', 'student.major']);
+        $query = User::with(['userType', 'undergraduateStudent.college', 'undergraduateStudent.course', 'undergraduateStudent.major']);
 
         $query->whereHas('userType', function ($q) {
-            $q->where('key', 'student');
+            $q->where('key', 'undergraduate_student');
         });
 
         // Handle search
