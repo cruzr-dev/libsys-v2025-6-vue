@@ -43,7 +43,8 @@ Route::middleware($middleware)->group(function () {
             Route::post('/admins', [AdminController::class, 'store'])->name('admins.store');
             Route::get('/admins/{id}/edit', [AdminController::class, 'edit'])->name('admins.edit');
             Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->name('admins.destroy');
-        Route::patch('/admins/{id}', [AdminController::class, 'update'])->name('admins.update');
+            Route::patch('/admins/{id}', [AdminController::class, 'update'])->name('admins.update');
+            Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->name('admins.destroy');
         });
         // faculty
         Route::get('/faculties', [FacultyController::class, 'index'])->name('faculties.index');
