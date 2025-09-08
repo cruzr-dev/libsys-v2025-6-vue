@@ -305,15 +305,14 @@ class UndergraduateStudentController extends Controller
     public function destroy($id)
     {
         try {
-            $student = User::findOrFail($id);
-            $student->delete();
+            User::findOrFail($id)->delete();
 
             return redirect()
-                ->route('undergraduate-students.index')
-                ->with('success', 'GraduateStudent deleted successfully.');
+                ->route('undergraduate.index')
+                ->with('success', 'Student deleted successfully.');
         } catch (\Exception $e) {
             return redirect()
-                ->route('undergraduate-students.index')
+                ->route('undergraduate.index')
                 ->with('error', 'Failed to delete the student.');
         }
     }
