@@ -54,6 +54,7 @@ Route::middleware($middleware)->group(function () {
         Route::get('/undergraduate/create', [UndergraduateStudentController::class, 'create'])->name('undergraduate.create');
         Route::get('/graduate/create', [GraduateStudentController::class, 'create'])->name('graduate.create');
         Route::post('/undergraduate', [UndergraduateStudentController::class, 'store'])->name('undergraduate.store');
+        Route::post('/graduate', [GraduateStudentController::class, 'store'])->name('graduate.store');
         Route::get('/undergraduate/{id}/edit', [UndergraduateStudentController::class, 'edit'])->name('undergraduate.edit');
         Route::patch('/undergraduate/{id}', [UndergraduateStudentController::class, 'update'])->name('undergraduate.update');
         Route::delete('/undergraduate/{id}', [UndergraduateStudentController::class, 'destroy'])->name('undergraduate.destroy');
