@@ -255,13 +255,13 @@ const stats = [
     {
         title: 'New Arrivals',
         value: '+' + (page.props.newThisMonth?.toLocaleString() || '0'),
-        change: '+19% from last month',
+        change: `${page.props.percentChangeThisMonth > 0 ? '+' : ''}${page.props.percentChangeThisMonth}% from last month`,
         icon: PlusCircle,
     },
     {
         title: 'Borrowing Transactions',
         value: '+' + (page.props.totalBorrowings?.toLocaleString() || '0'),
-        change: '+20 since last week',
+        change: `+${page.props.weekChange} since last week`,
         icon: Repeat,
     },
 ];

@@ -15,20 +15,34 @@ class WelcomeController extends Controller
 {
     public function index(Request $request)
     {
-        $totalCollections = Record::count();
+        $now = Carbon::now();
+        $lastMonth = $now->copy()->subMonth();
+        $lastWeek = $now->copy()->subWeek();
 
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-        $newThisMonth = Record::whereYear('created_at', $currentYear)
-            ->whereMonth('created_at', $currentMonth)
+        // Collections
+        $totalCollections = Record::count();
+        $newThisMonth = Record::whereYear('created_at', $now->year)
+            ->whereMonth('created_at', $now->month)
+            ->count();
+        $lastMonthCount = Record::whereYear('created_at', $lastMonth->year)
+            ->whereMonth('created_at', $lastMonth->month)
             ->count();
 
+        $percentChangeThisMonth = $lastMonthCount > 0
+            ? round(($newThisMonth - $lastMonthCount) / $lastMonthCount * 100)
+            : 100;
+
+        // Borrowing Transactions
         $totalBorrowings = BorrowingTransaction::count();
+        $lastWeekCount = BorrowingTransaction::where('created_at', '>=', $lastWeek)->count();
+        $weekChange = $lastWeekCount;
 
         return Inertia::render('Welcome', [
             'totalCollections' => $totalCollections,
             'newThisMonth' => $newThisMonth,
+            'percentChangeThisMonth' => $percentChangeThisMonth,
             'totalBorrowings' => $totalBorrowings,
+            'weekChange' => $weekChange,
         ]);
     }
 
