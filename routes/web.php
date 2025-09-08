@@ -46,20 +46,23 @@ Route::middleware($middleware)->group(function () {
         Route::get('/faculties', [FacultyController::class, 'index'])->name('faculties.index');
         Route::get('/faculties/create', [FacultyController::class, 'create'])->name('faculties.create');
         Route::post('/faculties', [FacultyController::class, 'store'])->name('faculties.store');
+        Route::get('/faculties/{id}/edit', [FacultyController::class, 'edit'])->name('faculties.edit');
         Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+        // Undergraduate Students
         Route::get('/undergraduate', [UndergraduateStudentController::class, 'index'])->name('undergraduate.index');
-        Route::get('/graduate', [GraduateStudentController::class, 'index'])->name('graduate.index');
         Route::get('/undergraduate/create', [UndergraduateStudentController::class, 'create'])->name('undergraduate.create');
-        Route::get('/graduate/create', [GraduateStudentController::class, 'create'])->name('graduate.create');
         Route::post('/undergraduate', [UndergraduateStudentController::class, 'store'])->name('undergraduate.store');
-        Route::post('/graduate', [GraduateStudentController::class, 'store'])->name('graduate.store');
         Route::get('/undergraduate/{id}/edit', [UndergraduateStudentController::class, 'edit'])->name('undergraduate.edit');
-        Route::get('/graduate/{id}/edit', [GraduateStudentController::class, 'edit'])->name('graduate.edit');
         Route::patch('/undergraduate/{id}', [UndergraduateStudentController::class, 'update'])->name('undergraduate.update');
-        Route::patch('/graduate/{id}', [GraduateStudentController::class, 'update'])->name('graduate.update');
         Route::delete('/undergraduate/{id}', [UndergraduateStudentController::class, 'destroy'])->name('undergraduate.destroy');
+        // Graduate Students
+        Route::get('/graduate', [GraduateStudentController::class, 'index'])->name('graduate.index');
+        Route::get('/graduate/create', [GraduateStudentController::class, 'create'])->name('graduate.create');
+        Route::post('/graduate', [GraduateStudentController::class, 'store'])->name('graduate.store');
+        Route::get('/graduate/{id}/edit', [GraduateStudentController::class, 'edit'])->name('graduate.edit');
+        Route::patch('/graduate/{id}', [GraduateStudentController::class, 'update'])->name('graduate.update');
         Route::delete('/graduate/{id}', [GraduateStudentController::class, 'destroy'])->name('graduate.destroy');
     });
     Route::prefix('records')->group(function () {

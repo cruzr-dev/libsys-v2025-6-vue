@@ -161,9 +161,22 @@ class FacultyController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Faculty $faculty)
+    public function edit($id)
     {
-        //
+        $faculty = User::with('faculty')->find($id);
+
+        $colleges = College::with(
+            'courses:id,college_id,code,name'
+        )
+            ->select('id', 'code', 'name')
+            ->orderBy('name')
+            ->get();
+
+
+        return Inertia::render('faculties/Edit', [
+            'colleges' => $colleges,
+            'faculty' =>  $faculty,
+        ]);
     }
 
     /**
