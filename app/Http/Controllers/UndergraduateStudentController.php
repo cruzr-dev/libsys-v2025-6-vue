@@ -61,7 +61,8 @@ class UndergraduateStudentController extends Controller
      */
     public function create(): \Inertia\Response
     {
-        $colleges = College::with([
+        $colleges = College::where('college_type', 'undergraduate')
+        ->with([
             'courses:id,college_id,code,name',
             'courses.majors:id,course_id,name'
         ])->select('id', 'code', 'name')

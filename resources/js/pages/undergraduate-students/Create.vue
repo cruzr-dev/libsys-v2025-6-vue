@@ -43,7 +43,7 @@ const props = defineProps<{
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
     { title: 'Students', href: '/users/undergraduate' },
-    { title: 'Add GraduateStudent', href: '/users/undergraduate/create' },
+    { title: 'Add Undergraduate Student', href: '/users/undergraduate/create' },
 ];
 
 // Initialize the form with all necessary fields (pre-filled with incremented values)
@@ -130,11 +130,13 @@ const goBack = () => {
 </script>
 
 <template>
-    <Head title="Add Student" />
+    <Head title="Add Undergraduate Student" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
             <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm relative">
+
+                <h2 class="text-xl text-center font-semibold text-gray-900">Add Undergraduate Student</h2>
 
                 <!-- Back Button -->
                 <div class="absolute right-4 top-4">
