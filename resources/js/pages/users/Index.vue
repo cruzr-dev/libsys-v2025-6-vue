@@ -169,6 +169,7 @@ const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({
     school_id: false,
     sex: false,
+    middle_initial: false,
 });
 const expanded = ref({});
 const pageSizes = [5, 10, 20, 30, 40, 50];
