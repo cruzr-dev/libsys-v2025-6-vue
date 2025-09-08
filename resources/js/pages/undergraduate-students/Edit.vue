@@ -60,7 +60,7 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
-    { title: 'Students', href: '/users/students' },
+    { title: 'Students', href: '/users/undergraduate' },
     { title: 'Edit GraduateStudent', href: `/users/students/${props.student.id}/edit` },
 ];
 
@@ -168,7 +168,7 @@ const handleDelete = () => {
 const deleteStudent = (id: number | null) => {
     if (!id) return
     // send a delete request via Inertia or Axios
-    router.delete(route('students.destroy', id))
+    router.delete(route('undergraduate.destroy', id))
 }
 
 // Handle form submission
@@ -193,7 +193,7 @@ const submit = () => {
     formData.append('_method', 'PATCH');
 
     // Send the FormData using Inertia's router
-    router.post(route('students.update', props.student.id), formData, {
+    router.post(route('undergraduate.update', props.student.id), formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },

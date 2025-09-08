@@ -28,7 +28,7 @@ class UserController extends Controller
 
         // Check if user has a UserType and is a student
         if ($user->UserType && $user->UserType->key === 'student') {
-            return to_route('students.edit', ['id' => $id]);
+            return to_route('undergraduate.edit', ['id' => $id]);
         }
 
         // Fallback for non-student users

@@ -13,14 +13,14 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 
-class StudentController extends Controller
+class UndergraduateStudentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(): \Inertia\Response
     {
-        return Inertia::render('students/Index');
+        return Inertia::render('undergraduate-students/Index');
     }
 
     public function fetchAll(Request $request)
@@ -72,7 +72,7 @@ class StudentController extends Controller
         $maxLibraryId = User::max('library_id') ?? 0;
         $maxCardNumber = User::max('card_number') ?? 0;
 
-        return Inertia::render('students/Create', [
+        return Inertia::render('undergraduate-students/Create', [
             'colleges' => $colleges,
             'nextLibraryId' => $maxLibraryId + 1,
             'nextCardNumber' => $maxCardNumber + 1,
@@ -152,7 +152,7 @@ class StudentController extends Controller
                 $user->update(['barcode_path' => $barcodeFile]);
             });
 
-            return to_route('students.index')
+            return to_route('undergraduate-students.index')
                 ->with('success', 'You successfully created a new GraduateStudent with barcode');
 
         } catch (\Throwable $e) {
@@ -178,7 +178,7 @@ class StudentController extends Controller
             ->orderBy('name')
             ->get();
 
-        return Inertia::render('students/Edit', [
+        return Inertia::render('undergraduate-students/Edit', [
             'colleges' => $colleges,
             'student' => $student,
         ]);
@@ -273,7 +273,7 @@ class StudentController extends Controller
                 }
             });
 
-            return to_route('students.index')
+            return to_route('undergraduate-students.index')
                 ->with('success', 'GraduateStudent updated successfully');
 
         } catch (\Throwable $e) {
@@ -296,11 +296,11 @@ class StudentController extends Controller
             $student->delete();
 
             return redirect()
-                ->route('students.index')
+                ->route('undergraduate-students.index')
                 ->with('success', 'GraduateStudent deleted successfully.');
         } catch (\Exception $e) {
             return redirect()
-                ->route('students.index')
+                ->route('undergraduate-students.index')
                 ->with('error', 'Failed to delete the student.');
         }
     }

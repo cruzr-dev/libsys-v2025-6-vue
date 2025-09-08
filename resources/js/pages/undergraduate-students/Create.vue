@@ -42,8 +42,8 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
-    { title: 'Students', href: '/users/students' },
-    { title: 'Add GraduateStudent', href: '/users/students/create' },
+    { title: 'Students', href: '/users/undergraduate' },
+    { title: 'Add GraduateStudent', href: '/users/undergraduate/create' },
 ];
 
 // Initialize the form with all necessary fields (pre-filled with incremented values)
@@ -121,7 +121,7 @@ watch(() => form.course_id, (newCourseId) => {
 
 // Handle form submission
 const submit = () => {
-    form.post(route('students.store'));
+    form.post(route('undergraduate.store'));
 };
 
 const goBack = () => {

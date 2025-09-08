@@ -9,7 +9,7 @@ use App\Http\Controllers\LibraryVisitController;
 use App\Http\Controllers\PeriodicalController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\StaffController;
-use App\Http\Controllers\StudentController;
+use App\Http\Controllers\UndergraduateStudentController;
 use App\Http\Controllers\ThesisController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WelcomeController;
@@ -37,7 +37,7 @@ Route::get('/borrowings/books/search', [BorrowingTransactionController::class, '
 Route::get('/borrowings/users/search', [BorrowingTransactionController::class, 'searchUser']);
 
 Route::get('/users/', [UserController::class, 'fetchAll']);
-Route::get('/students/', [StudentController::class, 'fetchAll']);
+Route::get('/undergraduate/', [UndergraduateStudentController::class, 'fetchAll']);
 Route::get('/faculties/', [FacultyController::class, 'fetchAll']);
 Route::get('/staff/', [StaffController::class, 'fetchAll']);
 Route::get('/admins/', [AdminController::class, 'fetchAll']);

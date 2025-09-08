@@ -25,7 +25,6 @@ import { h, ref, onMounted, watch, nextTick } from 'vue';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -65,7 +64,7 @@ const handleShow = (user: any) => {
 };
 
 const handleEdit = (id) => {
-    router.get(route('students.edit', id));
+    router.get(route('undergraduate.edit', id));
 }
 
 // Table columns definition
@@ -472,7 +471,7 @@ const initializeFromURL = () => {
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '/users' },
-    { title: 'Students', href: '/users/students' },
+    { title: 'Students', href: '/users/undergraduate' },
 ];
 
 // Lifecycle

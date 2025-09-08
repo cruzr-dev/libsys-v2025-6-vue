@@ -12,7 +12,7 @@ use App\Http\Controllers\PeriodicalController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\StaffController;
-use App\Http\Controllers\StudentController;
+use App\Http\Controllers\UndergraduateStudentController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\ThesisController;
 use App\Http\Controllers\UserController;
@@ -48,12 +48,12 @@ Route::middleware($middleware)->group(function () {
         Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
-        Route::get('/undergraduate', [StudentController::class, 'index'])->name('undergraduate.index');
-        Route::get('/undergraduate/create', [StudentController::class, 'create'])->name('undergraduate.create');
-        Route::post('/undergraduate', [StudentController::class, 'store'])->name('undergraduate.store');
-        Route::get('/undergraduate/{id}/edit', [StudentController::class, 'edit'])->name('undergraduate.edit');
-        Route::patch('/undergraduate/{id}', [StudentController::class, 'update'])->name('undergraduate.update');
-        Route::delete('/undergraduate/{id}', [StudentController::class, 'destroy'])->name('undergraduate.destroy');
+        Route::get('/undergraduate', [UndergraduateStudentController::class, 'index'])->name('undergraduate.index');
+        Route::get('/undergraduate/create', [UndergraduateStudentController::class, 'create'])->name('undergraduate.create');
+        Route::post('/undergraduate', [UndergraduateStudentController::class, 'store'])->name('undergraduate.store');
+        Route::get('/undergraduate/{id}/edit', [UndergraduateStudentController::class, 'edit'])->name('undergraduate.edit');
+        Route::patch('/undergraduate/{id}', [UndergraduateStudentController::class, 'update'])->name('undergraduate.update');
+        Route::delete('/undergraduate/{id}', [UndergraduateStudentController::class, 'destroy'])->name('undergraduate.destroy');
     });
     Route::prefix('records')->group(function () {
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
