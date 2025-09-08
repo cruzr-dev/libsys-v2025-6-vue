@@ -723,25 +723,18 @@ watch(() => window.location.search, () => {
                                     <h3 class="font-semibold text-lg mb-4 text-foreground">Faculty Information</h3>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                         <p>
-                                            <strong class="text-foreground">Department:</strong>
-                                            <span v-if="selectedUser.faculty?.department">
-                                    {{ selectedUser.faculty.department.code }} - {{ selectedUser.faculty.department.name }}
+                                            <strong class="text-foreground">College:</strong>
+                                            <span v-if="selectedUser.faculty?.college">
+                                    {{ selectedUser.faculty.college.code }} - {{ selectedUser.faculty.college.name }}
                                 </span>
                                             <span v-else class="text-muted-foreground">Not assigned</span>
                                         </p>
                                         <p>
-                                            <strong class="text-foreground">Position:</strong>
-                                            <span v-if="selectedUser.faculty?.position">
-                                    {{ selectedUser.faculty.position }}
+                                            <strong class="text-foreground">Department:</strong>
+                                            <span v-if="selectedUser.faculty?.course">
+                                    {{ selectedUser.faculty.course.code }} - {{ selectedUser.faculty.course.name }}
                                 </span>
-                                            <span v-else class="text-muted-foreground">Not specified</span>
-                                        </p>
-                                        <p>
-                                            <strong class="text-foreground">Employment Status:</strong>
-                                            <span v-if="selectedUser.faculty?.employment_status">
-                                    {{ selectedUser.faculty.employment_status }}
-                                </span>
-                                            <span v-else class="text-muted-foreground">Not specified</span>
+                                            <span v-else class="text-muted-foreground">Not assigned</span>
                                         </p>
                                     </div>
                                 </div>
