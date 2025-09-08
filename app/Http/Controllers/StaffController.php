@@ -208,7 +208,7 @@ class StaffController extends Controller
                     'library_id'     => $validated['library_id'],
                     'card_number'    => $validated['card_number'],
                     'first_name'     => $validated['first_name'],
-                    'middle_initial' => $validated['middle_initial'],
+                    'middle_initial' => $validated['middle_initial'] ?? '',
                     'last_name'      => $validated['last_name'],
                     'sex'            => $validated['sex'],
                     'email'          => $validated['email'],

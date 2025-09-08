@@ -62,8 +62,8 @@ const form = useForm({
     middle_initial: props.staff.middle_initial || '',
     last_name: props.staff.last_name,
     sex: props.staff.sex,
-    contact_number: props.staff.contact_number || '',
     email: props.staff.email,
+    profile_image: props.staff.profile_image,
     student_type: props.staff.student_type,
     card_number: props.staff.card_number,
     // Access the academic info from the staff relationship
@@ -305,19 +305,6 @@ const goBack = () => {
                     <div class="space-y-6">
                         <h2 class="text-lg font-semibold text-gray-900">Contact Information</h2>
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div class="grid gap-2">
-                                <Label for="contact_number" class="text-sm font-medium">Contact Number</Label>
-                                <Input
-                                    id="contact_number"
-                                    type="text"
-                                    :tabindex="6"
-                                    v-model="form.contact_number"
-                                    @input="form.clearErrors('contact_number')"
-                                    placeholder="10 Digit Contact Number"
-                                    class="h-10"
-                                />
-                                <InputError :message="form.errors.contact_number" />
-                            </div>
 
                             <div class="grid gap-2">
                                 <Label for="email" class="text-sm font-medium"> Email Address <span class="text-red-500">*</span> </Label>
