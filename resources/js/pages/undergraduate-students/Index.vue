@@ -484,6 +484,7 @@ watch(() => window.location.search, () => {
     initializeFromURL();
     fetchData();
 });
+
 </script>
 
 <template>
@@ -682,6 +683,7 @@ watch(() => window.location.search, () => {
                             </div>
 
                             <!-- Barcode -->
+                            {{ console.log(selectedUser)}}
                             <div class="flex flex-col items-center gap-2 w-full">
                                 <div v-if="selectedUser?.barcode_path" class="w-full">
                                     <img
@@ -726,22 +728,22 @@ watch(() => window.location.search, () => {
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                         <p>
                                             <strong class="text-foreground">College:</strong>
-                                            <span v-if="selectedUser.undergraduateStudent?.college">
-                                    {{ selectedUser.undergraduateStudent.college.code }} - {{ selectedUser.undergraduateStudent.college.name }}
+                                            <span v-if="selectedUser.undergraduate_student?.college">
+                                    {{ selectedUser.undergraduate_student.college.code }} - {{ selectedUser.undergraduate_student.college.name }}
                                 </span>
                                             <span v-else class="text-muted-foreground">Not assigned</span>
                                         </p>
                                         <p>
                                             <strong class="text-foreground">Course:</strong>
-                                            <span v-if="selectedUser.undergraduateStudent?.course">
-                                    {{ selectedUser.undergraduateStudent.course.code }} - {{ selectedUser.undergraduateStudent.course.name }}
+                                            <span v-if="selectedUser.undergraduate_student?.course">
+                                    {{ selectedUser.undergraduate_student.course.code }} - {{ selectedUser.undergraduate_student.course.name }}
                                 </span>
                                             <span v-else class="text-muted-foreground">Not assigned</span>
                                         </p>
                                         <p>
                                             <strong class="text-foreground">Major:</strong>
-                                            <span v-if="selectedUser.undergraduateStudent?.major">
-                                    {{ selectedUser.undergraduateStudent.major.name }}
+                                            <span v-if="selectedUser.undergraduate_student?.major">
+                                    {{ selectedUser.undergraduate_student.major.name }}
                                 </span>
                                             <span v-else class="text-muted-foreground">Not assigned</span>
                                         </p>
