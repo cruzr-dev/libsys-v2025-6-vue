@@ -93,8 +93,11 @@ class UserImportSeeder extends Seeder
                     $this->createUndergraduateRecord($user, $row);
                 } elseif ($user->user_type_id === $userTypeIds['graduate_student']) {
                     $this->createGraduateSchoolRecord($user, $row);
+                } elseif ($user->user_type_id === $userTypeIds['faculty']) {
+                    $this->createFacultyRecord($user, $row);
+                } elseif ($user->user_type_id === $userTypeIds['staff']) {
+                    $this->createStaffRecord($user, $row);
                 }
-
 
                 $importedCount++;
             } catch (\Exception $e) {
@@ -338,6 +341,68 @@ class UserImportSeeder extends Seeder
         ];
 
         $user->graduateStudent()->create($graduateSchoolData);
+    }
+
+    /**
+     * Create faculty record for a user.
+     *
+     * @param User $user
+     * @param array $row
+     */
+    private function createFacultyRecord(User $user, array $row): void
+    {
+        try {
+            // Get a random college (can be either undergraduate or graduate)
+            $college = College::inRandomOrder()->first();
+
+            if (!$college) {
+                Log::error('No colleges found in database');
+                $collegeId = null;
+                $courseId = null;
+                $majorId = null;
+            } else {
+                $collegeId = $college->id;
+
+                // Get a random course from the selected college
+                $course = $college->courses()->inRandomOrder()->first();
+
+                if (!$course) {
+                    Log::error("No courses found for college: {$college->code}");
+                    $courseId = null;
+                    $majorId = null;
+                } else {
+                    $courseId = $course->id;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error selecting random college/course for faculty: ' . $e->getMessage());
+            $collegeId = null;
+            $courseId = null;
+        }
+
+        $contactNumber = $this->parseContactNumber($row[7] ?? null);
+        $facultyData = [
+            'college_id' => $collegeId,
+            'course_id' => $courseId,
+        ];
+
+        $user->faculty()->create($facultyData);
+    }
+
+    /**
+     * Create staff record for a user.
+     *
+     * @param User $user
+     * @param array $row
+     */
+    private function createStaffRecord(User $user, array $row): void
+    {
+
+        $staffData = [
+            'office' => 'Get data from library',
+        ];
+
+        $user->staff()->create($staffData);
     }
 
     /**
