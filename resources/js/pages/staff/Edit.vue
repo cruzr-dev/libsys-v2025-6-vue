@@ -9,7 +9,7 @@ import Layout from '@/layouts/users/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { LoaderCircle, ArrowLeft } from 'lucide-vue-next';
-import { computed, watch, ref, onBeforeUnmount } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import DeleteDialog from '@/components/DeleteDialog.vue';
 
 // Updated interface to match your Laravel controller structure
@@ -108,22 +108,6 @@ const handleProfileImageChange = (event: Event) => {
 onBeforeUnmount(() => {
     if (previewUrl.value && previewUrl.value.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrl.value);
-    }
-});
-
-// Computed property to get courses based on selected college
-const availableCourses = computed(() => {
-    if (!form.college_id) return [];
-
-    const selectedCollege = props.colleges.find(college => college.id === form.college_id);
-    return selectedCollege?.courses || [];
-});
-
-// Watch for college changes to reset dependent fields
-watch(() => form.college_id, (newCollegeId) => {
-    if (newCollegeId !== null) {
-        form.course_id = null;
-        form.clearErrors('course_id');
     }
 });
 
