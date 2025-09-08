@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Imports
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -19,17 +20,9 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, X, Loader2, Eye, Search, Plus } from 'lucide-vue-next';
+import { ArrowUpDown, ChevronDown, Eye, Loader2, Plus, Search, X } from 'lucide-vue-next';
 import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
-import { h, ref, onMounted, watch, nextTick } from 'vue';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import { h, nextTick, onMounted, ref, watch } from 'vue';
 
 // API Data Interface
 interface ApiResponse {
@@ -127,19 +120,17 @@ const columns: ColumnDef<any>[] = [
         header: 'Action',
         enableHiding: false,
         cell: ({ row }) =>
-            h(Button,
+            h(
+                Button,
                 {
                     variant: 'outline',
                     size: 'sm',
                     onClick: () => handleShow(row.original),
-                    class: 'flex items-center gap-2'
+                    class: 'flex items-center gap-2',
                 },
-                () => [
-                    h(Eye, { class: 'h-4 w-4 text-muted-foreground' }),
-                    'Show'
-                ]
-            )
-    }
+                () => [h(Eye, { class: 'h-4 w-4 text-muted-foreground' }), 'Show'],
+            ),
+    },
 ];
 
 // Sorting helper
@@ -173,7 +164,7 @@ const restoreScrollPosition = () => {
     nextTick(() => {
         window.scrollTo({
             top: scrollPosition.value,
-            behavior: 'instant'
+            behavior: 'instant',
         });
     });
 };
@@ -207,7 +198,7 @@ const fetchData = async () => {
         }
 
         // Filters
-        columnFilters.value.forEach(filter => {
+        columnFilters.value.forEach((filter) => {
             if (Array.isArray(filter.value) && filter.value.length > 0) {
                 params.append(filter.id, filter.value.join(','));
             } else if (filter.value !== '' && filter.value !== null && filter.value !== undefined) {
@@ -227,10 +218,10 @@ const fetchData = async () => {
         // Make API request
         const response = await fetch(`/api/staff?${params.toString()}`, {
             headers: {
-                'Accept': 'application/json',
+                Accept: 'application/json',
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-            }
+            },
         });
 
         if (!response.ok) {
@@ -249,7 +240,6 @@ const fetchData = async () => {
         // Update pagination state to match API response
         pagination.value.pageIndex = (result.current_page || 1) - 1;
         pagination.value.pageSize = result.per_page || 10;
-
     } catch (err) {
         console.error('API fetch error:', err);
         error.value = err instanceof Error ? err.message : 'An error occurred while fetching data';
@@ -478,10 +468,13 @@ onMounted(() => {
 });
 
 // Watch for external changes that might require refetch
-watch(() => window.location.search, () => {
-    initializeFromURL();
-    fetchData();
-});
+watch(
+    () => window.location.search,
+    () => {
+        initializeFromURL();
+        fetchData();
+    },
+);
 </script>
 
 <template>
@@ -490,13 +483,10 @@ watch(() => window.location.search, () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
             <div class="w-full">
-
                 <!-- Error message -->
-                <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                <div v-if="error" class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
                     <p>{{ error }}</p>
-                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2">
-                        Retry
-                    </Button>
+                    <Button variant="outline" size="sm" @click="fetchData" class="mt-2"> Retry </Button>
                 </div>
 
                 <div class="flex items-center justify-between gap-2 py-4">
@@ -511,16 +501,14 @@ watch(() => window.location.search, () => {
                             <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
                                 <X class="h-4 w-4" />
                             </Button>
-                            <div v-else class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none">
+                            <div v-else class="pointer-events-none absolute top-0 right-0 flex h-full items-center justify-center px-2">
                                 <Search class="h-4 w-4 text-foreground" />
                             </div>
                         </div>
                     </div>
                     <div class="flex gap-2">
                         <Link :href="route('staff.create')">
-                            <Button variant="secondary">
-                                <Plus class="w-4 h-4" /> Add Staff
-                            </Button>
+                            <Button variant="secondary"> <Plus class="h-4 w-4" /> Add Staff </Button>
                         </Link>
                         <DropdownMenuRoot>
                             <DropdownMenuTrigger as-child>
@@ -576,17 +564,15 @@ watch(() => window.location.search, () => {
 
                             <TableRow v-else-if="isLoading">
                                 <TableCell :colspan="columns.length" class="h-24 text-center">
-                                    <div class="flex justify-center items-center">
-                                        <Loader2 class="h-4 w-4 animate-spin mr-2" />
+                                    <div class="flex items-center justify-center">
+                                        <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                                         Loading...
                                     </div>
                                 </TableCell>
                             </TableRow>
 
                             <TableRow v-else>
-                                <TableCell :colspan="columns.length" class="h-24 text-center">
-                                    No results found.
-                                </TableCell>
+                                <TableCell :colspan="columns.length" class="h-24 text-center"> No results found. </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -631,12 +617,7 @@ watch(() => window.location.search, () => {
                             >
                                 <ChevronLeftIcon class="h-4 w-4" />
                             </Button>
-                            <Button
-                                variant="outline"
-                                class="h-8 w-8 p-0"
-                                :disabled="!table.getCanNextPage() || isLoading"
-                                @click="goToNextPage"
-                            >
+                            <Button variant="outline" class="h-8 w-8 p-0" :disabled="!table.getCanNextPage() || isLoading" @click="goToNextPage">
                                 <ChevronRightIcon class="h-4 w-4" />
                             </Button>
                             <Button
@@ -653,72 +634,108 @@ watch(() => window.location.search, () => {
             </div>
 
             <Dialog v-model:open="isDialogOpen">
-                <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
-                    <DialogHeader class="p-6 pb-0">
-                        <DialogTitle>Staff Details</DialogTitle>
-                        <DialogDescription>
-                            Viewing staff profile information.
-                        </DialogDescription>
+                <DialogContent class="max-h-[95dvh] overflow-x-auto rounded-lg bg-background p-0 shadow-xl sm:max-w-4xl">
+                    <!-- Header -->
+                    <DialogHeader class="border-b px-4 pt-4 pb-4">
+                        <DialogTitle class="text-xl font-semibold text-foreground">Staff Profile</DialogTitle>
                     </DialogHeader>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
-                        <!-- Profile Image and Barcode -->
-                        <div class="flex flex-col items-center md:items-start gap-4">
+                    <!-- Main Content -->
+                    <div class="grid grid-cols-1 gap-4 overflow-y-auto p-4 py-0 md:grid-cols-3">
+                        <!-- Profile Card -->
+                        <div class="flex flex-col items-center gap-4 rounded-lg border bg-card p-4">
                             <!-- Profile Image -->
-                            <img
-                                v-if="selectedUser?.profile_image"
-                                :src="'/storage/profile_images/' + selectedUser.profile_image"
-                                alt="Profile Image"
-                                class="h-32 w-32 rounded-full object-cover border shadow-md"
-                            />
-                            <div
-                                v-else
-                                class="h-32 w-32 rounded-full flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
-                            >
-                                <span class="text-sm">No Image</span>
+                            <div class="relative">
+                                <img
+                                    v-if="selectedUser?.profile_image"
+                                    :src="'/storage/profile_images/' + selectedUser.profile_image"
+                                    alt="Profile Image"
+                                    class="h-36 w-36 rounded-full border-4 border-background object-cover shadow-lg"
+                                />
+                                <div
+                                    v-else
+                                    class="flex h-36 w-36 items-center justify-center rounded-full border-4 border-background bg-muted text-muted-foreground shadow-lg"
+                                >
+                                    <span class="text-sm font-medium">No Image</span>
+                                </div>
                             </div>
 
-                            <!-- Barcode Image -->
-                            <div v-if="selectedUser?.barcode_path" class="flex flex-col items-center">
-                                <img
-                                    :src="'/storage/' + selectedUser.barcode_path"
-                                    alt="User Barcode"
-                                    class="h-16 w-auto border shadow-md"
-                                />
-                                <span class="text-xs text-muted-foreground mt-2">Barcode: {{ selectedUser.card_number }}</span>
-                            </div>
-                            <div
-                                v-else
-                                class="h-16 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
-                            >
-                                <span class="text-xs">No Barcode</span>
+                            <!-- Barcode -->
+                            <div class="flex w-full flex-col items-center gap-2">
+                                <div v-if="selectedUser?.barcode_path" class="w-full">
+                                    <img
+                                        :src="'/storage/' + selectedUser.barcode_path"
+                                        alt="User Barcode"
+                                        class="mx-auto h-16 w-auto rounded border shadow-sm"
+                                    />
+                                    <span class="mt-2 block text-center text-xs text-muted-foreground">
+                                        Barcode: {{ selectedUser.card_number }}
+                                    </span>
+                                </div>
+                                <div
+                                    v-else
+                                    class="flex h-16 w-full items-center justify-center rounded border bg-muted text-muted-foreground shadow-sm"
+                                >
+                                    <span class="text-xs font-medium">No Barcode</span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- User Details -->
-                        <div class="md:col-span-2">
-                            <div v-if="selectedUser" class="grid gap-2 text-sm">
-                                <p><strong>Library ID:</strong> {{ selectedUser.library_id }}</p>
-                                <p><strong>Card #:</strong> {{ selectedUser.card_number }}</p>
-                                <p><strong>School ID:</strong> {{ selectedUser.school_id }}</p>
-                                <p><strong>Name:</strong> {{ selectedUser.first_name }} {{ selectedUser.middle_initial + '.' }} {{ selectedUser.last_name }}</p>
-                                <p><strong>Email:</strong> {{ selectedUser.email }}</p>
-                                <p><strong>Contact:</strong> {{ selectedUser.contact_number }}</p>
-                                <p><strong>Sex:</strong> {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}</p>
-                                <p><strong>User Type:</strong> {{ selectedUser.user_type?.name }}</p>
+                        <!-- Details Section -->
+                        <div class="space-y-4 md:col-span-2">
+                            <div v-if="selectedUser" class="space-y-4">
+                                <!-- Personal Information -->
+                                <div class="rounded-lg border bg-card p-5">
+                                    <h3 class="mb-4 text-lg font-semibold text-foreground">Personal Information</h3>
+                                    <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+                                        <p><strong class="text-foreground">Library ID:</strong> {{ selectedUser.library_id }}</p>
+                                        <p><strong class="text-foreground">Card #:</strong> {{ selectedUser.card_number }}</p>
+                                        <p><strong class="text-foreground">School ID:</strong> {{ selectedUser.school_id }}</p>
+                                        <p>
+                                            <strong class="text-foreground">Name:</strong>
+                                            {{ selectedUser.first_name }}
+                                            {{ selectedUser.middle_initial ? selectedUser.middle_initial + '.' : '' }}
+                                            {{ selectedUser.last_name }}
+                                        </p>
+                                        <p><strong class="text-foreground">Email:</strong> {{ selectedUser.email }}</p>
+                                        <p><strong class="text-foreground">Contact:</strong> {{ selectedUser.contact_number || 'Not provided' }}</p>
+                                        <p>
+                                            <strong class="text-foreground">Sex:</strong>
+                                            {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}
+                                        </p>
+                                        <p><strong class="text-foreground">User Type:</strong> {{ selectedUser.user_type?.name }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- staff Information -->
+                                <div class="rounded-lg border bg-card p-5">
+                                    <h3 class="mb-4 text-lg font-semibold text-foreground">Staff Information</h3>
+                                    <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+                                        <p>
+                                            <strong class="text-foreground">Office:</strong>
+                                            <span v-if="selectedUser.staff?.office">
+                                                {{ selectedUser.staff.office }}
+                                            </span>
+                                            <span v-else class="text-muted-foreground">Not assigned</span>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <div v-else class="text-muted-foreground">
-                                <p>No staff selected.</p>
+                            <div v-else class="p-4 text-center text-muted-foreground">
+                                <p class="text-sm">No staff selected.</p>
                             </div>
                         </div>
                     </div>
 
-                    <DialogFooter class="p-6 pt-0">
-                        <Button @click="isDialogOpen = false">Close</Button>
+                    <!-- Footer -->
+                    <DialogFooter class="border-t bg-background p-6">
+                        <div class="flex w-full justify-between">
+                            <Button variant="outline" @click="isDialogOpen = false" class="px-6">Close</Button>
+                            <Button @click="handleEdit(selectedUser.id)" class="px-6">Edit Staff Details</Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
         </Layout>
     </AppLayout>
 </template>
