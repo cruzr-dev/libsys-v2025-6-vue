@@ -87,19 +87,25 @@ class FacultyController extends Controller
         ProfileImageService $imageService,
         BarcodeService $barcodeService
     ): \Illuminate\Http\RedirectResponse {
-        // 1. Validation
-        $validated = $request->validate([
-            'library_id'     => 'required|integer|digits_between:1,10|unique:users,library_id',
-            'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
-            'first_name'     => 'required|string|max:50',
-            'middle_initial' => 'nullable|string|max:1',
-            'last_name'      => 'required|string|max:50',
-            'sex'            => 'required|in:m,f',
-            'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
-            'college_id'     => 'required|exists:colleges,id',
-            'course_id'      => 'required|exists:courses,id',
-            'profile_image'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+
+        try {
+
+            $validated = $request->validate([
+                'library_id'     => 'required|integer|digits_between:1,10|unique:users,library_id',
+                'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
+                'first_name'     => 'required|string|max:50',
+                'middle_initial' => 'nullable|string|max:1',
+                'last_name'      => 'required|string|max:50',
+                'sex'            => 'required|in:m,f',
+                'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
+                'college_id'     => 'required|exists:colleges,id',
+                'course_id'      => 'required|exists:courses,id',
+                'profile_image'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
+
+        }  catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withInput()->withErrors($e->validator)->with('error', 'Please correct the errors in the form.');
+        }
 
         // 2. Ensure user type exists
         $facultyType = UserType::where('key', 'faculty')->first();

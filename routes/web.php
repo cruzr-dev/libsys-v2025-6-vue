@@ -36,17 +36,20 @@ Route::middleware($middleware)->group(function () {
         Route::get('/all', [UserController::class, 'all'])->name('users.all');
         Route::get('/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
-//            Route::get('/import', [UserController::class, 'import'])->name('users.import');
-//            Route::post('/import', [UserController::class, 'importStore'])->name('users.import.store');
+            //            Route::get('/import', [UserController::class, 'import'])->name('users.import');
+            //            Route::post('/import', [UserController::class, 'importStore'])->name('users.import.store');
             Route::get('/admins',[AdminController::class, 'index'])->name('admins.index');
             Route::get('/admins/create', [AdminController::class, 'create'])->name('admins.create');
             Route::post('/admins', [AdminController::class, 'store'])->name('admins.store');
             Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->name('admins.destroy');
         });
+        // faculty
         Route::get('/faculties', [FacultyController::class, 'index'])->name('faculties.index');
         Route::get('/faculties/create', [FacultyController::class, 'create'])->name('faculties.create');
         Route::post('/faculties', [FacultyController::class, 'store'])->name('faculties.store');
         Route::get('/faculties/{id}/edit', [FacultyController::class, 'edit'])->name('faculties.edit');
+        Route::patch('/faculties/{id}', [FacultyController::class, 'update'])->name('faculties.update');
+        // staff
         Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
@@ -67,8 +70,8 @@ Route::middleware($middleware)->group(function () {
     });
     Route::prefix('records')->group(function () {
         Route::group(['middleware' => ['can:viewAny, App\Models\User']], function () {
-//            Route::get('/import', [BookController::class, 'import'])->name('books.import');
-//            Route::post('/import', [BookController::class, 'importStore'])->name('books.import.store');
+        //            Route::get('/import', [BookController::class, 'import'])->name('books.import');
+        //            Route::post('/import', [BookController::class, 'importStore'])->name('books.import.store');
         });
         Route::get('/', [RecordController::class, 'index'])->name('records.index');
         Route::get('/all', [RecordController::class, 'all'])->name('records.all');
