@@ -76,18 +76,24 @@ class StaffController extends Controller
         ProfileImageService $imageService,
         BarcodeService $barcodeService
     ): \Illuminate\Http\RedirectResponse {
-        // 1. Validation
-        $validated = $request->validate([
-            'library_id'     => 'required|integer|digits_between:1,10|unique:users,library_id',
-            'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
-            'first_name'     => 'required|string|max:50',
-            'middle_initial' => 'nullable|string|max:1',
-            'last_name'      => 'required|string|max:50',
-            'sex'            => 'required|in:m,f',
-            'profile_image'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
-            'office'     => 'required|string|max:50',
-        ]);
+
+        try {
+
+            $validated = $request->validate([
+                'library_id'     => 'required|integer|digits_between:1,10|unique:users,library_id',
+                'card_number'    => 'required|integer|min:1|max:9999999999|unique:users,card_number',
+                'first_name'     => 'required|string|max:50',
+                'middle_initial' => 'nullable|string|max:1',
+                'last_name'      => 'required|string|max:50',
+                'sex'            => 'required|in:m,f',
+                'profile_image'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+                'email'          => 'required|string|lowercase|email|max:255|unique:users,email',
+                'office'     => 'required|string|max:50',
+            ]);
+
+        }  catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withInput()->withErrors($e->validator)->with('error', 'Please correct the errors in the form.');
+        }
 
         // 2. Ensure user type exists
         $staffType = UserType::where('key', 'staff')->first();
