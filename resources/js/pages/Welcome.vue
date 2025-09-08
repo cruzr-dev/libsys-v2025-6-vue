@@ -253,12 +253,6 @@ const stats = [
         icon: DollarSign,
     },
     {
-        title: 'Clients',
-        value: '2,350',
-        change: 'Students, Staffs, Faculties',
-        icon: Users,
-    },
-    {
         title: 'New Arrivals',
         value: '+234',
         change: '+19% from last month',
@@ -373,17 +367,17 @@ watch(() => window.location.search, () => {
             </div>
 
             <!-- Statistics section -->
-            <div class="grid gap-4 px-16 py-12 pb-0 md:grid-cols-2 lg:grid-cols-4">
-                <Card v-for="stat in stats" :key="stat.title" class="p-4 transition hover:shadow-md">
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+            <div class="flex gap-4 px-16 py-12 pb-0">
+                <Card v-for="stat in stats" :key="stat.title" class="p-4 w-full transition hover:shadow-md">
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 p-0">
                         <CardTitle class="text-sm font-medium text-muted-foreground">
                             {{ stat.title }}
                         </CardTitle>
                         <component :is="stat.icon" class="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent class="p-0">
-                        <div class="text-2xl font-bold">{{ stat.value }}</div>
-                        <p class="text-xs text-muted-foreground">{{ stat.change }}</p>
+                        <div class="text-4xl text-center font-bold">{{ stat.value }}</div>
+                        <p class="text-sm mt-2 text-center text-muted-foreground">{{ stat.change }}</p>
                     </CardContent>
                 </Card>
             </div>
