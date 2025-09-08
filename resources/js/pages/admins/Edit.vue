@@ -41,10 +41,6 @@ const props = defineProps<{
         student_type: string;
         card_number: string;
         profile_image: string | null;
-        // Add the admin relationship
-        admin?: {
-            office: string | null;
-        };
     };
     colleges: College[];
 }>();
@@ -66,8 +62,8 @@ const form = useForm({
     profile_image: props.admin.profile_image,
     student_type: props.admin.student_type,
     card_number: props.admin.card_number,
-    // Access the academic info from the admin relationship
-    office: props.admin.admin?.office || null,
+    password: '',
+    password_confirmation: '',
 });
 
 // Separate ref for handling the profile image file
@@ -324,25 +320,48 @@ const goBack = () => {
                         </div>
                     </div>
 
-                    <!-- Academic Information Section -->
+                    <!-- Account Information Section -->
                     <div class="space-y-6">
-                        <h2 class="text-lg font-semibold text-gray-900">Library Staff Information</h2>
-                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-
+                        <h2 class="text-lg font-semibold text-gray-900">Account Information</h2>
+                        <p class="mt-2 text-xs text-gray-500">
+                            Passwords must be at least 8 characters, include uppercase, lowercase, number, and symbol.
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Password -->
                             <div class="grid gap-2">
-                                <Label for="office" class="text-sm font-medium">Office</Label>
+                                <Label for="password" class="text-sm font-medium">
+                                    Password <span class="text-red-500">*</span>
+                                </Label>
                                 <Input
-                                    id="office"
-                                    type="text"
-                                    :tabindex="6"
-                                    v-model="form.office"
-                                    @input="form.clearErrors('office')"
-                                    placeholder="Office"
+                                    id="password"
+                                    type="password"
+                                    :tabindex="9"
+                                    autocomplete="new-password"
+                                    v-model="form.password"
+                                    @input="form.clearErrors('password')"
+                                    placeholder="Password"
                                     class="h-10"
                                 />
-                                <InputError :message="form.errors.office" />
+                                <InputError :message="form.errors.password" />
                             </div>
 
+                            <!-- Confirm Password -->
+                            <div class="grid gap-2">
+                                <Label for="password_confirmation" class="text-sm font-medium">
+                                    Confirm Password <span class="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="password_confirmation"
+                                    type="password"
+                                    :tabindex="10"
+                                    autocomplete="new-password"
+                                    v-model="form.password_confirmation"
+                                    @input="form.clearErrors('password_confirmation')"
+                                    placeholder="Confirm password"
+                                    class="h-10"
+                                />
+                                <InputError :message="form.errors.password_confirmation" />
+                            </div>
                         </div>
                     </div>
 
