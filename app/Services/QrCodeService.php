@@ -31,6 +31,6 @@ class QrCodeService
         // Save to storage/app/public/qrcodes
         Storage::disk('public')->put($path, $result->getString());
 
-        return $path;
+        return $filename;
     }
 }
