@@ -248,21 +248,21 @@ const initializeFromURL = () => {
 const stats = [
     {
         title: 'Collections',
-        value: '15,821',
+        value: page.props.totalCollections?.toLocaleString() || '0',
         change: 'Book, CDs, Magazines, Thesis, etc.',
-        icon: Book, // represents books/collections
+        icon: Book,
     },
     {
         title: 'New Arrivals',
-        value: '+234',
+        value: '+' + (page.props.newThisMonth?.toLocaleString() || '0'),
         change: '+19% from last month',
-        icon: PlusCircle, // represents additions or new items
+        icon: PlusCircle,
     },
     {
         title: 'Borrowing Transactions',
-        value: '+73',
+        value: '+' + (page.props.totalBorrowings?.toLocaleString() || '0'),
         change: '+20 since last week',
-        icon: Repeat, // represents ongoing transactions or borrowing/returning
+        icon: Repeat,
     },
 ];
 
