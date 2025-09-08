@@ -653,68 +653,89 @@ watch(() => window.location.search, () => {
             </div>
 
             <Dialog v-model:open="isDialogOpen">
-                <DialogContent class="sm:max-w-xl grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
-                    <DialogHeader class="p-6 pb-0">
-                        <DialogTitle>Library Staff Details</DialogTitle>
-                        <DialogDescription>
-                            Viewing library staff profile information.
-                        </DialogDescription>
+                <DialogContent class="sm:max-w-4xl max-h-[95dvh] p-0 bg-background rounded-lg shadow-xl overflow-x-auto">
+                    <!-- Header -->
+                    <DialogHeader class="px-4 pt-4 pb-4 border-b">
+                        <DialogTitle class="text-xl font-semibold text-foreground">Library Staff Profile</DialogTitle>
                     </DialogHeader>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 px-6 overflow-y-auto">
-                        <!-- Profile Image and Barcode -->
-                        <div class="flex flex-col items-center md:items-start gap-4">
+                    <!-- Main Content -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 py-0 overflow-y-auto">
+                        <!-- Profile Card -->
+                        <div class="flex flex-col items-center gap-4 bg-card rounded-lg p-4 border">
                             <!-- Profile Image -->
-                            <img
-                                v-if="selectedUser?.profile_image"
-                                :src="'/storage/profile_images/' + selectedUser.profile_image"
-                                alt="Profile Image"
-                                class="h-32 w-32 rounded-full object-cover border shadow-md"
-                            />
-                            <div
-                                v-else
-                                class="h-32 w-32 rounded-full flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
-                            >
-                                <span class="text-sm">No Image</span>
+                            <div class="relative">
+                                <img
+                                    v-if="selectedUser?.profile_image"
+                                    :src="'/storage/profile_images/' + selectedUser.profile_image"
+                                    alt="Profile Image"
+                                    class="h-36 w-36 rounded-full object-cover border-4 border-background shadow-lg"
+                                />
+                                <div
+                                    v-else
+                                    class="h-36 w-36 rounded-full flex items-center justify-center bg-muted text-muted-foreground border-4 border-background shadow-lg"
+                                >
+                                    <span class="text-sm font-medium">No Image</span>
+                                </div>
                             </div>
 
-                            <!-- Barcode Image -->
-                            <div v-if="selectedUser?.barcode_path" class="flex flex-col items-center">
-                                <img
-                                    :src="'/storage/' + selectedUser.barcode_path"
-                                    alt="User Barcode"
-                                    class="h-16 w-auto border shadow-md"
-                                />
-                                <span class="text-xs text-muted-foreground mt-2">Barcode: {{ selectedUser.card_number }}</span>
-                            </div>
-                            <div
-                                v-else
-                                class="h-16 w-32 flex items-center justify-center bg-muted text-muted-foreground border shadow-md"
-                            >
-                                <span class="text-xs">No Barcode</span>
+                            <!-- Barcode -->
+                            <div class="flex flex-col items-center gap-2 w-full">
+                                <div v-if="selectedUser?.barcode_path" class="w-full">
+                                    <img
+                                        :src="'/storage/' + selectedUser.barcode_path"
+                                        alt="User Barcode"
+                                        class="h-16 w-auto mx-auto border rounded shadow-sm"
+                                    />
+                                    <span class="text-xs text-muted-foreground mt-2 block text-center">
+                            Barcode: {{ selectedUser.card_number }}
+                        </span>
+                                </div>
+                                <div
+                                    v-else
+                                    class="h-16 w-full flex items-center justify-center bg-muted text-muted-foreground border rounded shadow-sm"
+                                >
+                                    <span class="text-xs font-medium">No Barcode</span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- User Details -->
-                        <div class="md:col-span-2">
-                            <div v-if="selectedUser" class="grid gap-2 text-sm">
-                                <p><strong>Library ID:</strong> {{ selectedUser.library_id }}</p>
-                                <p><strong>Card #:</strong> {{ selectedUser.card_number }}</p>
-                                <p><strong>School ID:</strong> {{ selectedUser.school_id }}</p>
-                                <p><strong>Name:</strong> {{ selectedUser.first_name }} {{ selectedUser.middle_initial + '.' }} {{ selectedUser.last_name }}</p>
-                                <p><strong>Email:</strong> {{ selectedUser.email }}</p>
-                                <p><strong>Contact:</strong> {{ selectedUser.contact_number }}</p>
-                                <p><strong>Sex:</strong> {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}</p>
-                                <p><strong>User Type:</strong> {{ selectedUser.user_type?.name }}</p>
+                        <!-- Details Section -->
+                        <div class="md:col-span-2 space-y-4">
+                            <div v-if="selectedUser" class="space-y-4">
+                                <!-- Personal Information -->
+                                <div class="bg-card rounded-lg p-5 border">
+                                    <h3 class="font-semibold text-lg mb-4 text-foreground">Personal Information</h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                        <p><strong class="text-foreground">Library ID:</strong> {{ selectedUser.library_id }}</p>
+                                        <p><strong class="text-foreground">Card #:</strong> {{ selectedUser.card_number }}</p>
+                                        <p><strong class="text-foreground">School ID:</strong> {{ selectedUser.school_id }}</p>
+                                        <p>
+                                            <strong class="text-foreground">Name:</strong>
+                                            {{ selectedUser.first_name }}
+                                            {{ selectedUser.middle_initial ? selectedUser.middle_initial + '.' : '' }}
+                                            {{ selectedUser.last_name }}
+                                        </p>
+                                        <p><strong class="text-foreground">Email:</strong> {{ selectedUser.email }}</p>
+                                        <p><strong class="text-foreground">Contact:</strong> {{ selectedUser.contact_number || 'Not provided' }}</p>
+                                        <p><strong class="text-foreground">Sex:</strong> {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}</p>
+                                        <p><strong class="text-foreground">User Type:</strong> {{ selectedUser.user_type?.name }}</p>
+                                    </div>
+                                </div>
+
                             </div>
-                            <div v-else class="text-muted-foreground">
-                                <p>No library staff selected.</p>
+                            <div v-else class="text-muted-foreground p-4 text-center">
+                                <p class="text-sm">No library staff selected.</p>
                             </div>
                         </div>
                     </div>
 
-                    <DialogFooter class="p-6 pt-0">
-                        <Button @click="isDialogOpen = false">Close</Button>
+                    <!-- Footer -->
+                    <DialogFooter class="p-6 border-t bg-background">
+                        <div class="flex justify-between w-full">
+                            <Button variant="outline" @click="isDialogOpen = false" class="px-6">Close</Button>
+                            <Button @click="handleEdit(selectedUser.id)" class="px-6">Edit Library Staff Details</Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
