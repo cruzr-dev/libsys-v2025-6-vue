@@ -29,7 +29,7 @@ interface Course {
 
 // Define the props passed from the controller
 const props = defineProps<{
-    faculty: {
+    staff: {
         id: number;
         library_id: string;
         first_name: string;
@@ -41,10 +41,9 @@ const props = defineProps<{
         student_type: string;
         card_number: string;
         profile_image: string | null;
-        // Add the faculty relationship
-        faculty?: {
-            college_id: number | null;
-            course_id: number | null;
+        // Add the staff relationship
+        staff?: {
+            office: string | null;
         };
     };
     colleges: College[];
@@ -53,23 +52,22 @@ const props = defineProps<{
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Patrons', href: '/users' },
     { title: 'Faculties', href: '/users/staff' },
-    { title: 'Edit Staffy', href: `/users/students/${props.faculty.id}/edit` },
+    { title: 'Edit Staffy', href: `/users/students/${props.staff.id}/edit` },
 ];
 
-// Initialize the form with faculty data - DON'T include profile_image in the initial form data
+// Initialize the form with staff data - DON'T include profile_image in the initial form data
 const form = useForm({
-    library_id: props.faculty.library_id,
-    first_name: props.faculty.first_name,
-    middle_initial: props.faculty.middle_initial || '',
-    last_name: props.faculty.last_name,
-    sex: props.faculty.sex,
-    contact_number: props.faculty.contact_number || '',
-    email: props.faculty.email,
-    student_type: props.faculty.student_type,
-    card_number: props.faculty.card_number,
-    // Access the academic info from the faculty relationship
-    college_id: props.faculty.faculty?.college_id || null,
-    course_id: props.faculty.faculty?.course_id || null,
+    library_id: props.staff.library_id,
+    first_name: props.staff.first_name,
+    middle_initial: props.staff.middle_initial || '',
+    last_name: props.staff.last_name,
+    sex: props.staff.sex,
+    contact_number: props.staff.contact_number || '',
+    email: props.staff.email,
+    student_type: props.staff.student_type,
+    card_number: props.staff.card_number,
+    // Access the academic info from the staff relationship
+    office: props.staff.staff?.office || null,
 });
 
 // Separate ref for handling the profile image file
@@ -79,8 +77,8 @@ const profileImageFile = ref<File | null>(null);
 const previewUrl = ref<string | null>(null);
 
 // Initialize preview URL with existing profile image
-if (props.faculty.profile_image) {
-    previewUrl.value = `/storage/profile_images/${props.faculty.profile_image}`;
+if (props.staff.profile_image) {
+    previewUrl.value = `/storage/profile_images/${props.staff.profile_image}`;
 }
 
 // Handle file input change
@@ -98,9 +96,9 @@ const handleProfileImageChange = (event: Event) => {
 
     if (file) {
         previewUrl.value = URL.createObjectURL(file);
-    } else if (props.faculty.profile_image) {
+    } else if (props.staff.profile_image) {
         // Reset to original image if file input is cleared
-        previewUrl.value = `/storage/profile_images/${props.faculty.profile_image}`;
+        previewUrl.value = `/storage/profile_images/${props.staff.profile_image}`;
     } else {
         previewUrl.value = null;
     }
@@ -164,7 +162,7 @@ const submit = () => {
     formData.append('_method', 'PATCH');
 
     // Send the FormData using Inertia's router
-    router.post(route('staff.update', props.faculty.id), formData, {
+    router.post(route('staff.update', props.staff.id), formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -357,48 +355,23 @@ const goBack = () => {
 
                     <!-- Academic Information Section -->
                     <div class="space-y-6">
-                        <h2 class="text-lg font-semibold text-gray-900">Academic Information</h2>
+                        <h2 class="text-lg font-semibold text-gray-900">Staff Information</h2>
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 
-                            <!-- College Select Input -->
                             <div class="grid gap-2">
-                                <Label for="college_id" class="text-sm font-medium"> College <span class="text-red-500">*</span> </Label>
-                                <Select v-model="form.college_id" @update:model-value="form.clearErrors('college_id')" required>
-                                    <SelectTrigger id="college_id" :tabindex="9" class="h-10">
-                                        <SelectValue placeholder="Select college" class="max-w-80 truncate"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem v-for="college in colleges" :key="college.id" :value="college.id">
-                                            {{ college.code }} - {{ college.name }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError :message="form.errors.college_id" />
+                                <Label for="office" class="text-sm font-medium">Office</Label>
+                                <Input
+                                    id="office"
+                                    type="text"
+                                    :tabindex="6"
+                                    v-model="form.office"
+                                    @input="form.clearErrors('office')"
+                                    placeholder="Office"
+                                    class="h-10"
+                                />
+                                <InputError :message="form.errors.office" />
                             </div>
 
-                            <!-- Course Select Input (Dynamic based on college) -->
-                            <div class="grid gap-2">
-                                <Label for="course_id" class="text-sm font-medium"> Course <span class="text-red-500">*</span> </Label>
-                                <Select
-                                    v-model="form.course_id"
-                                    @update:model-value="form.clearErrors('course_id')"
-                                    required
-                                    :disabled="!form.college_id || availableCourses.length === 0"
-                                >
-                                    <SelectTrigger id="course_id" :tabindex="10" class="h-10">
-                                        <SelectValue
-                                            class="max-w-sm truncate"
-                                            :placeholder="!form.college_id ? 'Select college first' : availableCourses.length === 0 ? 'No courses available' : 'Select course'"
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem v-for="course in availableCourses" :key="course.id" :value="course.id">
-                                            {{ course.code }} - {{ course.name }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError :message="form.errors.course_id" />
-                            </div>
                         </div>
                     </div>
 
@@ -415,7 +388,7 @@ const goBack = () => {
 
             <DeleteDialog
                 v-model:open="isDialogOpen"
-                :user-id="faculty.id"
+                :user-id="staff.id"
                 @confirm-delete="deleteStudent"
             />
 
