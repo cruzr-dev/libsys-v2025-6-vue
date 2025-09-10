@@ -48,7 +48,7 @@ const error = ref<string | null>(null);
 const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({
-    editors_list: false,
+    primary_editor: false,
     publication_year: false,
     call_number: false,
     isbn: false,
@@ -195,23 +195,25 @@ const columns: ColumnDef<any>[] = [
         enableHiding: true,
     },
     {
-        accessorKey: 'authors_list',
-        header: () => h('div', 'Authors'),
+        id: 'primary_author',
+        header: () => h('div', 'Primary Author'),
         cell: ({ row }) => {
-            const authorsList = row.getValue('authors_list');
-            return h('div', { class: 'truncate max-w-xs' }, authorsList || 'No authors');
+            const authors = row.original.authors; // now an array
+            const primaryAuthor = Array.isArray(authors) && authors.length > 0 ? authors[0].name : 'No author';
+            return h('div', { class: 'truncate max-w-xs' }, primaryAuthor);
         },
         enableHiding: true,
     },
     {
-        accessorKey: 'editors_list',
-        header: () => h('div', 'Editors'),
+        id: 'primary_author',
+        header: () => h('div', 'Primary Editor'),
         cell: ({ row }) => {
-            const editorsList = row.getValue('editors_list');
-            return h('div', { class: 'truncate max-w-xs' }, editorsList || 'No editors');
+            const editors = row.original.editors; // now an array
+            const primaryEditor = Array.isArray(editors) && editors.length > 0 ? editors[0].name : 'No editor';
+            return h('div', { class: 'truncate max-w-xs' }, primaryEditor);
         },
         enableHiding: true,
-    },
+    },,
     {
         id: 'publication_year', // use id instead of accessorKey since it's nested
         header: ({ column }) =>
