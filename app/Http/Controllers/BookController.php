@@ -310,7 +310,7 @@ class BookController extends Controller
     {
         $record = Record::where('id', $id)
             ->whereHas('book')
-            ->with(['book','authors'])
+            ->with(['book','authors','editors'])
             ->firstOrFail();
 
         $ddcClassifications = DdcClassification::select('id', 'title', 'number_range')
