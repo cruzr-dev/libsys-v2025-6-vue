@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class UserReportsController extends Controller
@@ -12,7 +13,7 @@ class UserReportsController extends Controller
         return Inertia::render('reports/users/Barcodes');
     }
 
-    public function fetchBarcodes()
+    public function fetchBarcodes(Request $request): \Inertia\Response
     {
         $query = User::whereNotNull('barcode_file')->get();
 
