@@ -335,7 +335,30 @@ class BookController extends Controller
      */
     public function edit(Book $book)
     {
-        //
+        $ddcClassifications = DdcClassification::select('id', 'title', 'number_range')
+            ->orderBy('title')
+            ->get();
+
+        $lcClassifications = LcClassification::select('id', 'code', 'name')
+            ->orderBy('name')
+            ->get();
+
+        $physicalLocations = PhysicalLocation::select('id', 'symbol', 'name')
+            ->orderBy('name')
+            ->get();
+
+        $coverTypes = CoverType::select('id', 'name')->orderBy('name')->get();
+
+        $sources = Source::select('id', 'name')->orderBy('name')->get();
+
+        return Inertia::render('books/Edit', [
+            'ddcClassifications' => $ddcClassifications,
+            'lcClassifications'  => $lcClassifications,
+            'physicalLocations'  => $physicalLocations,
+            'coverTypes'         => $coverTypes,
+            'sources'         => $sources,
+        ]);
+
     }
 
     /**

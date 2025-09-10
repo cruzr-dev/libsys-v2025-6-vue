@@ -80,11 +80,14 @@ Route::middleware($middleware)->group(function () {
         //            Route::get('/import', [BookController::class, 'import'])->name('books.import');
         //            Route::post('/import', [BookController::class, 'importStore'])->name('books.import.store');
         });
+        // books
         Route::get('/', [RecordController::class, 'index'])->name('records.index');
         Route::get('/all', [RecordController::class, 'all'])->name('records.all');
         Route::get('/books', [BookController::class, 'index'])->name('books.index');
         Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
         Route::post('/books', [BookController::class, 'store'])->name('books.store');
+        Route::get('/books/{id}/edit', [BookController::class, 'edit'])->name('books.edit');
+        // multimedia
         Route::get('/multimedia', [DigitalResourceController::class, 'index'])->name('multimedia.index');
         Route::get('/multimedia/create', [DigitalResourceController::class, 'create'])->name('multimedia.create');
         Route::post('/multimedia', [DigitalResourceController::class, 'store'])->name('multimedia.store');

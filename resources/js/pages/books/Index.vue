@@ -97,7 +97,7 @@ const handleShow = (book: any) => {
 };
 
 const handleEdit = (id: string | number) => {
-    router.get(route('records.books.edit', id));
+    router.get(route('books.edit', id));
 };
 
 // Sorting helper
