@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('editor_record', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('record_id')->onDelete('cascade');
-            $table->foreignId('author_id')->onDelete('cascade');
+            $table->foreignId('record_id')->constrained()->onDelete('cascade');
+            $table->foreignId('author_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
