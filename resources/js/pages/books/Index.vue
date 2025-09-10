@@ -679,8 +679,8 @@ console.log(data);
                                 <!-- Book Cover Image -->
                                 <div class="relative w-full">
                                     <img
-                                        v-if="selectedBook?.cover_image"
-                                        :src="'/storage/resized_book_covers/' + selectedBook.cover_image"
+                                        v-if="selectedBook.book?.cover_image"
+                                        :src="'/storage/resized_book_covers/' + selectedBook.book.cover_image"
                                         alt="Book Cover"
                                         class=" w-full rounded-lg border-4 border-background object-cover shadow-lg"
                                     />
