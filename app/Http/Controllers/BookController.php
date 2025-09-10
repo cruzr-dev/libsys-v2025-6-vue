@@ -37,7 +37,8 @@ class BookController extends Controller
         $query = Record::query()
             ->whereNull('deleted_at') // respect soft deletes
             ->whereHas('book')
-            ->with(['book.authors', 'book.editors', 'book.ddcClassification', 'book.physicalLocation']);
+            ->with(['authors', 'editors', 'book.ddcClassification', 'book.physicalLocation']
+        );
 
         // Handle search
         if ($request->filled('search')) {
@@ -167,7 +168,7 @@ class BookController extends Controller
         BookCoverImageService $imageService,
         QrCodeService $qrCodeService
     ): \Illuminate\Http\RedirectResponse {
-        // 1. Validation
+
         $validated = $request->validate([
             // Basic Information
             'accession_number'      => 'required|string|max:50|unique:records,accession_number',
@@ -281,13 +282,13 @@ class BookController extends Controller
 
                 // Handle Primary Author
                 $primaryAuthor = $this->findOrCreateAuthor($validated['primary_author']);
-                $book->authors()->attach($primaryAuthor->id, ['role' => 'primary author']);
+                $record->authors()->attach($primaryAuthor->id, ['role' => 'primary author']);
 
                 // Handle Co-Authors
                 if (!empty($validated['co_authors'])) {
                     foreach ($validated['co_authors'] as $coAuthorName) {
                         $coAuthor = $this->findOrCreateAuthor($coAuthorName);
-                        $book->authors()->attach($coAuthor->id, ['role' => 'co-author']);
+                        $record->authors()->attach($coAuthor->id, ['role' => 'co-author']);
                     }
                 }
 
@@ -295,7 +296,7 @@ class BookController extends Controller
                 if (!empty($validated['editors'])) {
                     foreach ($validated['editors'] as $editorName) {
                         $editor = $this->findOrCreateAuthor($editorName);
-                        $book->editors()->attach($editor->id);
+                        $record->editors()->attach($editor->id);
                     }
                 }
             });
