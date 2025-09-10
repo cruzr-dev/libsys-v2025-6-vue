@@ -36,6 +36,11 @@ const props = defineProps<{
             };
         }>;
 
+        editors: Array<{
+            id: number;
+            name: string;
+        }>;
+
         // Related book model
         book: {
             id: number;
@@ -88,6 +93,11 @@ const getCoAuthors = () => {
         ?.map(author => author.name) || [];
 };
 
+const getEditors = () => {
+    return props.record.editors
+        ?.map(author => author.name) || [];
+};
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Records', href: '/records' },
     { title: 'Books', href: '/records/books' },
@@ -101,7 +111,7 @@ const form = useForm({
     primary_author: getPrimaryAuthor(),
     co_authors: getCoAuthors(),
     edition: props.record.book.edition || '',
-    editors: props.record.book.editors || [],
+    editors: getEditors(),
     publication_year: props.record.book.publication_year || '',
     publisher: props.record.book.publisher || '',
     publication_place: props.record.book.publication_place || '',
