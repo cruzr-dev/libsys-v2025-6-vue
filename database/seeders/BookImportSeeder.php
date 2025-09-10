@@ -115,7 +115,7 @@ class BookImportSeeder extends Seeder
 
                 // Handle authors relationship
                 if (!empty($authorData)) {
-                    $this->attachAuthorsToBook($book, $authorData);
+                    $this->attachAuthorsToRecord($record, $authorData);
                 }
 
                 // turn off for now
@@ -223,12 +223,12 @@ class BookImportSeeder extends Seeder
     }
 
     /**
-     * Attach authors to a book with their roles.
+     * Attach authors to a record with their roles.
      *
-     * @param mixed $book
+     * @param mixed $record
      * @param array $authorData
      */
-    private function attachAuthorsToBook($book, array $authorData): void
+    private function attachAuthorsToRecord($record, array $authorData): void
     {
         foreach ($authorData as $authorInfo) {
             // Find or create the author
@@ -237,8 +237,8 @@ class BookImportSeeder extends Seeder
                 ['name' => $authorInfo['name']]
             );
 
-            // Attach author to book with role
-            $book->authors()->attach($author->id, [
+            // Attach author to record with role
+            $record->authors()->attach($author->id, [
                 'role' => $authorInfo['role'],
                 'created_at' => now(),
                 'updated_at' => now()
