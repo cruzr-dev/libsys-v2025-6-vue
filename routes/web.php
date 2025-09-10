@@ -12,6 +12,7 @@ use App\Http\Controllers\LibraryVisitController;
 use App\Http\Controllers\PeriodicalController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\RecordReportsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\UndergraduateStudentController;
 use App\Http\Controllers\TestController;
@@ -109,7 +110,10 @@ Route::middleware($middleware)->group(function () {
     });
     Route::prefix('reports')->group(function () {
         Route::prefix('users')->group(function () {
-            Route::get('/student/barcodes', [UserReportsController::class, 'StudentBarcodes'])->name('reports.users.student.barcodes');
+            Route::get('/students/barcodes', [UserReportsController::class, 'StudentBarcodes'])->name('reports.users.students.barcodes');
+        });
+        Route::prefix('records')->group(function () {
+            Route::get('/books/barcodes', [RecordReportsController::class, 'BookBarcodes'])->name('reports.records.books.barcodes');
         });
     });
         Route::prefix('logger')->group(function () {
