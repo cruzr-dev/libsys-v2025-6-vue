@@ -336,16 +336,12 @@ class BookController extends Controller
     public function edit($id)
     {
         $record = Record::where('id', $id)
-            ->whereHas(['book'])
+            ->whereHas('book')
             ->with(['book','book.authors'])
             ->firstOrFail();
 
         $ddcClassifications = DdcClassification::select('id', 'title', 'number_range')
             ->orderBy('title')
-            ->get();
-
-        $lcClassifications = LcClassification::select('id', 'code', 'name')
-            ->orderBy('name')
             ->get();
 
         $physicalLocations = PhysicalLocation::select('id', 'symbol', 'name')
@@ -359,7 +355,6 @@ class BookController extends Controller
         return Inertia::render('books/Edit', [
             'record' => $record,
             'ddcClassifications' => $ddcClassifications,
-            'lcClassifications'  => $lcClassifications,
             'physicalLocations'  => $physicalLocations,
             'coverTypes'         => $coverTypes,
             'sources'         => $sources,
