@@ -41,10 +41,6 @@ const error = ref<string | null>(null);
 // Scroll position preservation
 const scrollPosition = ref(0);
 
-// Show handler function
-const isDialogOpen = ref(false);
-const selectedUser = ref<any | null>(null);
-
 // Table columns definition
 const columns: ColumnDef<any>[] = [
     {
@@ -146,7 +142,7 @@ const fetchData = async () => {
         }
 
         // Make API request
-        const response = await fetch(`/api/admins?${params.toString()}`, {
+        const response = await fetch(`/api/reports/users/barcodes?${params.toString()}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',

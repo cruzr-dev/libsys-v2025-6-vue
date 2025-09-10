@@ -13,6 +13,7 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\UndergraduateStudentController;
 use App\Http\Controllers\ThesisController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserReportsController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,3 +53,9 @@ Route::get('/books/cover-types', [BookController::class, 'fetchCoverTypes']);
 Route::get('/multimedia', [DigitalResourceController::class, 'fetchAll']);
 Route::get('/periodicals', [PeriodicalController::class, 'fetchAll']);
 Route::get('/theses', [ThesisController::class, 'fetchAll']);
+
+Route::prefix('reports')->group(function () {
+    Route::prefix('users')->group(function () {
+        Route::get('/barcodes', [UserReportsController::class, 'fetchBarcodes']);
+    });
+});
