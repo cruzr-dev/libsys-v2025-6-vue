@@ -1,13 +1,21 @@
 <script setup lang="ts">
-  import Layout from '@/layouts/AppLayout'
+  import Layout from '@/layouts/users/ReportsLayout.vue'
   import { Head } from '@inertiajs/vue3'
+  import AppLayout from '@/layouts/AppLayout.vue';
+  import type { BreadcrumbItem } from '@/types';
 
-  defineProps<{}>()
+  const breadcrumbs: BreadcrumbItem[] = [
+      { title: 'Users Reports', href: '/users' },
+  ];
+
 </script>
 
 <template>
-  <Layout>
-    <Head title="StudentBarcodes" />
+    <Head title="Create Library Staff" />
 
-  </Layout>
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <Layout>
+            hiii
+        </Layout>
+    </AppLayout>
 </template>
