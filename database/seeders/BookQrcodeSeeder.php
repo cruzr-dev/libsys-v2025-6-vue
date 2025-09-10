@@ -13,7 +13,7 @@ class BookQrcodeSeeder extends Seeder
     public function run(): void
     {
         // Get books that don't have QR codes and have associated records with accession numbers
-        $books = Book::whereNull('qrcode_path')
+        $books = Book::whereNull('qrcode_file')
             ->whereHas('record', function($query) {
                 $query->whereNotNull('accession_number');
             })
@@ -43,7 +43,7 @@ class BookQrcodeSeeder extends Seeder
                     // Check if QR code already exists in storage
                     if (Storage::exists($filename)) {
                         // File exists, just update the book record with the path
-                        $book->update(['qrcode_path' => $filename]);
+                        $book->update(['qrcode_file' => $filename]);
                         $skippedCount++;
                     } else {
                         // Generate QR code from accession number
@@ -57,7 +57,7 @@ class BookQrcodeSeeder extends Seeder
                         Storage::put($filename, $qrResult->getString());
 
                         // Update book record
-                        $book->update(['qrcode_path' => $filename]);
+                        $book->update(['qrcode_file' => $filename]);
                         $generatedCount++;
                     }
                 } catch (\Exception $e) {

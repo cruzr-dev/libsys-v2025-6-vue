@@ -12,7 +12,7 @@ class UserBarcodeSeeder extends Seeder
 {
     public function run(): void
     {
-        $users = User::whereNull('barcode_path')->get();
+        $users = User::whereNull('barcode_file')->get();
         $totalUsers = $users->count();
 
         if ($totalUsers === 0) {
@@ -36,7 +36,7 @@ class UserBarcodeSeeder extends Seeder
                     // Check if barcode already exists in storage
                     if (Storage::exists($filename)) {
                         // File exists, just update the user record with the path
-                        $user->update(['barcode_path' => $filename]);
+                        $user->update(['barcode_file' => $filename]);
                         $skippedCount++;
                     } else {
                         // Generate barcode
@@ -46,7 +46,7 @@ class UserBarcodeSeeder extends Seeder
                         Storage::put($filename, $barcodeData);
 
                         // Update user
-                        $user->update(['barcode_path' => $filename]);
+                        $user->update(['barcode_file' => $filename]);
                         $generatedCount++;
                     }
 
