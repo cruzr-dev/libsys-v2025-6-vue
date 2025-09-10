@@ -414,7 +414,7 @@ const submit = () => {
     }
 
     // Add _method field for PUT request (Laravel method spoofing)
-    formData.append('_method', 'PUT');
+    formData.append('_method', 'PATCH   ');
 
     // Send the FormData using Inertia's router
     router.post(route('books.update', props.record.id), formData, {
