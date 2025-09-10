@@ -67,24 +67,8 @@ class BookController extends Controller
             $query->latest('created_at');
         }
 
-        // Handle column visibility (optional - for server-side optimization)
-        $showAuthors = !$request->has('hide_authors_list') || $request->get('show_authors_list') === '1';
-        $showEditors = !$request->has('hide_editors_list') || $request->get('show_editors_list') === '1';
         $showDDC = !$request->has('hide_ddc_classification') || $request->get('show_ddc_classification') === '1';
         $showLocation = !$request->has('hide_physical_location') || $request->get('show_physical_location') === '1';
-
-        // Conditionally load relationships based on visibility
-        if (!$showAuthors && !$showEditors) {
-            // Don't load any author/editor relationships if both are hidden
-            $query->with(['book']);
-        } elseif (!$showAuthors) {
-            // Only load editors if authors are hidden
-            $query->with(['editors']);
-        } elseif (!$showEditors) {
-            // Only load authors if editors are hidden
-            $query->with(['authors']);
-        }
-        // If both are visible (default), the original with() at the top handles it
 
         // Pagination
         $perPage = $request->get('per_page', 10);
@@ -92,18 +76,7 @@ class BookController extends Controller
         $records = $query->paginate($perPage);
 
         // Transform the data to include author and editor information
-        $records->getCollection()->transform(function ($record) use ($showAuthors, $showEditors, $showDDC, $showLocation) {
-            if ($showAuthors) {
-                $record->authors_list = $record->book && $record->book->authors->count() > 0
-                    ? $record->book->authors->pluck('name')->join(', ')
-                    : null;
-            }
-
-            if ($showEditors) {
-                $record->editors_list = $record->book && $record->book->editors->count() > 0
-                    ? $record->book->editors->pluck('name')->join(', ')
-                    : null;
-            }
+        $records->getCollection()->transform(function ($record) use ($showDDC, $showLocation) {
 
             if ($showDDC) {
                 $record->ddc_classification = $record->book && $record->book->ddcClassification
