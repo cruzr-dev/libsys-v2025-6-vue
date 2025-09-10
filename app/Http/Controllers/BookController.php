@@ -32,7 +32,7 @@ class BookController extends Controller
         return Inertia::render('books/Index');
     }
 
-    public function fetchAll(Request $request): \Illuminate\Pagination\LengthAwarePaginator
+    public function fetchAll(Request $request)
     {
         $query = Record::query()
             ->whereNull('deleted_at') // respect soft deletes
@@ -76,14 +76,6 @@ class BookController extends Controller
 
         // Transform the data to include author, editor, and other information
         $records->getCollection()->transform(function ($record) use ($showDDC, $showLocation) {
-
-            // Add authors information
-            $record->authors_list = $record->authors->pluck('name')->toArray();
-            $record->authors_string = $record->authors->pluck('name')->join(', ');
-
-            // Add editors information
-            $record->editors_list = $record->editors->pluck('name')->toArray();
-            $record->editors_string = $record->editors->pluck('name')->join(', ');
 
             if ($showDDC) {
                 $record->ddc_classification = $record->book && $record->book->ddcClassification
