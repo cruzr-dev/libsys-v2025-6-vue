@@ -31,7 +31,7 @@ class UserBarcodeSeeder extends Seeder
         foreach ($users as $user) {
             if ($user->card_number) {
                 try {
-                    $filename = 'barcodes/' . $user->card_number . '.png';
+                    $filename = $user->card_number . '.png';
 
                     // Check if barcode already exists in storage
                     if (Storage::exists($filename)) {
