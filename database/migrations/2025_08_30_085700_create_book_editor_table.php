@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('book_editor', function (Blueprint $table) {
+        Schema::create('editor_record', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('book_id')->constrained()->onDelete('cascade');
-            $table->foreignId('author_id')->constrained()->onDelete('cascade');
+            $table->foreignId('record_id')->onDelete('cascade');
+            $table->foreignId('author_id')->onDelete('cascade');
             $table->timestamps();
         });
     }
