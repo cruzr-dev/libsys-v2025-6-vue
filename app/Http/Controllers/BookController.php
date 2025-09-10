@@ -336,8 +336,8 @@ class BookController extends Controller
     public function edit($id)
     {
         $record = Record::where('id', $id)
-            ->whereHas('book')
-            ->with('book')
+            ->whereHas(['book'])
+            ->with(['book','book.authors'])
             ->firstOrFail();
 
         $ddcClassifications = DdcClassification::select('id', 'title', 'number_range')

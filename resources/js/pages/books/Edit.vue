@@ -36,8 +36,16 @@ const props = defineProps<{
             cover_type_id: number | string;
             cover_image: string | null;
             volume: string;
-            primary_author: string;
-            co_authors: string[];
+
+            // Add this for the pivot relationship:
+            authors: Array<{
+                id: number;
+                name: string;
+                pivot: {
+                    role: 'primary author' | 'co-author';
+                };
+            }>;
+
             edition: string;
             editors: string[];
             publication_year: string;
@@ -64,7 +72,22 @@ const props = defineProps<{
     physicalLocations: { id: number; name: string; symbol: string }[];
     coverTypes: { id: number; name: string }[];
     sources: { id: number; name: string }[];
+    // Add available authors for the tags input
+    authors: { id: number; name: string }[];
 }>();
+
+const getPrimaryAuthor = () => {
+    const primaryAuthor = props.record.book.authors?.find(
+        author => author.pivot.role === 'primary author'
+    );
+    return primaryAuthor ? primaryAuthor.name : '';
+};
+
+const getCoAuthors = () => {
+    return props.record.book.authors
+        ?.filter(author => author.pivot.role === 'co-author')
+        ?.map(author => author.name) || [];
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Records', href: '/records' },
@@ -76,8 +99,8 @@ const form = useForm({
     accession_number: props.record.accession_number || '',
     title: props.record.title || '',
     volume: props.record.book.volume || '',
-    primary_author: props.record.book.primary_author || '',
-    co_authors: props.record.book.co_authors || [],
+    primary_author: getPrimaryAuthor(),
+    co_authors: getCoAuthors(),
     edition: props.record.book.edition || '',
     editors: props.record.book.editors || [],
     publication_year: props.record.book.publication_year || '',
