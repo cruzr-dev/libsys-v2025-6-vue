@@ -23,16 +23,6 @@ const props = defineProps<{
     record: {
         id: number;
         accession_number: string;
-        title: string;
-        volume: string;
-        primary_author: string;
-        co_authors: string[];
-        edition: string;
-        editors: string[];
-        publication_year: string;
-        publisher: string;
-        publication_place: string;
-        isbn: string;
         call_number: string;
         ddc_class_id: number | string;
         physical_location_id: number | string;
@@ -50,11 +40,27 @@ const props = defineProps<{
         donated_by: string;
         replaced_by: string;
         cover_type_id: number | string;
-        table_of_contents: string;
-        subject_headings: string[];
         status: string;
+
+        // Related book model
+        book: {
+            id: number;
+            title: string;
+            volume: string;
+            primary_author: string;
+            co_authors: string[];
+            edition: string;
+            editors: string[];
+            publication_year: string;
+            publisher: string;
+            publication_place: string;
+            isbn: string;
+            table_of_contents: string;
+            subject_headings: string[];
+        };
     };
     ddcClassifications: { id: number; number_range: string; title: string }[];
+    lcClassifications: { id: number; code: string; name: string }[];
     physicalLocations: { id: number; name: string; symbol: string }[];
     coverTypes: { id: number; name: string }[];
     sources: { id: number; name: string }[];
@@ -69,7 +75,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const form = useForm({
     accession_number: props.record.accession_number || '',
     title: props.record.title || '',
-    volume: props.record.volume || '',
+    volume: props.record.book.volume || '',
     primary_author: props.record.primary_author || '',
     co_authors: props.record.co_authors || [],
     edition: props.record.edition || '',
@@ -347,6 +353,7 @@ const goBack = () => {
     window.history.back();
 };
 
+console.log(props.record);
 </script>
 
 <template>

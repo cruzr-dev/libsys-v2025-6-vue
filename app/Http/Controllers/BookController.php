@@ -336,6 +336,7 @@ class BookController extends Controller
     public function edit($id)
     {
         $record = Record::where('id', $id)
+            ->whereHas('book')
             ->with('book')
             ->firstOrFail();
 
