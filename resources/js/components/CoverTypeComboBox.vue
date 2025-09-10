@@ -20,7 +20,10 @@ interface CoverType {
     name: string
 }
 
-// Emit selected id
+// Props and emits
+const props = defineProps<{
+    coverTypeId: number | null
+}>()
 const emit = defineEmits<{
     (e: "update:coverTypeId", value: number | null): void
 }>()
@@ -34,6 +37,20 @@ watch(selected, (val) => {
     emit("update:coverTypeId", val?.id ?? null)
 })
 
+// Watch coverTypeId prop to set initial selection
+watch(
+    () => props.coverTypeId,
+    (newId) => {
+        if (newId !== null && coverTypes.value.length > 0) {
+            const match = coverTypes.value.find((cover) => cover.id === newId)
+            selected.value = match ?? null
+        } else {
+            selected.value = null
+        }
+    },
+    { immediate: true }
+)
+
 // Fetch cover types
 const fetchCoverTypes = async () => {
     try {
@@ -46,12 +63,19 @@ const fetchCoverTypes = async () => {
         if (!response.ok) throw new Error("Failed to fetch cover types")
         const data = await response.json()
         coverTypes.value = data
+
+        // Set initial selection after fetching cover types
+        if (props.coverTypeId !== null) {
+            const match = coverTypes.value.find((cover) => cover.id === props.coverTypeId)
+            selected.value = match ?? null
+        }
     } catch (error) {
         console.error("Error fetching cover types:", error)
     }
 }
 
 onMounted(fetchCoverTypes)
+
 </script>
 
 <template>

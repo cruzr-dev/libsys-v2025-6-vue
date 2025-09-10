@@ -47,7 +47,7 @@ const props = defineProps<{
             call_number: string;
             ddc_class_id: number | string;
             physical_location_id: number | string;
-            cover_type_id: number | string;
+            cover_type_id: number | null;
             cover_image: string | null;
             volume: string;
             edition: string;
@@ -132,7 +132,7 @@ const form = useForm({
     supplier: props.record.book.supplier || '',
     donated_by: props.record.book.donated_by || '',
     replaced_by: props.record.book.replaced_by || '',
-    cover_type_id: props.record.book.cover_type_id?.toString() || '',
+    cover_type_id: props.record.book.cover_type_id || '',
     table_of_contents: props.record.book.table_of_contents || '',
     subject_headings: props.record.subject || [],
     status: props.record.status || 'available',
@@ -385,7 +385,6 @@ const goBack = () => {
     window.history.back();
 };
 
-console.log(props.record);
 </script>
 
 <template>
