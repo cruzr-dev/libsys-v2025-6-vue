@@ -32,7 +32,7 @@ class BookController extends Controller
         return Inertia::render('books/Index');
     }
 
-    public function fetchAll(Request $request)
+    public function fetchAll(Request $request): \Illuminate\Pagination\LengthAwarePaginator
     {
         $query = Record::query()
             ->whereNull('deleted_at') // respect soft deletes
@@ -46,10 +46,10 @@ class BookController extends Controller
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('accession_number', 'like', "%{$searchTerm}%")
                     ->orWhere('title', 'like', "%{$searchTerm}%")
-                    ->orWhereHas('book.authors', function ($authorQuery) use ($searchTerm) {
+                    ->orWhereHas('authors', function ($authorQuery) use ($searchTerm) {
                         $authorQuery->where('name', 'like', "%{$searchTerm}%");
                     })
-                    ->orWhereHas('book.editors', function ($editorQuery) use ($searchTerm) {
+                    ->orWhereHas('editors', function ($editorQuery) use ($searchTerm) {
                         $editorQuery->where('name', 'like', "%{$searchTerm}%");
                     });
             });
@@ -79,10 +79,10 @@ class BookController extends Controller
             $query->with(['book']);
         } elseif (!$showAuthors) {
             // Only load editors if authors are hidden
-            $query->with(['book.editors']);
+            $query->with(['editors']);
         } elseif (!$showEditors) {
             // Only load authors if editors are hidden
-            $query->with(['book.authors']);
+            $query->with(['authors']);
         }
         // If both are visible (default), the original with() at the top handles it
 
@@ -338,7 +338,7 @@ class BookController extends Controller
     {
         $record = Record::where('id', $id)
             ->whereHas('book')
-            ->with(['book','book.authors'])
+            ->with(['book','authors'])
             ->firstOrFail();
 
         $ddcClassifications = DdcClassification::select('id', 'title', 'number_range')
