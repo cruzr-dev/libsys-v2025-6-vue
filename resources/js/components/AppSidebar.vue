@@ -70,8 +70,8 @@ const mainNavItems = computed((): NavItem[] => [
         items: [
             {
                 title: "Users",
-                url: "/test",
-                isActive: isRouteActive('/test'),
+                url: "/reports/users/student/barcodes",
+                isActive: isRouteActive('/reports/users/student/barcodes'),
             },
             {
                 title: "Collection",

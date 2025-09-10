@@ -17,6 +17,7 @@ use App\Http\Controllers\UndergraduateStudentController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\ThesisController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserReportsController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -106,7 +107,12 @@ Route::middleware($middleware)->group(function () {
         Route::post('/borrow', [BorrowingTransactionController::class, 'borrow'])->name('borrowings.borrow');
         Route::post('/return', [BorrowingTransactionController::class, 'returnBook'])->name('borrowings.return');
     });
-    Route::prefix('logger')->group(function () {
+    Route::prefix('reports')->group(function () {
+        Route::prefix('users')->group(function () {
+            Route::get('/student/barcodes', [UserReportsController::class, 'StudentBarcodes'])->name('reports.users.student.barcodes');
+        });
+    });
+        Route::prefix('logger')->group(function () {
         Route::get('/', [LibraryVisitController::class, 'index'])->name('logger.index');
     });
 
