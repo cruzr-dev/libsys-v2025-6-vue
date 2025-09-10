@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AuthorsTagsInput from '@/components/AuthorsTagsInput.vue';
+import CoverTypeComboBox from '@/components/CoverTypeComboBox.vue';
 import EditorsTagsInput from '@/components/EditorsTagsInput.vue';
 import InputError from '@/components/InputError.vue';
 import SubjectTagsInput from '@/components/SubjectTagsInput.vue';
@@ -14,7 +15,6 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, LoaderCircle } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
-import CoverTypeComboBox from '@/components/CoverTypeComboBox.vue';
 import DatePicker from 'vue-datepicker-next';
 import 'vue-datepicker-next/index.css';
 
@@ -81,21 +81,16 @@ const props = defineProps<{
 }>();
 
 const getPrimaryAuthor = () => {
-    const primaryAuthor = props.record.authors?.find(
-        author => author.pivot.role === 'primary author'
-    );
+    const primaryAuthor = props.record.authors?.find((author) => author.pivot.role === 'primary author');
     return primaryAuthor ? primaryAuthor.name : '';
 };
 
 const getCoAuthors = () => {
-    return props.record.authors
-        ?.filter(author => author.pivot.role === 'co-author')
-        ?.map(author => author.name) || [];
+    return props.record.authors?.filter((author) => author.pivot.role === 'co-author')?.map((author) => author.name) || [];
 };
 
 const getEditors = () => {
-    return props.record.editors
-        ?.map(author => author.name) || [];
+    return props.record.editors?.map((author) => author.name) || [];
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -151,18 +146,18 @@ const form = useForm({
 watch(
     () => ({ ...form }), // watch whole form
     (newForm, oldForm) => {
-        if (!oldForm) return
+        if (!oldForm) return;
         for (const key in newForm) {
             if (
                 form.errors[key] && // has an error
                 newForm[key] !== oldForm[key] // value actually changed
             ) {
-                form.clearErrors(key)
+                form.clearErrors(key);
             }
         }
     },
-    { deep: true }
-)
+    { deep: true },
+);
 
 // Date picker setup for ics_date
 const icsDate = ref<Date | null>(form.ics_date ? new Date(form.ics_date) : null);
@@ -210,31 +205,40 @@ watch(poDate, (newValue) => {
 });
 
 // Sync form.ics_date back to icsDate if changed externally
-watch(() => form.ics_date, (newValue) => {
-    if (newValue && newValue !== (icsDate.value ? icsDate.value.toISOString().split('T')[0] : '')) {
-        icsDate.value = new Date(newValue);
-    } else if (!newValue) {
-        icsDate.value = null;
-    }
-});
+watch(
+    () => form.ics_date,
+    (newValue) => {
+        if (newValue && newValue !== (icsDate.value ? icsDate.value.toISOString().split('T')[0] : '')) {
+            icsDate.value = new Date(newValue);
+        } else if (!newValue) {
+            icsDate.value = null;
+        }
+    },
+);
 
 // Sync form.pr_date back to prDate if changed externally
-watch(() => form.pr_date, (newValue) => {
-    if (newValue && newValue !== (prDate.value ? prDate.value.toISOString().split('T')[0] : '')) {
-        prDate.value = new Date(newValue);
-    } else if (!newValue) {
-        prDate.value = null;
-    }
-});
+watch(
+    () => form.pr_date,
+    (newValue) => {
+        if (newValue && newValue !== (prDate.value ? prDate.value.toISOString().split('T')[0] : '')) {
+            prDate.value = new Date(newValue);
+        } else if (!newValue) {
+            prDate.value = null;
+        }
+    },
+);
 
 // Sync form.po_date back to poDate if changed externally
-watch(() => form.po_date, (newValue) => {
-    if (newValue && newValue !== (poDate.value ? poDate.value.toISOString().split('T')[0] : '')) {
-        poDate.value = new Date(newValue);
-    } else if (!newValue) {
-        poDate.value = null;
-    }
-});
+watch(
+    () => form.po_date,
+    (newValue) => {
+        if (newValue && newValue !== (poDate.value ? poDate.value.toISOString().split('T')[0] : '')) {
+            poDate.value = new Date(newValue);
+        } else if (!newValue) {
+            poDate.value = null;
+        }
+    },
+);
 
 // State to track auto-selection and override status
 const isLocationAutoSelected = ref(false);
@@ -369,28 +373,24 @@ watch(
 function useSourceChecker(form, sources) {
     return (targetNames: string[]) => {
         return computed(() => {
-            const matchedSources = sources.filter((s) =>
-                targetNames.includes(s.name.toLowerCase())
-            )
-            return matchedSources.some(
-                (s) => form.source_id?.toString() === s.id?.toString()
-            )
-        })
-    }
+            const matchedSources = sources.filter((s) => targetNames.includes(s.name.toLowerCase()));
+            return matchedSources.some((s) => form.source_id?.toString() === s.id?.toString());
+        });
+    };
 }
 
-const checkSource = useSourceChecker(form, props.sources)
+const checkSource = useSourceChecker(form, props.sources);
 
-const isPurchased = checkSource(["purchased", "purchased-photocopy"])
-const isDonated = checkSource(["donation", 'donation-photocopy'])
-const isReplaced = checkSource(["replaced"])
+const isPurchased = checkSource(['purchased', 'purchased-photocopy']);
+const isDonated = checkSource(['donation', 'donation-photocopy']);
+const isReplaced = checkSource(['replaced']);
 
 const submit = () => {
     // Create FormData to handle file upload
     const formData = new FormData();
 
     // Add all form fields
-    Object.keys(form.data()).forEach(key => {
+    Object.keys(form.data()).forEach((key) => {
         const value = form.data()[key];
 
         // Handle arrays (like co_authors, editors, subject_headings)
@@ -435,31 +435,28 @@ const submit = () => {
             if (fileInput) fileInput.value = '';
 
             // Set errors using Inertia's built-in method
-            Object.keys(errors).forEach(key => {
+            Object.keys(errors).forEach((key) => {
                 form.setError(key, errors[key]);
             });
+            console.log(errors);
         },
     });
 };
 
 const goBack = () => {
-    router.visit(route('books.index'))
-}
-
+    router.visit(route('books.index'));
+};
 </script>
 
 <template>
     <Head title="Edit Book" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <RecordsLayout>
-            <div class="flex flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm relative">
+            <div class="relative flex flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm">
+                <h2 class="text-center text-xl font-semibold text-gray-900">Edit Book</h2>
 
-                <h2 class="text-xl text-center font-semibold text-gray-900">Edit Book</h2>
-
-                <div class="absolute right-4 top-4">
-                    <Button variant="outline" @click="goBack">
-                        <ArrowLeft class="w-4 h-4" /> Back
-                    </Button>
+                <div class="absolute top-4 right-4">
+                    <Button variant="outline" @click="goBack"> <ArrowLeft class="h-4 w-4" /> Back </Button>
                 </div>
 
                 <form @submit.prevent="submit" enctype="multipart/form-data" class="mx-auto flex max-w-5xl flex-col gap-8">
@@ -497,12 +494,7 @@ const goBack = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="primary_author">Primary Author</Label>
-                                <Input
-                                    v-model="form.primary_author"
-                                    placeholder="Enter author name"
-                                    id="primary_author"
-                                    type="text"
-                                />
+                                <Input v-model="form.primary_author" placeholder="Enter author name" id="primary_author" type="text" />
                                 <InputError :message="form.errors.primary_author" />
                             </div>
                             <div class="col-span-2 grid gap-2">
@@ -511,7 +503,14 @@ const goBack = () => {
                                     <span class="text-sm text-gray-500">(Hit 'ENTER' or ';' for each co-author)</span>
                                 </div>
                                 <AuthorsTagsInput id="co_authors" v-model="form.co_authors" />
-                                <InputError :message="form.errors.co_authors" />
+                                <InputError
+                                    :message="
+                                        Object.keys(form.errors)
+                                            .filter((key) => key.startsWith('co_authors.'))
+                                            .map((key) => form.errors[key])
+                                            .join(', ')
+                                    "
+                                />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="edition">Edition</Label>
@@ -524,7 +523,14 @@ const goBack = () => {
                                     <span class="text-sm text-gray-500">(Hit 'ENTER' or ';' for each editor)</span>
                                 </div>
                                 <EditorsTagsInput v-model="form.editors" />
-                                <InputError :message="form.errors.editors" />
+                                <InputError
+                                    :message="
+                                        Object.keys(form.errors)
+                                            .filter((key) => key.startsWith('editors.'))
+                                            .map((key) => form.errors[key])
+                                            .join(', ')
+                                    "
+                                />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="publisher">Publisher</Label>
@@ -537,13 +543,19 @@ const goBack = () => {
                                 <span v-if="isYearAutoSelected && !isYearOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isYearOverridden" class="text-sm text-blue-500">Overridden auto select</span>
                                 <span v-if="!isCallNumberValid && !isYearAutoSelected && form.call_number" class="text-sm text-red-500"
-                                >Invalid call number format</span
+                                    >Invalid call number format</span
                                 >
                                 <InputError :message="form.errors.publication_year" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="publication_place">Publication Place</Label>
-                                <Input id="publication_place" placeholder="Publication place..." type="text" required v-model="form.publication_place" />
+                                <Input
+                                    id="publication_place"
+                                    placeholder="Publication place..."
+                                    type="text"
+                                    required
+                                    v-model="form.publication_place"
+                                />
                                 <InputError :message="form.errors.publication_place" />
                             </div>
                         </div>
@@ -568,7 +580,7 @@ const goBack = () => {
                                 <span v-if="isDDCAutoSelected && !isDDCOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isDDCOverridden" class="text-sm text-blue-500">Overridden auto select</span>
                                 <span v-if="!isCallNumberValid && !isDDCAutoSelected && form.call_number" class="text-sm text-red-500"
-                                >Invalid call number format</span
+                                    >Invalid call number format</span
                                 >
                                 <InputError :message="form.errors.ddc_class_id" />
                             </div>
@@ -587,7 +599,7 @@ const goBack = () => {
                                 <span v-if="isLocationAutoSelected && !isLocationOverridden" class="text-sm text-green-500">Auto selected</span>
                                 <span v-if="isLocationOverridden" class="text-sm text-blue-500">Overridden auto select</span>
                                 <span v-if="!isCallNumberValid && !isLocationAutoSelected && form.call_number" class="text-sm text-red-500"
-                                >Invalid call number format</span
+                                    >Invalid call number format</span
                                 >
                                 <InputError :message="form.errors.physical_location_id" />
                             </div>
@@ -600,7 +612,7 @@ const goBack = () => {
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div class="grid gap-2">
                                 <Label for="cover_type">Cover Type</Label>
-                                <CoverTypeComboBox v-model:coverTypeId="form.cover_type_id"/>
+                                <CoverTypeComboBox v-model:coverTypeId="form.cover_type_id" />
                                 <InputError :message="form.errors.cover_type_id" />
                             </div>
                             <div class="grid gap-2">
@@ -641,12 +653,13 @@ const goBack = () => {
                             </div>
                             <div v-if="form.ics_number" class="grid gap-2">
                                 <Label for="ics_date">ICS Date</Label>
-                                <DatePicker class="min-w-full"
-                                            v-model:value="icsDate"
-                                            type="date"
-                                            valueType="date"
-                                            format="YYYY-MM-DD"
-                                            placeholder="Select ICS date"
+                                <DatePicker
+                                    class="min-w-full"
+                                    v-model:value="icsDate"
+                                    type="date"
+                                    valueType="date"
+                                    format="YYYY-MM-DD"
+                                    placeholder="Select ICS date"
                                 />
                                 <InputError :message="form.errors.ics_date" />
                             </div>
@@ -657,12 +670,13 @@ const goBack = () => {
                             </div>
                             <div v-if="form.pr_number" class="grid gap-2">
                                 <Label for="pr_date">PR Date</Label>
-                                <DatePicker class="min-w-full"
-                                            v-model:value="prDate"
-                                            type="date"
-                                            valueType="date"
-                                            format="YYYY-MM-DD"
-                                            placeholder="Select PR date"
+                                <DatePicker
+                                    class="min-w-full"
+                                    v-model:value="prDate"
+                                    type="date"
+                                    valueType="date"
+                                    format="YYYY-MM-DD"
+                                    placeholder="Select PR date"
                                 />
                                 <InputError :message="form.errors.pr_date" />
                             </div>
@@ -673,18 +687,19 @@ const goBack = () => {
                             </div>
                             <div v-if="form.po_number" class="grid gap-2">
                                 <Label for="po_date">PO Date</Label>
-                                <DatePicker class="min-w-full"
-                                            v-model:value="poDate"
-                                            type="date"
-                                            valueType="date"
-                                            format="YYYY-MM-DD"
-                                            placeholder="Select PO date"
+                                <DatePicker
+                                    class="min-w-full"
+                                    v-model:value="poDate"
+                                    type="date"
+                                    valueType="date"
+                                    format="YYYY-MM-DD"
+                                    placeholder="Select PO date"
                                 />
                                 <InputError :message="form.errors.po_date" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="source">Source</Label>
-                                <Select v-model="form.source_id" required >
+                                <Select v-model="form.source_id" required>
                                     <SelectTrigger id="source" class="min-w-full">
                                         <SelectValue placeholder="Select source" />
                                     </SelectTrigger>
@@ -702,7 +717,13 @@ const goBack = () => {
                                         <Label for="purchase_amount">Purchase Amount</Label>
                                         <span class="text-xs text-muted-foreground">(purchase related info)</span>
                                     </div>
-                                    <Input id="purchase_amount" placeholder="Purchase amount..." type="number" step="0.01" v-model="form.purchase_amount" />
+                                    <Input
+                                        id="purchase_amount"
+                                        placeholder="Purchase amount..."
+                                        type="number"
+                                        step="0.01"
+                                        v-model="form.purchase_amount"
+                                    />
                                     <InputError :message="form.errors.purchase_amount" />
                                 </div>
 
