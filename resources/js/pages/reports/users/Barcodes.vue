@@ -1,7 +1,6 @@
 <script setup lang="ts">
 // Imports
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -9,18 +8,16 @@ import Layout from '@/layouts/users/ReportsLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue';
-import type { Column, ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table';
+import type { Column, ColumnDef, SortingState } from '@tanstack/vue-table';
 import {
     FlexRender,
     getCoreRowModel,
     getExpandedRowModel,
-    getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, ChevronDown, X, Loader2, Eye, Search, Plus } from 'lucide-vue-next';
-import { DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuRoot, DropdownMenuTrigger } from 'radix-vue';
+import { ArrowUpDown, Loader2, Eye, Plus } from 'lucide-vue-next';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
 import {
     Dialog,
@@ -52,9 +49,6 @@ const error = ref<string | null>(null);
 // Scroll position preservation
 const scrollPosition = ref(0);
 
-// Search input ref for focus preservation
-const searchInputRef = ref(null);
-
 // Show handler function
 const isDialogOpen = ref(false);
 const selectedUser = ref<any | null>(null);
@@ -71,7 +65,6 @@ const columns: ColumnDef<any>[] = [
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Lib ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('library_id')),
-        enableHiding: false,
     },
     {
         accessorKey: 'card_number',
@@ -90,7 +83,6 @@ const columns: ColumnDef<any>[] = [
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['First Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('first_name')),
-        enableHiding: false,
     },
     {
         accessorKey: 'middle_initial',
@@ -103,7 +95,6 @@ const columns: ColumnDef<any>[] = [
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Last Name', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('last_name')),
-        enableHiding: false,
     },
     {
         accessorKey: 'sex',
@@ -120,12 +111,10 @@ const columns: ColumnDef<any>[] = [
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Email', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'lowercase max-w-52 truncate' }, row.getValue('email')),
-        enableHiding: false,
     },
     {
         id: 'action',
         header: 'Action',
-        enableHiding: false,
         cell: ({ row }) =>
             h(Button,
                 {
@@ -152,11 +141,6 @@ function cycleSort(column: Column<any, any>) {
 
 // Table state
 const sorting = ref<SortingState>([]);
-const columnFilters = ref<ColumnFiltersState>([]);
-const columnVisibility = ref<VisibilityState>({
-    school_id: false,
-    sex: false,
-});
 const expanded = ref({});
 const pageSizes = [5, 10, 20, 30, 40, 50];
 const pagination = ref({
@@ -178,15 +162,6 @@ const restoreScrollPosition = () => {
     });
 };
 
-// Debounce utility
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
-    let timeout: ReturnType<typeof setTimeout>;
-    return ((...args: any[]) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(null, args), wait);
-    }) as T;
-}
-
 // API fetch function
 const fetchData = async () => {
     isLoading.value = true;
@@ -205,24 +180,6 @@ const fetchData = async () => {
             params.append('sort_field', sorting.value[0].id);
             params.append('sort_direction', sorting.value[0].desc ? 'desc' : 'asc');
         }
-
-        // Filters
-        columnFilters.value.forEach(filter => {
-            if (Array.isArray(filter.value) && filter.value.length > 0) {
-                params.append(filter.id, filter.value.join(','));
-            } else if (filter.value !== '' && filter.value !== null && filter.value !== undefined) {
-                params.append(filter.id, filter.value.toString());
-            }
-        });
-
-        // Column visibility
-        Object.entries(columnVisibility.value).forEach(([key, value]) => {
-            if (value === true) {
-                params.append(`show_${key}`, '1');
-            } else {
-                params.append(`hide_${key}`, '1');
-            }
-        });
 
         // Make API request
         const response = await fetch(`/api/admins?${params.toString()}`, {
@@ -259,9 +216,6 @@ const fetchData = async () => {
     }
 };
 
-// Debounced fetch for immediate UI feedback
-const debouncedFetch = debounce(fetchData, 300);
-
 // Table instance
 const table = useVueTable({
     get data() {
@@ -271,30 +225,20 @@ const table = useVueTable({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     get pageCount() {
         return lastPage.value;
     },
     manualPagination: true,
     manualSorting: true,
-    manualFiltering: true,
     onPaginationChange: handlePaginationChange,
     onSortingChange: handleSortingChange,
-    onColumnFiltersChange: handleFilterChange,
-    onColumnVisibilityChange: handleColumnVisibilityChange,
     onExpandedChange: (updater) => {
         expanded.value = typeof updater === 'function' ? updater(expanded.value) : updater;
     },
     state: {
         get sorting() {
             return sorting.value;
-        },
-        get columnFilters() {
-            return columnFilters.value;
-        },
-        get columnVisibility() {
-            return columnVisibility.value;
         },
         get expanded() {
             return expanded.value;
@@ -323,19 +267,6 @@ function handleSortingChange(updaterOrValue) {
     // Reset to first page when sorting changes
     pagination.value.pageIndex = 0;
     // Don't preserve scroll position for sorting - user expects to see top
-    fetchData();
-}
-
-function handleFilterChange(updaterOrValue) {
-    columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue;
-    // Reset to first page when filters change
-    pagination.value.pageIndex = 0;
-    // Don't preserve scroll position for filtering - user expects to see top
-    debouncedFetch(); // Use debounced version for filters
-}
-
-function handleColumnVisibilityChange(updaterOrValue) {
-    columnVisibility.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility.value) : updaterOrValue;
     fetchData();
 }
 
@@ -390,45 +321,6 @@ const handlePageSizeChange = (value: string) => {
     }
 };
 
-// Search functionality
-const filterInput = ref<string>('');
-
-const applyFilter = () => {
-    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-    if (filterInput.value.trim()) {
-        newFilters.push({ id: 'search', value: filterInput.value.trim() });
-    }
-    table.setColumnFilters(newFilters);
-};
-
-const clearFilter = () => {
-    filterInput.value = '';
-    const newFilters = columnFilters.value.filter((f) => f.id !== 'search');
-    table.setColumnFilters(newFilters);
-};
-
-// Debounced search - automatically triggers on input change
-const debouncedApplyFilter = debounce(() => {
-    applyFilter();
-}, 300);
-
-// Watch for search input changes with focus preservation
-watch(filterInput, (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-        // Store focus state before applying filter
-        const hadFocus = document.activeElement === searchInputRef.value;
-
-        debouncedApplyFilter();
-
-        // Restore focus after next DOM update
-        if (hadFocus) {
-            nextTick(() => {
-                searchInputRef.value?.focus();
-            });
-        }
-    }
-});
-
 // Initialize URL parameters from current page URL
 const initializeFromURL = () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -445,24 +337,6 @@ const initializeFromURL = () => {
     if (sortField) {
         sorting.value = [{ id: sortField, desc: sortDirection === 'desc' }];
     }
-
-    // Initialize search filter
-    const searchParam = urlParams.get('search');
-    if (searchParam) {
-        filterInput.value = searchParam;
-        columnFilters.value = [{ id: 'search', value: searchParam }];
-    }
-
-    // Initialize column visibility
-    urlParams.forEach((value, key) => {
-        if (key.startsWith('show_')) {
-            const columnKey = key.replace('show_', '');
-            columnVisibility.value[columnKey] = value === '1';
-        } else if (key.startsWith('hide_')) {
-            const columnKey = key.replace('hide_', '');
-            columnVisibility.value[columnKey] = value !== '1';
-        }
-    });
 };
 
 // Breadcrumbs
@@ -503,54 +377,12 @@ const handleEdit = (id) => {
                     </Button>
                 </div>
 
-                <div class="flex items-center justify-between gap-2 py-4">
-                    <div class="flex gap-2">
-                        <div class="relative">
-                            <Input
-                                ref="searchInputRef"
-                                class="w-[380px] pr-8"
-                                placeholder="Search by lib id, card #, first name, or last name ..."
-                                v-model="filterInput"
-                            />
-                            <Button v-if="filterInput" variant="ghost" class="absolute top-0 right-0 h-full px-2" @click="clearFilter">
-                                <X class="h-4 w-4" />
-                            </Button>
-                            <div v-else class="absolute top-0 right-0 h-full px-2 flex items-center justify-center pointer-events-none">
-                                <Search class="h-4 w-4 text-foreground" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <Link :href="route('admins.create')">
-                            <Button variant="secondary">
-                                <Plus class="w-4 h-4" /> Add Library Staff
-                            </Button>
-                        </Link>
-                        <DropdownMenuRoot>
-                            <DropdownMenuTrigger as-child>
-                                <Button variant="outline" class="ml-auto" :disabled="isLoading">
-                                    Columns
-                                    <ChevronDown class="ml-2 h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" class="z-50 min-w-[220px] rounded-md border border-gray-200 bg-white p-1 shadow-lg">
-                                <DropdownMenuCheckboxItem
-                                    v-for="column in table.getAllColumns().filter((col) => col.getCanHide())"
-                                    :key="column.id"
-                                    :checked="column.getIsVisible()"
-                                    @update:checked="(value) => column.toggleVisibility(!!value)"
-                                    class="relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none hover:bg-gray-100"
-                                >
-                                    <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                                        <svg v-if="column.getIsVisible()" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </span>
-                                    {{ column.id }}
-                                </DropdownMenuCheckboxItem>
-                            </DropdownMenuContent>
-                        </DropdownMenuRoot>
-                    </div>
+                <div class="flex items-center justify-end gap-2 py-4">
+                    <Link :href="route('admins.create')">
+                        <Button variant="secondary">
+                            <Plus class="w-4 h-4" /> Add Library Staff
+                        </Button>
+                    </Link>
                 </div>
 
                 <div class="rounded-md border">
@@ -655,107 +487,6 @@ const handleEdit = (id) => {
                     </div>
                 </div>
             </div>
-
-            <Dialog v-model:open="isDialogOpen">
-                <DialogContent class="sm:max-w-4xl max-h-[95dvh] p-0 bg-background rounded-lg shadow-xl overflow-x-auto">
-                    <!-- Header -->
-                    <DialogHeader class="px-4 pt-4 pb-4 border-b">
-                        <DialogTitle class="text-xl font-semibold text-foreground">Library Staff Profile</DialogTitle>
-                    </DialogHeader>
-
-                    <!-- Main Content -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 py-0 overflow-y-auto">
-                        <!-- Profile Card -->
-                        <div class="flex flex-col items-center gap-4 bg-card rounded-lg p-4 border">
-                            <!-- Profile Image -->
-                            <div class="relative">
-                                <img
-                                    v-if="selectedUser?.profile_image"
-                                    :src="'/storage/profile_images/' + selectedUser.profile_image"
-                                    alt="Profile Image"
-                                    class="h-36 w-36 rounded-full object-cover border-4 border-background shadow-lg"
-                                />
-                                <div
-                                    v-else
-                                    class="h-36 w-36 rounded-full flex items-center justify-center bg-muted text-muted-foreground border-4 border-background shadow-lg"
-                                >
-                                    <span class="text-sm font-medium">No Image</span>
-                                </div>
-                            </div>
-
-                            <!-- Barcode -->
-                            <div class="flex flex-col items-center gap-2 w-full">
-                                <div v-if="selectedUser?.barcode_path" class="w-full">
-                                    <img
-                                        :src="'/storage/' + selectedUser.barcode_path"
-                                        alt="User Barcode"
-                                        class="h-16 w-auto mx-auto border rounded shadow-sm"
-                                    />
-                                    <span class="text-xs text-muted-foreground mt-2 block text-center">
-                            Barcode: {{ selectedUser.card_number }}
-                        </span>
-                                </div>
-                                <div
-                                    v-else
-                                    class="h-16 w-full flex items-center justify-center bg-muted text-muted-foreground border rounded shadow-sm"
-                                >
-                                    <span class="text-xs font-medium">No Barcode</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Details Section -->
-                        <div class="md:col-span-2 space-y-4">
-                            <div v-if="selectedUser" class="space-y-4">
-                                <!-- Personal Information -->
-                                <div class="bg-card rounded-lg p-5 border">
-                                    <h3 class="font-semibold text-lg mb-4 text-foreground">Personal Information</h3>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                                        <p><strong class="text-foreground">Library ID:</strong> {{ selectedUser.library_id }}</p>
-                                        <p><strong class="text-foreground">Card #:</strong> {{ selectedUser.card_number }}</p>
-                                        <p><strong class="text-foreground">School ID:</strong> {{ selectedUser.school_id }}</p>
-                                        <p>
-                                            <strong class="text-foreground">Name:</strong>
-                                            {{ selectedUser.first_name }}
-                                            {{ selectedUser.middle_initial ? selectedUser.middle_initial + '.' : '' }}
-                                            {{ selectedUser.last_name }}
-                                        </p>
-                                        <p><strong class="text-foreground">Email:</strong> {{ selectedUser.email }}</p>
-                                        <p><strong class="text-foreground">Contact:</strong> {{ selectedUser.contact_number || 'Not provided' }}</p>
-                                        <p><strong class="text-foreground">Sex:</strong> {{ selectedUser.sex === 'm' ? 'Male' : selectedUser.sex === 'f' ? 'Female' : selectedUser.sex }}</p>
-                                        <p><strong class="text-foreground">User Type:</strong> {{ selectedUser.user_type?.name }}</p>
-                                    </div>
-                                </div>
-
-                                <!-- staff Information -->
-                                <div class="rounded-lg border bg-card p-5">
-                                    <h3 class="mb-4 text-lg font-semibold text-foreground">Staff Information</h3>
-                                    <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-                                        <p>
-                                            <strong class="text-foreground">Office:</strong>
-                                            <span v-if="selectedUser.admin?.office">
-                                                {{ selectedUser.admin.office }}
-                                            </span>
-                                            <span v-else class="text-muted-foreground">Not assigned</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div v-else class="text-muted-foreground p-4 text-center">
-                                <p class="text-sm">No library staff selected.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Footer -->
-                    <DialogFooter class="p-6 border-t bg-background">
-                        <div class="flex justify-between w-full">
-                            <Button variant="outline" @click="isDialogOpen = false" class="px-6">Close</Button>
-                            <Button @click="handleEdit(selectedUser.id)" class="px-6">Edit Library Staff Details</Button>
-                        </div>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
         </Layout>
     </AppLayout>
