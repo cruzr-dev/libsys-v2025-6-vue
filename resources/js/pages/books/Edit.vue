@@ -545,8 +545,8 @@ const goBack = () => {
                             <div class="grid gap-2">
                                 <Label for="cover_image">Cover Page</Label>
                                 <Input id="cover_image" type="file" @change="(e) => (form.cover_image = e.target.files[0])" />
-                                <div v-if="props.record.cover_image && !form.cover_image" class="text-sm text-gray-500">
-                                    Current file: {{ props.record.cover_image }}
+                                <div v-if="props.record.book.cover_image && !form.cover_image" class="text-sm text-gray-500">
+                                    Current file: {{ props.record.book.cover_image }}
                                 </div>
                                 <InputError :message="form.errors.cover_image" />
                             </div>

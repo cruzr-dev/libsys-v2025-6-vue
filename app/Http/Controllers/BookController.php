@@ -141,56 +141,62 @@ class BookController extends Controller
         QrCodeService $qrCodeService
     ): \Illuminate\Http\RedirectResponse {
 
-        $validated = $request->validate([
-            // Basic Information
-            'accession_number'      => 'required|string|max:50|unique:records,accession_number',
-            'title'                 => 'required|string|max:255',
-            'volume'                => 'nullable|string|max:50',
-            'edition'               => 'nullable|string|max:50',
-            'primary_author'        => 'required|string|max:255',
-            'co_authors'            => 'nullable|array',
-            'co_authors.*'          => 'string|max:255',
-            'editors'               => 'nullable|array',
-            'editors.*'             => 'string|max:255',
-            'publication_year'      => 'required|integer|min:1000|max:' . date('Y'),
-            'publisher'             => 'required|string|max:255',
-            'publication_place'     => 'required|string|max:255',
-            'isbn'                  => 'required|string|max:20|unique:books,isbn',
+        try {
 
-            // Classification & Location
-            'call_number' => [
-                'nullable',
-                'string',
-                'max:50',
-                'regex:/^(?:[a-z]{2,10}\s+)?\d{1,3}(\.\d+)?\s*[A-Z]\d{1,4}(\s*\d{4})?$/i'
-            ],
-            'ddc_class_id'          => 'nullable|exists:ddc_classifications,id',
-            'physical_location_id'  => 'required|exists:physical_locations,id',
+            $validated = $request->validate([
+                // Basic Information
+                'accession_number'      => 'required|string|max:50|unique:records,accession_number',
+                'title'                 => 'required|string|max:255',
+                'volume'                => 'nullable|string|max:50',
+                'edition'               => 'nullable|string|max:50',
+                'primary_author'        => 'required|string|max:255',
+                'co_authors'            => 'nullable|array',
+                'co_authors.*'          => 'string|max:255',
+                'editors'               => 'nullable|array',
+                'editors.*'             => 'string|max:255',
+                'publication_year'      => 'required|integer|min:1000|max:' . date('Y'),
+                'publisher'             => 'required|string|max:255',
+                'publication_place'     => 'required|string|max:255',
+                'isbn'                  => 'required|string|max:20|unique:books,isbn',
 
-            // Physical Description
-            'cover_image'           => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
-            'cover_type_id'         => 'required|exists:cover_types,id',
-            'status'                => 'required|in:available,damaged,missing,borrowed,discarded',
+                // Classification & Location
+                'call_number' => [
+                    'nullable',
+                    'string',
+                    'max:50',
+                    'regex:/^(?:[a-z]{2,10}\s+)?\d{1,3}(\.\d+)?\s*[A-Z]\d{1,4}(\s*\d{4})?$/i'
+                ],
+                'ddc_class_id'          => 'nullable|exists:ddc_classifications,id',
+                'physical_location_id'  => 'required|exists:physical_locations,id',
 
-            // Administrative Information
-            'ics_number'            => 'nullable|max:50',
-            'ics_date'              => 'required_with:ics_number|date',
-            'pr_number'             => 'nullable|max:50',
-            'pr_date'               => 'required_with:pr_number|date',
-            'po_number'             => 'nullable|max:50',
-            'po_date'               => 'required_with:po_number|date',
-            'source_id'             => 'required|exists:sources,id',
-            'purchase_amount'       => 'nullable|numeric|min:0',
-            'lot_cost'              => 'nullable|numeric|min:0',
-            'supplier'              => 'nullable|string|max:255',
-            'donated_by'            => 'nullable|string|max:255',
-            'replaced_by'           => 'nullable|string|max:255',
+                // Physical Description
+                'cover_image'           => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
+                'cover_type_id'         => 'required|exists:cover_types,id',
+                'status'                => 'required|in:available,damaged,missing,borrowed,discarded',
 
-            // Content Description
-            'table_of_contents'     => 'nullable|string',
-            'subject_headings'      => 'nullable|array',
-            'subject_headings.*'    => 'string|max:255',
-        ]);
+                // Administrative Information
+                'ics_number'            => 'nullable|max:50',
+                'ics_date'              => 'required_with:ics_number|date',
+                'pr_number'             => 'nullable|max:50',
+                'pr_date'               => 'required_with:pr_number|date',
+                'po_number'             => 'nullable|max:50',
+                'po_date'               => 'required_with:po_number|date',
+                'source_id'             => 'required|exists:sources,id',
+                'purchase_amount'       => 'nullable|numeric|min:0',
+                'lot_cost'              => 'nullable|numeric|min:0',
+                'supplier'              => 'nullable|string|max:255',
+                'donated_by'            => 'nullable|string|max:255',
+                'replaced_by'           => 'nullable|string|max:255',
+
+                // Content Description
+                'table_of_contents'     => 'nullable|string',
+                'subject_headings'      => 'nullable|array',
+                'subject_headings.*'    => 'string|max:255',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withInput()->withErrors($e->validator)->with('error', 'Please correct the errors in the form.');
+        }
 
         // 2. Transaction
         try {
@@ -340,7 +346,7 @@ class BookController extends Controller
      */
     public function update(Request $request, Book $book)
     {
-        //
+
     }
 
     /**
