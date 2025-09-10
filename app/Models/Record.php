@@ -42,4 +42,14 @@ class Record extends Model
     {
         return $this->hasMany(Remark::class);
     }
+
+    public function authors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Author::class, 'author_record');
+    }
+
+    public function editors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Author::class, 'editor_record');
+    }
 }

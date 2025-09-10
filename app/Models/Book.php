@@ -49,14 +49,4 @@ class Book extends Model
     {
         return $this->belongsTo(Source::class);
     }
-
-    public function authors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
-    {
-        return $this->belongsToMany(Author::class, 'author_book')->withPivot('role')->withTimestamps();
-    }
-
-    public function editors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
-    {
-        return $this->belongsToMany(Author::class, 'book_editor')->withTimestamps();
-    }
 }

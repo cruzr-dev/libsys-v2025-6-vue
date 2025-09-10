@@ -8,10 +8,8 @@ class Author extends Model
 {
     protected $guarded = [];
 
-    public function books()
+    public function records(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(Book::class, 'author_book')
-            ->withPivot('role')
-            ->withTimestamps();
+        return $this->belongsToMany(Book::class, 'author_record');
     }
 }
