@@ -675,7 +675,6 @@ console.log(data);
                         <!-- Main Content -->
                         <div class="grid grid-cols-1 gap-4 overflow-y-auto p-4 py-0 md:grid-cols-3">
                             <!-- Book Cover Card -->
-                            <!-- Book Cover Card -->
                             <div class="flex flex-col items-center justify-center gap-4 rounded-lg border bg-card p-4">
                                 <!-- Book Cover Image with QR Code -->
                                 <div class="relative w-full">
