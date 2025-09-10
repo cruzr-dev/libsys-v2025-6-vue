@@ -27,6 +27,15 @@ const props = defineProps<{
         status: string;
         subject: string[];
 
+        // Add this for the pivot relationship:
+        authors: Array<{
+            id: number;
+            name: string;
+            pivot: {
+                role: 'primary author' | 'co-author';
+            };
+        }>;
+
         // Related book model
         book: {
             id: number;
@@ -36,16 +45,6 @@ const props = defineProps<{
             cover_type_id: number | string;
             cover_image: string | null;
             volume: string;
-
-            // Add this for the pivot relationship:
-            authors: Array<{
-                id: number;
-                name: string;
-                pivot: {
-                    role: 'primary author' | 'co-author';
-                };
-            }>;
-
             edition: string;
             editors: string[];
             publication_year: string;
@@ -77,14 +76,14 @@ const props = defineProps<{
 }>();
 
 const getPrimaryAuthor = () => {
-    const primaryAuthor = props.record.book.authors?.find(
+    const primaryAuthor = props.record.authors?.find(
         author => author.pivot.role === 'primary author'
     );
     return primaryAuthor ? primaryAuthor.name : '';
 };
 
 const getCoAuthors = () => {
-    return props.record.book.authors
+    return props.record.authors
         ?.filter(author => author.pivot.role === 'co-author')
         ?.map(author => author.name) || [];
 };
