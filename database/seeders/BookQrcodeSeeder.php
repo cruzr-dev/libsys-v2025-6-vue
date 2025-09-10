@@ -38,10 +38,10 @@ class BookQrcodeSeeder extends Seeder
             // Access accession_number from the related record
             if ($book->record && $book->record->accession_number) {
                 try {
-                    $filename = $book->record->accession_number . '.png';
+                    $filename = 'qr_' . $book->record->accession_number . '.png';
 
                     // Check if QR code already exists in storage
-                    if (Storage::exists($filename)) {
+                    if (Storage::exists('qrcodes/'.$filename)) {
                         // File exists, just update the book record with the path
                         $book->update(['qrcode_file' => $filename]);
                         $skippedCount++;
@@ -54,7 +54,7 @@ class BookQrcodeSeeder extends Seeder
                         $qrResult = $writer->write($qrCode);
 
                         // Save QR code
-                        Storage::put($filename, $qrResult->getString());
+                        Storage::put('qrcodes/'.$filename, $qrResult->getString());
 
                         // Update book record
                         $book->update(['qrcode_file' => $filename]);
