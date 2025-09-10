@@ -675,20 +675,38 @@ console.log(data);
                         <!-- Main Content -->
                         <div class="grid grid-cols-1 gap-4 overflow-y-auto p-4 py-0 md:grid-cols-3">
                             <!-- Book Cover Card -->
-                            <div class="flex flex-col items-center gap-4 rounded-lg border bg-card p-4">
-                                <!-- Book Cover Image -->
+                            <!-- Book Cover Card -->
+                            <div class="flex flex-col items-center justify-center gap-4 rounded-lg border bg-card p-4">
+                                <!-- Book Cover Image with QR Code -->
                                 <div class="relative w-full">
                                     <img
                                         v-if="selectedBook.book?.cover_image"
                                         :src="'/storage/resized_book_covers/' + selectedBook.book.cover_image"
                                         alt="Book Cover"
-                                        class=" w-full rounded-lg border-4 border-background object-cover shadow-lg"
+                                        class="w-full rounded-lg border-4 border-background object-cover shadow-lg"
                                     />
                                     <div
                                         v-else
                                         class="flex h-64 w-full items-center justify-center rounded-lg border-4 border-background bg-muted text-muted-foreground shadow-lg"
                                     >
                                         <span class="text-sm font-medium">No Cover</span>
+                                    </div>
+
+                                    <!-- QR Code in Top Right Corner -->
+                                    <div class="absolute top-2 right-2">
+                                        <div v-if="selectedBook.book?.qrcode_file" class="flex flex-col items-center">
+                                            <img
+                                                :src="'/storage/qrcodes/' + selectedBook.book.qrcode_file"
+                                                alt="Book QR Code"
+                                                class="h-16 w-16 rounded border bg-white shadow-md"
+                                            />
+                                        </div>
+                                        <div
+                                            v-else
+                                            class="flex h-16 w-16 items-center justify-center rounded border bg-muted text-muted-foreground shadow-md"
+                                        >
+                                            <span class="text-[10px] font-medium">No QR</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -697,23 +715,7 @@ console.log(data);
                             <div class="space-y-4 md:col-span-2">
                                 <div v-if="selectedBook" class="space-y-4">
                                     <!-- Book Information -->
-                                    <div class="relative rounded-lg border bg-card p-5">
-                                        <!-- Barcode in Top Right Corner -->
-                                        <div class="absolute top-5 right-5">
-                                            <div v-if="selectedBook.book?.qrcode_path" class="flex flex-col items-center">
-                                                <img
-                                                    :src="'/storage/' + selectedBook.book.qrcode_path"
-                                                    alt="Book Barcode"
-                                                    class="h-12 w-auto rounded border shadow-sm"
-                                                />
-                                            </div>
-                                            <div
-                                                v-else
-                                                class="flex h-12 w-24 items-center justify-center rounded border bg-muted text-muted-foreground shadow-sm"
-                                            >
-                                                <span class="text-xs font-medium">No Barcode</span>
-                                            </div>
-                                        </div>
+                                    <div class="rounded-lg border bg-card p-5">
                                         <h3 class="mb-4 text-lg font-semibold text-foreground">Book Information</h3>
                                         <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                                             <p><strong class="text-foreground">Accession No.:</strong> {{ selectedBook.accession_number }}</p>
