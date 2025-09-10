@@ -414,7 +414,7 @@ const submit = () => {
     }
 
     // Add _method field for PUT request (Laravel method spoofing)
-    formData.append('_method', 'PATCH   ');
+    formData.append('_method', 'PATCH');
 
     // Send the FormData using Inertia's router
     router.post(route('books.update', props.record.id), formData, {
@@ -428,7 +428,16 @@ const submit = () => {
             form.processing = false; // Reset processing state
         },
         onError: (errors) => {
-            form.errors = errors; // Set form errors if any
+            // Clear the file input on error
+            coverImageFile.value = null;
+            // Reset the file input element
+            const fileInput = document.getElementById('cover_image') as HTMLInputElement;
+            if (fileInput) fileInput.value = '';
+
+            // Set errors using Inertia's built-in method
+            Object.keys(errors).forEach(key => {
+                form.setError(key, errors[key]);
+            });
         },
     });
 };
