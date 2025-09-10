@@ -104,6 +104,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Edit Book', href: `/records/books/${props.record.id}/edit` },
 ];
 
+// Add this ref for handling the cover image file separately
+const coverImageFile = ref<File | null>(null);
+
+// Handle cover image file input change
+const handleCoverImageChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0] || null;
+    coverImageFile.value = file;
+    form.clearErrors('cover_image');
+};
+
 const form = useForm({
     accession_number: props.record.accession_number || '',
     title: props.record.title || '',
@@ -119,7 +130,6 @@ const form = useForm({
     call_number: props.record.book.call_number || '',
     ddc_class_id: props.record.book.ddc_class_id?.toString() || '',
     physical_location_id: props.record.book.physical_location_id?.toString() || '',
-    cover_image: null, // File input starts empty for editing
     ics_number: props.record.book.ics_number || '',
     ics_date: props.record.book.ics_date || '',
     pr_number: props.record.book.pr_number || '',
@@ -136,9 +146,7 @@ const form = useForm({
     table_of_contents: props.record.book.table_of_contents || '',
     subject_headings: props.record.subject || [],
     status: props.record.status || 'available',
-    _method: 'PUT', // For Laravel method spoofing
 });
-
 // Auto-clear errors when editing fields
 watch(
     () => ({ ...form }), // watch whole form
@@ -378,7 +386,51 @@ const isDonated = checkSource(["donation", 'donation-photocopy'])
 const isReplaced = checkSource(["replaced"])
 
 const submit = () => {
-    form.post(route('books.update', props.record.id));
+    // Create FormData to handle file upload
+    const formData = new FormData();
+
+    // Add all form fields
+    Object.keys(form.data()).forEach(key => {
+        const value = form.data()[key];
+
+        // Handle arrays (like co_authors, editors, subject_headings)
+        if (Array.isArray(value)) {
+            if (value.length > 0) {
+                value.forEach((item, index) => {
+                    formData.append(`${key}[${index}]`, item);
+                });
+            } else {
+                // Send empty array indicator
+                formData.append(`${key}[]`, '');
+            }
+        } else if (value !== null && value !== undefined && value !== '') {
+            formData.append(key, value);
+        }
+    });
+
+    // Add cover image if selected
+    if (coverImageFile.value) {
+        formData.append('cover_image', coverImageFile.value);
+    }
+
+    // Add _method field for PUT request (Laravel method spoofing)
+    formData.append('_method', 'PUT');
+
+    // Send the FormData using Inertia's router
+    router.post(route('books.update', props.record.id), formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+        onBefore: () => {
+            form.processing = true; // Set processing state manually
+        },
+        onFinish: () => {
+            form.processing = false; // Reset processing state
+        },
+        onError: (errors) => {
+            form.errors = errors; // Set form errors if any
+        },
+    });
 };
 
 const goBack = () => {
@@ -401,7 +453,7 @@ const goBack = () => {
                     </Button>
                 </div>
 
-                <form @submit.prevent="submit" class="mx-auto flex max-w-5xl flex-col gap-8">
+                <form @submit.prevent="submit" enctype="multipart/form-data" class="mx-auto flex max-w-5xl flex-col gap-8">
                     <!-- Basic Information -->
                     <section class="space-y-6">
                         <h2 class="text-lg font-semibold">Basic Information</h2>
@@ -544,8 +596,8 @@ const goBack = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="cover_image">Cover Page</Label>
-                                <Input id="cover_image" type="file" @change="(e) => (form.cover_image = e.target.files[0])" />
-                                <div v-if="props.record.book.cover_image && !form.cover_image" class="text-sm text-gray-500">
+                                <Input id="cover_image" type="file" accept="image/*" @change="handleCoverImageChange" />
+                                <div v-if="props.record.book.cover_image && !coverImageFile" class="text-sm text-gray-500">
                                     Current file: {{ props.record.book.cover_image }}
                                 </div>
                                 <InputError :message="form.errors.cover_image" />

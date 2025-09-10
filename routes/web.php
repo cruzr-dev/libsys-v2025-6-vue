@@ -87,6 +87,7 @@ Route::middleware($middleware)->group(function () {
         Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
         Route::post('/books', [BookController::class, 'store'])->name('books.store');
         Route::get('/books/{id}/edit', [BookController::class, 'edit'])->name('books.edit');
+        Route::patch('/books/{id}', [BookController::class, 'update'])->name('books.update');
         // multimedia
         Route::get('/multimedia', [DigitalResourceController::class, 'index'])->name('multimedia.index');
         Route::get('/multimedia/create', [DigitalResourceController::class, 'create'])->name('multimedia.create');
