@@ -25,7 +25,7 @@ class QrCodeService
             ->build();
 
         // Define path
-        $filename = $accessionNumber . '.png';
+        $filename = 'qr_' . $accessionNumber . '.png';
         $path = 'qrcodes/' . $filename;
 
         // Save to storage/app/public/qrcodes

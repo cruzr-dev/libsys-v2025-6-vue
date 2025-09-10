@@ -250,7 +250,7 @@ class BookController extends Controller
 
                 // Generate QR Code for accession number
                 $qrCodePath = $qrCodeService->store($validated['accession_number']);
-                $book->update(['qrcode_path' => $qrCodePath]);
+                $book->update(['qrcode_file' => $qrCodePath]);
 
                 // Handle Primary Author
                 $primaryAuthor = $this->findOrCreateAuthor($validated['primary_author']);

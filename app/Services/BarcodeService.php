@@ -24,7 +24,7 @@ class BarcodeService
     {
         $barcodeData = $this->generator->getBarcode($cardNumber, $this->generator::TYPE_CODE_128);
 
-        $path = $cardNumber . '.png';
+        $path = 'bar_' . $cardNumber . '.png';
 
         Storage::put($path, $barcodeData);
 
