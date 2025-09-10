@@ -163,8 +163,8 @@ const submit = () => {
 };
 
 const goBack = () => {
-    window.history.back();
-};
+    router.visit(route('staff.index'))
+}
 </script>
 
 <template>

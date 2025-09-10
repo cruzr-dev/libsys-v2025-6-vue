@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import RecordsLayout from '@/layouts/records/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, BookOpen, LoaderCircle } from 'lucide-vue-next';
 import { computed, nextTick, ref, watch } from 'vue';
 import CoverTypeComboBox from '@/components/CoverTypeComboBox.vue';
@@ -316,8 +316,8 @@ const submit = () => {
 };
 
 const goBack = () => {
-    window.history.back();
-};
+    router.visit(route('books.index'))
+}
 
 </script>
 

@@ -210,8 +210,8 @@ const submit = () => {
 };
 
 const goBack = () => {
-    window.history.back();
-};
+    router.visit(route('undergraduate.index'))
+}
 </script>
 
 <template>

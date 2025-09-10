@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -59,8 +59,8 @@ onBeforeUnmount(() => {
 });
 
 const goBack = () => {
-    window.history.back();
-};
+    router.visit(route('admins.index'))
+}
 
 const submit = () => {
     form.post(route('admins.store'));

@@ -159,8 +159,8 @@ const submit = () => {
 };
 
 const goBack = () => {
-    window.history.back();
-};
+    router.visit(route('admins.index'))
+}
 </script>
 
 <template>

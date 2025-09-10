@@ -181,8 +181,8 @@ const submit = () => {
 };
 
 const goBack = () => {
-    window.history.back();
-};
+    router.visit(route('faculties.index'))
+}
 </script>
 
 <template>
