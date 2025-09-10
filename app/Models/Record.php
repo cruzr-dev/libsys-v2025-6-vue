@@ -45,7 +45,8 @@ class Record extends Model
 
     public function authors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(Author::class, 'author_record');
+        return $this->belongsToMany(Author::class, 'author_record')
+            ->withPivot('role');
     }
 
     public function editors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

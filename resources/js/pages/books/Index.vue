@@ -199,13 +199,20 @@ const columns: ColumnDef<any>[] = [
         header: () => h('div', 'Primary Author'),
         cell: ({ row }) => {
             const authors = row.original.authors; // now an array
-            const primaryAuthor = Array.isArray(authors) && authors.length > 0 ? authors[0].name : 'No author';
-            return h('div', { class: 'truncate max-w-xs' }, primaryAuthor);
+            const primaryAuthor = Array.isArray(authors)
+                ? authors.find(author => author.pivot.role === 'primary author')
+                : null;
+
+            return h(
+                'div',
+                { class: 'truncate max-w-xs' },
+                primaryAuthor ? primaryAuthor.name : 'No primary author'
+            );
         },
         enableHiding: true,
     },
     {
-        id: 'primary_author',
+        id: 'primary_editor',
         header: () => h('div', 'Primary Editor'),
         cell: ({ row }) => {
             const editors = row.original.editors; // now an array
