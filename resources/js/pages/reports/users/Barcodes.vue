@@ -17,16 +17,8 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, Loader2, Eye, Plus } from 'lucide-vue-next';
+import { ArrowUpDown, Loader2, Plus } from 'lucide-vue-next';
 import { h, ref, onMounted, watch, nextTick } from 'vue';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 
 // API Data Interface
 interface ApiResponse {
@@ -53,17 +45,12 @@ const scrollPosition = ref(0);
 const isDialogOpen = ref(false);
 const selectedUser = ref<any | null>(null);
 
-const handleShow = (user: any) => {
-    selectedUser.value = user;
-    isDialogOpen.value = true;
-};
-
 // Table columns definition
 const columns: ColumnDef<any>[] = [
     {
-        accessorKey: 'library_id',
+        accessorKey: 'bar_code',
         header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Lib ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Bar Code', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('library_id')),
     },
     {
@@ -71,12 +58,6 @@ const columns: ColumnDef<any>[] = [
         header: ({ column }) =>
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Card #', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('card_number')),
-    },
-    {
-        accessorKey: 'school_id',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Scl ID', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('school_id')),
     },
     {
         accessorKey: 'first_name',
@@ -112,23 +93,6 @@ const columns: ColumnDef<any>[] = [
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Email', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'lowercase max-w-52 truncate' }, row.getValue('email')),
     },
-    {
-        id: 'action',
-        header: 'Action',
-        cell: ({ row }) =>
-            h(Button,
-                {
-                    variant: 'outline',
-                    size: 'sm',
-                    onClick: () => handleShow(row.original),
-                    class: 'flex items-center gap-2'
-                },
-                () => [
-                    h(Eye, { class: 'h-4 w-4 text-muted-foreground' }),
-                    'Show'
-                ]
-            )
-    }
 ];
 
 // Sorting helper
@@ -380,7 +344,7 @@ const handleEdit = (id) => {
                 <div class="flex items-center justify-end gap-2 py-4">
                     <Link :href="route('admins.create')">
                         <Button variant="secondary">
-                            <Plus class="w-4 h-4" /> Add Library Staff
+                            <Plus class="w-4 h-4" /> Export XLSX
                         </Button>
                     </Link>
                 </div>
