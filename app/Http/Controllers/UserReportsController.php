@@ -9,6 +9,6 @@ class UserReportsController extends Controller
 {
     public function StudentBarcodes(): \Inertia\Response
     {
-        return Inertia::render('user-reports/StudentBarcodes');
+        return Inertia::render('reports/users/StudentBarcodes');
     }
 }

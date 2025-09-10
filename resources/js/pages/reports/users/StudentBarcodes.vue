@@ -15,7 +15,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
-            hiii from qr heheh
+            hiii from usrs heheh
         </Layout>
     </AppLayout>
 </template>

@@ -113,7 +113,7 @@ Route::middleware($middleware)->group(function () {
             Route::get('/students/barcodes', [UserReportsController::class, 'StudentBarcodes'])->name('reports.users.students.barcodes');
         });
         Route::prefix('records')->group(function () {
-            Route::get('/books/barcodes', [RecordReportsController::class, 'BookBarcodes'])->name('reports.records.books.barcodes');
+            Route::get('/books/qrcodes', [RecordReportsController::class, 'BookBarcodes'])->name('reports.records.books.barcodes');
         });
     });
         Route::prefix('logger')->group(function () {
