@@ -23,29 +23,18 @@ const props = defineProps<{
     record: {
         id: number;
         accession_number: string;
-        call_number: string;
-        ddc_class_id: number | string;
-        physical_location_id: number | string;
-        cover_image: string | null;
-        ics_number: string;
-        ics_date: string;
-        pr_number: string;
-        pr_date: string;
-        po_number: string;
-        po_date: string;
-        source_id: number | string;
-        purchase_amount: string;
-        lot_cost: string;
-        supplier: string;
-        donated_by: string;
-        replaced_by: string;
-        cover_type_id: number | string;
+        title: string;
         status: string;
+        subject: string[];
 
         // Related book model
         book: {
             id: number;
-            title: string;
+            call_number: string;
+            ddc_class_id: number | string;
+            physical_location_id: number | string;
+            cover_type_id: number | string;
+            cover_image: string | null;
             volume: string;
             primary_author: string;
             co_authors: string[];
@@ -56,7 +45,18 @@ const props = defineProps<{
             publication_place: string;
             isbn: string;
             table_of_contents: string;
-            subject_headings: string[];
+            ics_number: string;
+            ics_date: string;
+            pr_number: string;
+            pr_date: string;
+            po_number: string;
+            po_date: string;
+            source_id: number | string;
+            purchase_amount: string;
+            lot_cost: string;
+            supplier: string;
+            donated_by: string;
+            replaced_by: string;
         };
     };
     ddcClassifications: { id: number; number_range: string; title: string }[];
@@ -76,33 +76,33 @@ const form = useForm({
     accession_number: props.record.accession_number || '',
     title: props.record.title || '',
     volume: props.record.book.volume || '',
-    primary_author: props.record.primary_author || '',
-    co_authors: props.record.co_authors || [],
-    edition: props.record.edition || '',
-    editors: props.record.editors || [],
-    publication_year: props.record.publication_year || '',
-    publisher: props.record.publisher || '',
-    publication_place: props.record.publication_place || '',
-    isbn: props.record.isbn || '',
-    call_number: props.record.call_number || '',
-    ddc_class_id: props.record.ddc_class_id?.toString() || '',
-    physical_location_id: props.record.physical_location_id?.toString() || '',
+    primary_author: props.record.book.primary_author || '',
+    co_authors: props.record.book.co_authors || [],
+    edition: props.record.book.edition || '',
+    editors: props.record.book.editors || [],
+    publication_year: props.record.book.publication_year || '',
+    publisher: props.record.book.publisher || '',
+    publication_place: props.record.book.publication_place || '',
+    isbn: props.record.book.isbn || '',
+    call_number: props.record.book.call_number || '',
+    ddc_class_id: props.record.book.ddc_class_id?.toString() || '',
+    physical_location_id: props.record.book.physical_location_id?.toString() || '',
     cover_image: null, // File input starts empty for editing
-    ics_number: props.record.ics_number || '',
-    ics_date: props.record.ics_date || '',
-    pr_number: props.record.pr_number || '',
-    pr_date: props.record.pr_date || '',
-    po_number: props.record.po_number || '',
-    po_date: props.record.po_date || '',
-    source_id: props.record.source_id?.toString() || '',
-    purchase_amount: props.record.purchase_amount || '',
-    lot_cost: props.record.lot_cost || '',
-    supplier: props.record.supplier || '',
-    donated_by: props.record.donated_by || '',
-    replaced_by: props.record.replaced_by || '',
-    cover_type_id: props.record.cover_type_id?.toString() || '',
-    table_of_contents: props.record.table_of_contents || '',
-    subject_headings: props.record.subject_headings || [],
+    ics_number: props.record.book.ics_number || '',
+    ics_date: props.record.book.ics_date || '',
+    pr_number: props.record.book.pr_number || '',
+    pr_date: props.record.book.pr_date || '',
+    po_number: props.record.book.po_number || '',
+    po_date: props.record.book.po_date || '',
+    source_id: props.record.book.source_id?.toString() || '',
+    purchase_amount: props.record.book.purchase_amount || '',
+    lot_cost: props.record.book.lot_cost || '',
+    supplier: props.record.book.supplier || '',
+    donated_by: props.record.book.donated_by || '',
+    replaced_by: props.record.book.replaced_by || '',
+    cover_type_id: props.record.book.cover_type_id?.toString() || '',
+    table_of_contents: props.record.book.table_of_contents || '',
+    subject_headings: props.record.subject || [],
     status: props.record.status || 'available',
     _method: 'PUT', // For Laravel method spoofing
 });
