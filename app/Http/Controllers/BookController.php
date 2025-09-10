@@ -37,8 +37,7 @@ class BookController extends Controller
         $query = Record::query()
             ->whereNull('deleted_at') // respect soft deletes
             ->whereHas('book')
-            ->with(['authors', 'editors', 'book.ddcClassification', 'book.physicalLocation']
-        );
+            ->with(['authors', 'editors', 'book.ddcClassification', 'book.physicalLocation']);
 
         // Handle search
         if ($request->filled('search')) {
@@ -75,8 +74,16 @@ class BookController extends Controller
 
         $records = $query->paginate($perPage);
 
-        // Transform the data to include author and editor information
+        // Transform the data to include author, editor, and other information
         $records->getCollection()->transform(function ($record) use ($showDDC, $showLocation) {
+
+            // Add authors information
+            $record->authors_list = $record->authors->pluck('name')->toArray();
+            $record->authors_string = $record->authors->pluck('name')->join(', ');
+
+            // Add editors information
+            $record->editors_list = $record->editors->pluck('name')->toArray();
+            $record->editors_string = $record->editors->pluck('name')->join(', ');
 
             if ($showDDC) {
                 $record->ddc_classification = $record->book && $record->book->ddcClassification
