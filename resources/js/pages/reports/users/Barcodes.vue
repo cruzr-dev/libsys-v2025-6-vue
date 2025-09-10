@@ -44,10 +44,22 @@ const scrollPosition = ref(0);
 // Table columns definition
 const columns: ColumnDef<any>[] = [
     {
-        accessorKey: 'bar_code',
-        header: ({ column }) =>
-            h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Bar Code', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
-        cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('library_id')),
+        accessorKey: 'barcode_file',
+        header: () => h('div', 'Barcode Image'),
+        cell: ({ row }) => {
+            const barcodeFile = row.getValue('barcode_file');
+            if (!barcodeFile) {
+                return h('div', 'No barcode');
+            }
+            // Construct the full image URL (adjust the base path as needed)
+            const imageUrl = `/storage/barcodes/${barcodeFile}`; // Update this path based on your storage setup
+            return h('img', {
+                src: imageUrl,
+                alt: 'Barcode',
+                class: 'h-8 w-auto object-contain', // Adjust styling as needed
+                onError: () => h('div', 'Image not found'), // Fallback if image fails to load
+            });
+        },
     },
     {
         accessorKey: 'card_number',
@@ -89,7 +101,7 @@ const columns: ColumnDef<any>[] = [
             h(Button, { variant: 'ghost', onClick: () => cycleSort(column) }, () => ['Email', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
         cell: ({ row }) => h('div', { class: 'lowercase max-w-52 truncate' }, row.getValue('email')),
     },
-];
+];;
 
 // Sorting helper
 function cycleSort(column: Column<any, any>) {
