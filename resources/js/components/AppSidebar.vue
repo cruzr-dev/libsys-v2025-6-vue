@@ -77,14 +77,14 @@ const mainNavItems = computed((): NavItem[] => [
         url: "/reports",
         icon: ChartColumnIncreasing,
         isActive: hasActiveSubItem([
-            { url: "/reports/users/students/barcodes" },
+            { url: "/reports/users/barcodes" },
             { url: "/reports/records/books/qrcodes" }
         ]) || isRouteActive('/reports'),
         items: [
             {
                 title: "Users",
-                url: "/reports/users/students/barcodes",
-                isActive: isRouteActive('/reports/users/students/barcodes'),
+                url: "/reports/users/barcodes",
+                isActive: isRouteActive('/reports/users/barcodes'),
             },
             {
                 title: "Collection",

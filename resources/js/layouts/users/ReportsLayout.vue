@@ -5,19 +5,13 @@ import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const sidebarNavItems: NavItem[] = [
-    { title: 'All Patrons', href: '/users/all' },
+    { title: 'Barcodes', href: '/reports/users/barcodes' },
     { title: 'GraduateStudent', href: '/users/undergraduate' },
     { title: 'Faculty', href: '/users/faculties' },
     { title: 'Staff', href: '/users/staff' },
 ];
 
-const rightNavItems: NavItem[] = [{ title: 'Options', href: '/users/options' }];
-
 const page = usePage();
-if (page.props.auth.permissions.can_view_any_users) {
-    sidebarNavItems.push({ title: 'Library Staff', href: '/users/admins' });
-    // rightNavItems.unshift({ title: 'Import', href: '/users/import' });
-}
 
 const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.location).pathname : '';
 </script>

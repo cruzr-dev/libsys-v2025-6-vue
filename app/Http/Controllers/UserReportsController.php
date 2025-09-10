@@ -7,8 +7,8 @@ use Inertia\Inertia;
 
 class UserReportsController extends Controller
 {
-    public function StudentBarcodes(): \Inertia\Response
+    public function barcodes(): \Inertia\Response
     {
-        return Inertia::render('reports/users/StudentBarcodes');
+        return Inertia::render('reports/users/Barcodes');
     }
 }
