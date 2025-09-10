@@ -333,8 +333,12 @@ class BookController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Book $book)
+    public function edit($id)
     {
+        $record = Record::where('id', $id)
+            ->with('book')
+            ->firstOrFail();
+
         $ddcClassifications = DdcClassification::select('id', 'title', 'number_range')
             ->orderBy('title')
             ->get();
@@ -352,6 +356,7 @@ class BookController extends Controller
         $sources = Source::select('id', 'name')->orderBy('name')->get();
 
         return Inertia::render('books/Edit', [
+            'record' => $record,
             'ddcClassifications' => $ddcClassifications,
             'lcClassifications'  => $lcClassifications,
             'physicalLocations'  => $physicalLocations,
