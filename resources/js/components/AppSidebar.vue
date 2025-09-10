@@ -14,17 +14,31 @@ import { computed } from 'vue';
 const page = usePage();
 const currentUrl = computed(() => page.url);
 
-// Helper function to check if a route is active
 const isRouteActive = (url: string): boolean => {
+    const current = currentUrl.value;
+
+    // Special case for dashboard
     if (url === '/dashboard') {
-        return currentUrl.value === '/dashboard' || currentUrl.value === '/';
+        return current === '/dashboard' || current === '/';
     }
-    return currentUrl.value.startsWith(url);
+
+    // For exact matches (useful for sub-items)
+    if (current === url) {
+        return true;
+    }
+
+    // For parent routes, check if current URL starts with the route
+    return current.startsWith(url + '/') || current.startsWith(url + '?');
 };
 
 // Helper function to check if any sub-item is active
 const hasActiveSubItem = (items: { url: string }[] = []): boolean => {
-    return items.some(item => currentUrl.value.startsWith(item.url));
+    return items.some(item => {
+        const current = currentUrl.value;
+        return current === item.url ||
+            current.startsWith(item.url + '/') ||
+            current.startsWith(item.url + '?');
+    });
 };
 
 const mainNavItems = computed((): NavItem[] => [
@@ -60,40 +74,35 @@ const mainNavItems = computed((): NavItem[] => [
     },
     {
         title: "Reports",
-        url: "reports",
-        icon: ChartColumnIncreasing ,
+        url: "/reports",
+        icon: ChartColumnIncreasing,
         isActive: hasActiveSubItem([
             { url: "/reports/users/student/barcodes" },
-            { url: "/explorer" },
-            { url: "/quantum" }
-        ]),
+            { url: "/reports/collection/book/qrcodes" }
+        ]) || isRouteActive('/reports'),
         items: [
             {
                 title: "Users",
                 url: "/reports/users/student/barcodes",
-                isActive: isRouteActive('users'),
+                isActive: isRouteActive('/reports/users/student/barcodes'),
             },
             {
                 title: "Collection",
                 url: "/reports/collection/book/qrcodes",
-                isActive: isRouteActive('collection'),
-            },
-            {
-                title: "Quantum",
-                url: "/quantum",
-                isActive: isRouteActive('/quantum'),
+                isActive: isRouteActive('/reports/collection/book/qrcodes'),
             },
         ],
     },
     {
-        title: "Statistical data",
-        url: "#",
-        icon: ChartPie ,
+        title: "Statistical Data",
+        url: "/statistics", // Changed to avoid confusion
+        icon: ChartPie,
+        // Fixed: Check only statistical data sub-items
         isActive: hasActiveSubItem([
-            { url: "#" },
-            { url: "#" },
-            { url: "#" }
-        ]),
+            { url: "/sample" },
+            { url: "/explorer" },
+            { url: "/quantum" }
+        ]) || isRouteActive('/statistics'),
         items: [
             {
                 title: "Genesis",
