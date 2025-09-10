@@ -71,6 +71,8 @@ const submit = () => {
         <Layout>
             <div class="flex h-full flex-1 flex-col gap-6 p-6 bg-white rounded-xl shadow-sm overflow-x-auto relative">
 
+                <h2 class="text-xl text-center font-semibold text-gray-900">Add Staff</h2>
+
                 <div class="absolute right-4 top-4">
                     <Button variant="outline" @click="goBack">
                         <ArrowLeft class="w-4 h-4" /> Back

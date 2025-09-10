@@ -52,7 +52,7 @@ const props = defineProps<{
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Patrons', href: '/users' },
     { title: 'Faculties', href: '/users/staff' },
-    { title: 'Edit Staffy', href: `/users/students/${props.staff.id}/edit` },
+    { title: 'Edit Staff', href: `/users/students/${props.staff.id}/edit` },
 ];
 
 // Initialize the form with staff data - DON'T include profile_image in the initial form data
@@ -168,13 +168,13 @@ const goBack = () => {
 </script>
 
 <template>
-    <Head title="Edit Staffy" />
+    <Head title="Edit Staff" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Layout>
             <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm relative">
 
-                <h2 class="text-xl text-center font-semibold text-gray-900">Edit Staffy Details</h2>
+                <h2 class="text-xl text-center font-semibold text-gray-900">Edit Staff Details</h2>
 
                 <!-- Back Button -->
                 <div class="absolute right-4 top-4">

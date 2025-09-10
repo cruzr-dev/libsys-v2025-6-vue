@@ -12,7 +12,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import RecordsLayout from '@/layouts/records/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
-import { BookOpen, LoaderCircle } from 'lucide-vue-next';
+import { ArrowLeft, BookOpen, LoaderCircle } from 'lucide-vue-next';
 import { computed, nextTick, ref, watch } from 'vue';
 import CoverTypeComboBox from '@/components/CoverTypeComboBox.vue';
 import DatePicker from 'vue-datepicker-next';
@@ -314,13 +314,27 @@ const isReplaced = checkSource(["replaced"])
 const submit = () => {
     form.post(route('books.store'));
 };
+
+const goBack = () => {
+    window.history.back();
+};
+
 </script>
 
 <template>
     <Head title="Add Book" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <RecordsLayout>
-            <div class="flex flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm">
+            <div class="flex flex-col gap-6 overflow-x-auto rounded-xl bg-white p-6 shadow-sm relative">
+
+                <h2 class="text-xl text-center font-semibold text-gray-900">Add Book</h2>
+
+                <div class="absolute right-4 top-4">
+                    <Button variant="outline" @click="goBack">
+                        <ArrowLeft class="w-4 h-4" /> Back
+                    </Button>
+                </div>
+
                 <form @submit.prevent="submit" class="mx-auto flex max-w-5xl flex-col gap-8">
                     <!-- Basic Information -->
                     <section class="space-y-6">
