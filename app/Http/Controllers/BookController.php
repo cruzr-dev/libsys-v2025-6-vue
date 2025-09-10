@@ -344,9 +344,196 @@ class BookController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Book $book)
-    {
+    public function update(
+        Request $request,
+                $id,
+        BookCoverImageService $imageService,
+        QrCodeService $qrCodeService
+    ): \Illuminate\Http\RedirectResponse {
 
+        $record = Record::with(['book', 'authors', 'editors'])->findOrFail($id);
+        $book = $record->book;
+
+        try {
+            $validated = $request->validate([
+                // Basic Information
+                'accession_number'      => 'required|string|max:50|unique:records,accession_number,' . $record->id,
+                'title'                 => 'required|string|max:255',
+                'volume'                => 'nullable|string|max:50',
+                'edition'               => 'nullable|string|max:50',
+                'primary_author'        => 'required|string|max:255',
+                'co_authors'            => 'nullable|array',
+                'co_authors.*'          => 'string|max:255',
+                'editors'               => 'nullable|array',
+                'editors.*'             => 'string|max:255',
+                'publication_year'      => 'required|integer|min:1000|max:' . date('Y'),
+                'publisher'             => 'required|string|max:255',
+                'publication_place'     => 'required|string|max:255',
+                'isbn'                  => 'required|string|max:20|unique:books,isbn,' . $book->id,
+
+                // Classification & Location
+                'call_number' => [
+                    'nullable',
+                    'string',
+                    'max:50',
+                    'regex:/^(?:[a-z]{2,10}\s+)?\d{1,3}(\.\d+)?\s*[A-Z]\d{1,4}(\s*\d{4})?$/i'
+                ],
+                'ddc_class_id'          => 'nullable|exists:ddc_classifications,id',
+                'physical_location_id'  => 'required|exists:physical_locations,id',
+
+                // Physical Description
+                'cover_image'           => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
+                'cover_type_id'         => 'required|exists:cover_types,id',
+                'status'                => 'required|in:available,damaged,missing,borrowed,discarded',
+
+                // Administrative Information
+                'ics_number'            => 'nullable|max:50',
+                'ics_date'              => 'required_with:ics_number|date',
+                'pr_number'             => 'nullable|max:50',
+                'pr_date'               => 'required_with:pr_number|date',
+                'po_number'             => 'nullable|max:50',
+                'po_date'               => 'required_with:po_number|date',
+                'source_id'             => 'required|exists:sources,id',
+                'purchase_amount'       => 'nullable|numeric|min:0',
+                'lot_cost'              => 'nullable|numeric|min:0',
+                'supplier'              => 'nullable|string|max:255',
+                'donated_by'            => 'nullable|string|max:255',
+                'replaced_by'           => 'nullable|string|max:255',
+
+                // Content Description
+                'table_of_contents'     => 'nullable|string',
+                'subject_headings'      => 'nullable|array',
+                'subject_headings.*'    => 'string|max:255',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withInput()->withErrors($e->validator)->with('error', 'Please correct the errors in the form.');
+        }
+
+        // 2. Transaction
+        try {
+            DB::transaction(function () use ($validated, $request, $record, $book, $imageService, $qrCodeService) {
+
+                // Process subject headings
+                $subject = null;
+                if (!empty($validated['subject_headings'])) {
+                    $subject = collect($validated['subject_headings'])
+                        ->map(fn($heading, $i) => ($i + 1) . '. ' . trim($heading) . '.')
+                        ->implode(' ');
+                }
+
+                // Prepare record update data
+                $recordUpdateData = [
+                    'accession_number' => $validated['accession_number'],
+                    'title'            => $validated['title'],
+                    'subject'          => $subject,
+                    'status'           => $validated['status'],
+                ];
+
+                // Handle cover image update
+                $bookUpdateData = [
+                    'volume'               => $validated['volume'],
+                    'edition'              => $validated['edition'],
+                    'publication_year'     => $validated['publication_year'],
+                    'publisher'            => $validated['publisher'],
+                    'publication_place'    => $validated['publication_place'],
+                    'isbn'                 => $validated['isbn'],
+                    'call_number'          => $validated['call_number'],
+                    'ddc_class_id'         => $validated['ddc_class_id'],
+                    'physical_location_id' => $validated['physical_location_id'],
+                    'cover_type_id'        => $validated['cover_type_id'],
+                    'ics_number'           => $validated['ics_number'],
+                    'ics_date'             => $validated['ics_date'],
+                    'pr_number'            => $validated['pr_number'],
+                    'pr_date'              => $validated['pr_date'],
+                    'po_number'            => $validated['po_number'],
+                    'po_date'              => $validated['po_date'],
+                    'source_id'            => $validated['source_id'],
+                    'purchase_amount'      => $validated['purchase_amount'],
+                    'lot_cost'             => $validated['lot_cost'],
+                    'supplier'             => $validated['supplier'],
+                    'donated_by'           => $validated['donated_by'],
+                    'replaced_by'          => $validated['replaced_by'],
+                    'table_of_contents'    => $validated['table_of_contents'],
+                ];
+
+                // Handle cover image update
+                if ($request->hasFile('cover_image') && $request->file('cover_image')->isValid()) {
+                    // Delete old cover image if it exists
+                    if ($book->cover_image) {
+                        $imageService->delete($book->cover_image);
+                    }
+
+                    // Store new image
+                    $coverImagePath = $imageService->store(
+                        $request->file('cover_image'),
+                        $validated['accession_number']
+                    );
+                    $bookUpdateData['cover_image'] = $coverImagePath;
+                }
+                // If no new file is uploaded, keep the existing image (don't modify cover_image field)
+
+                // Update record and book data
+                $record->update($recordUpdateData);
+                $book->update($bookUpdateData);
+
+                // Regenerate QR code if accession number changed
+                if ($record->wasChanged('accession_number')) {
+                    // Delete old QR code if it exists
+                    if ($book->qrcode_file) {
+                        $qrCodeService->delete($book->qrcode_file);
+                    }
+
+                    $qrCodePath = $qrCodeService->store($validated['accession_number']);
+                    $book->update(['qrcode_file' => $qrCodePath]);
+                }
+
+                // Handle Primary Author update
+                $primaryAuthor = $this->findOrCreateAuthor($validated['primary_author']);
+
+                // Remove existing primary author relationships
+                $record->authors()->wherePivot('role', 'primary author')->detach();
+
+                // Add new primary author
+                $record->authors()->attach($primaryAuthor->id, ['role' => 'primary author']);
+
+                // Handle Co-Authors update
+                // Remove existing co-author relationships
+                $record->authors()->wherePivot('role', 'co-author')->detach();
+
+                // Add new co-authors
+                if (!empty($validated['co_authors'])) {
+                    foreach ($validated['co_authors'] as $coAuthorName) {
+                        $coAuthor = $this->findOrCreateAuthor($coAuthorName);
+                        $record->authors()->attach($coAuthor->id, ['role' => 'co-author']);
+                    }
+                }
+
+                // Handle Editors update
+                // Remove existing editor relationships
+                $record->editors()->detach();
+
+                // Add new editors
+                if (!empty($validated['editors'])) {
+                    foreach ($validated['editors'] as $editorName) {
+                        $editor = $this->findOrCreateAuthor($editorName);
+                        $record->editors()->attach($editor->id);
+                    }
+                }
+            });
+
+            return to_route('books.index')
+                ->with('success', 'Book record updated successfully.');
+
+        } catch (\Throwable $e) {
+            Log::error('Error updating Book: ' . $e->getMessage(), [
+                'record_id'        => $record->id,
+                'accession_number' => $validated['accession_number'],
+                'isbn'             => $validated['isbn'],
+            ]);
+
+            return back()->withInput()->with('error', 'Failed to update book record. Please try again.');
+        }
     }
 
     /**
