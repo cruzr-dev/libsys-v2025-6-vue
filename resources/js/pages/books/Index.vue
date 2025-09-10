@@ -199,15 +199,9 @@ const columns: ColumnDef<any>[] = [
         header: () => h('div', 'Primary Author'),
         cell: ({ row }) => {
             const authors = row.original.authors; // now an array
-            const primaryAuthor = Array.isArray(authors)
-                ? authors.find(author => author.pivot.role === 'primary author')
-                : null;
+            const primaryAuthor = Array.isArray(authors) ? authors.find((author) => author.pivot.role === 'primary author') : null;
 
-            return h(
-                'div',
-                { class: 'truncate max-w-xs' },
-                primaryAuthor ? primaryAuthor.name : 'No primary author'
-            );
+            return h('div', { class: 'truncate max-w-xs' }, primaryAuthor ? primaryAuthor.name : 'No primary author');
         },
         enableHiding: true,
     },
@@ -220,7 +214,8 @@ const columns: ColumnDef<any>[] = [
             return h('div', { class: 'truncate max-w-xs' }, primaryEditor);
         },
         enableHiding: true,
-    },,
+    },
+    ,
     {
         id: 'publication_year', // use id instead of accessorKey since it's nested
         header: ({ column }) =>
@@ -525,8 +520,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Records', href: '/records' },
     { title: 'Books', href: '/records/books' },
 ];
-
-console.log(data);
 </script>
 
 <template>
@@ -675,6 +668,7 @@ console.log(data);
 
                 <!-- Book Details Modal -->
                 <Dialog v-model:open="isDialogOpen">
+                    {{ console.log(selectedBook) }}
                     <DialogContent class="max-h-[95dvh] overflow-x-auto rounded-lg bg-background p-0 shadow-xl sm:max-w-4xl">
                         <!-- Header -->
                         <DialogHeader class="border-b px-4 pt-4 pb-4">
@@ -728,24 +722,50 @@ console.log(data);
                                         <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                                             <p><strong class="text-foreground">Accession No.:</strong> {{ selectedBook.accession_number }}</p>
                                             <p><strong class="text-foreground">Title:</strong> {{ selectedBook.title }}</p>
+                                            <!-- Primary Author -->
                                             <p>
-                                                <strong class="text-foreground">Authors:</strong>
-                                                <span v-if="selectedBook.book?.authors && selectedBook.book.authors.length > 0">
-                                                    <span v-for="(author, index) in selectedBook.book.authors" :key="author.id">
-                                                        {{ author.name }}<span v-if="index < selectedBook.book.authors.length - 1">, </span>
+                                                <strong class="text-foreground">Primary Author:</strong>
+                                                <span v-if="selectedBook.authors && selectedBook.authors.length > 0">
+                                                    <span v-for="author in selectedBook.authors" :key="author.id">
+                                                        <span v-if="author.pivot?.role === 'primary author'">
+                                                            {{ author.name }}
+                                                        </span>
                                                     </span>
                                                 </span>
-                                                <span v-else class="text-muted-foreground">No authors listed</span>
+                                                <span v-else class="text-muted-foreground">No primary author listed</span>
                                             </p>
+
+                                            <!-- Co-Authors -->
+                                            <p>
+                                                <strong class="text-foreground">Co-Authors:</strong>
+                                                <span v-if="selectedBook.authors && selectedBook.authors.length > 0">
+                                                    <span
+                                                        v-for="(author, index) in selectedBook.authors.filter((a) => a.pivot?.role === 'co-author')"
+                                                        :key="author.id"
+                                                    >
+                                                        {{ author.name }}
+                                                        <span
+                                                            v-if="
+                                                                index < selectedBook.authors.filter((a) => a.pivot?.role === 'co-author').length - 1
+                                                            "
+                                                            >;
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                                <span v-else class="text-muted-foreground">No co-authors listed</span>
+                                            </p>
+
+                                            <!-- Editors -->
                                             <p>
                                                 <strong class="text-foreground">Editors:</strong>
-                                                <span v-if="selectedBook.book?.editors && selectedBook.book.editors.length > 0">
-                                                    <span v-for="(editor, index) in selectedBook.book.editors" :key="editor.id">
-                                                        {{ editor.name }}<span v-if="index < selectedBook.book.editors.length - 1">, </span>
+                                                <span v-if="selectedBook.editors && selectedBook.editors.length > 0">
+                                                    <span v-for="(editor, index) in selectedBook.editors" :key="editor.id">
+                                                        {{ editor.name }}<span v-if="index < selectedBook.editors.length - 1">; </span>
                                                     </span>
                                                 </span>
                                                 <span v-else class="text-muted-foreground">No editors listed</span>
                                             </p>
+
                                             <p><strong class="text-foreground">ISBN:</strong> {{ selectedBook.book?.isbn || 'Not provided' }}</p>
                                             <p>
                                                 <strong class="text-foreground">Publisher:</strong>
