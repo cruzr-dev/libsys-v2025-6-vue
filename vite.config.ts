@@ -20,4 +20,8 @@ export default defineConfig({
             },
         }),
     ],
+    server: {
+        cors: true,
+        port: 5178, // Specific Vite port para dili mag conflict ang npm run dev sa 2 different projects
+    },
 });
