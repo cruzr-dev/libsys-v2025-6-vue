@@ -328,10 +328,6 @@ watch(() => window.location.search, () => {
     initializeFromURL();
     fetchData();
 });
-
-const handleEdit = (id) => {
-    router.get(route('admins.edit', id));
-}
 </script>
 
 <template>
