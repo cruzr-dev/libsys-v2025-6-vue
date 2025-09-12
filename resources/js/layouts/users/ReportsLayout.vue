@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const sidebarNavItems: NavItem[] = [
     { title: 'Barcodes', href: '/reports/users/barcodes' },
-    { title: 'GraduateStudent', href: '/users/undergraduate' },
-    { title: 'Faculty', href: '/users/faculties' },
-    { title: 'Staff', href: '/users/staff' },
+    { title: 'Item', href: '/#' },
+    { title: 'Item', href: '/#' },
+    { title: 'Item', href: '/#' },
 ];
 
 const page = usePage();
