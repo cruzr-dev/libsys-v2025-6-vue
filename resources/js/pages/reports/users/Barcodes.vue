@@ -45,7 +45,7 @@ const scrollPosition = ref(0);
 const columns: ColumnDef<any>[] = [
     {
         accessorKey: 'barcode_file',
-        header: () => h('div', 'Barcode Image'),
+        header: () => h('div', 'Barcode'),
         cell: ({ row }) => {
             const barcodeFile = row.getValue('barcode_file');
             if (!barcodeFile) {
@@ -56,7 +56,7 @@ const columns: ColumnDef<any>[] = [
             return h('img', {
                 src: imageUrl,
                 alt: 'Barcode',
-                class: 'h-8 w-auto object-contain', // Adjust styling as needed
+                class: 'w-32 h-auto object-contain', // Adjust styling as needed
                 onError: () => h('div', 'Image not found'), // Fallback if image fails to load
             });
         },
