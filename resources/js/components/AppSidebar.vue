@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpenCheck, LayoutGrid, Library, Users, ChartColumnIncreasing, ChartPie  } from 'lucide-vue-next';
+import { BookOpenCheck, LayoutGrid, Library, Users, ChartColumnIncreasing, ChartPie,Folder, Logs, Scan, Boxes } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import { FileClock } from 'lucide-vue-next';
 import { computed } from 'vue';
@@ -94,6 +94,18 @@ const mainNavItems = computed((): NavItem[] => [
         ],
     },
     {
+        title: "Clearance",
+        url: "/clearance",
+        isActive: isRouteActive('/clearance'),
+        icon: Folder,
+    },
+    {
+        title: "User Logs",
+        url: "/userlogs",
+        isActive: isRouteActive('/userlogs'),
+        icon: Logs,
+    },
+    {
         title: "Statistical Data",
         url: "/statistics", // Changed to avoid confusion
         icon: ChartPie,
@@ -119,7 +131,21 @@ const mainNavItems = computed((): NavItem[] => [
                 url: "/quantum",
                 isActive: isRouteActive('/quantum'),
             },
+
         ],
+
+    },
+    {
+        title: "Inventory",
+        url: "/inventory",
+        isActive: isRouteActive('/inventory'),
+        icon: Boxes,
+    },
+    {
+        title: "Scanner",
+        url: "/scanner",
+        isActive: isRouteActive('/scanner'),
+        icon: Scan,
     },
 ]);
 
