@@ -3,6 +3,7 @@ import AuthorsTagsInput from '@/components/AuthorsTagsInput.vue';
 import EditorsTagsInput from '@/components/EditorsTagsInput.vue';
 import InputError from '@/components/InputError.vue';
 import SubjectTagsInput from '@/components/SubjectTagsInput.vue';
+import UploadContentsButton from '@/components/UploadContentsButton.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,11 +13,12 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import RecordsLayout from '@/layouts/records/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, BookOpen, LoaderCircle } from 'lucide-vue-next';
-import { computed, nextTick, ref, watch } from 'vue';
+import { ArrowLeft, LoaderCircle, CircleHelp } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 import CoverTypeComboBox from '@/components/CoverTypeComboBox.vue';
 import DatePicker from 'vue-datepicker-next';
 import 'vue-datepicker-next/index.css';
+import { Dialog, DialogContent, DialogOverlay } from '@/components/ui/dialog';
 
 // Props
 const props = defineProps<{
@@ -66,6 +68,8 @@ const form = useForm({
     subject_headings: [],
     status: 'available',
 });
+
+const showGuideModal = ref(false)
 
 // Auto-clear errors when editing fields
 watch(
@@ -315,8 +319,89 @@ const submit = () => {
     form.post(route('books.store'));
 };
 
+// Handle uploaded contents from UploadContentsButton
+const handleContentsUploaded = (contents: string) => {
+    form.table_of_contents = contents;
+};
+
+// Handle upload errors
+const handleUploadError = (error: string) => {
+    // You could show a toast notification here or handle the error as needed
+    console.error('Upload error:', error);
+    alert(error); // Simple alert for now, can be replaced with a proper notification system
+};
+
 const goBack = () => {
     router.visit(route('books.index'))
+}
+
+
+// Organize Table of Contents text
+const organizeTOC = () => {
+    if (!form.table_of_contents || form.table_of_contents.trim().length === 0) {
+        return;
+    }
+
+    let text = form.table_of_contents.trim();
+
+    // Step 1: Normalize spacing and remove excessive dots/separators
+    text = text.replace(/\.{3,}/g, ' ···· '); // Replace multiple dots with uniform separator
+    text = text.replace(/\s{2,}/g, ' '); // Replace multiple spaces with single space
+    text = text.replace(/[\-_]{2,}/g, ' '); // Replace multiple dashes/underscores with space
+
+    // Step 2: Insert line breaks before major sections
+    const majorHeadings = /\b(Part\s+[IVX\d]+|Chapter\s+\d+|Introduction|Acknowledgments?|Preface|Foreword|Abstract|Summary|Conclusion|References?|Bibliography|Appendix|Index|Glossary)\b/gi;
+    text = text.replace(majorHeadings, '\n$1');
+
+    // Step 3: Split into lines and process each line
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+    // Step 4: Apply hierarchical indentation
+    const processedLines = lines.map(line => {
+        // Remove page numbers only if separated by dots/spaces like in real TOCs
+        line = line.replace(/(\.{2,}|\s{3,})\d+\s*$/, '');
+
+        if (/^Part\s+[IVX\d]+/i.test(line)) {
+            return line; // Part level (no indentation)
+        } else if (/^Chapter\s+\d+/i.test(line)) {
+            return '  ' + line; // Chapter level
+        } else if (/^(Introduction|Acknowledgments?|Preface|Foreword|Abstract|Summary|Conclusion|References?|Bibliography|Appendix|Index|Glossary)$/i.test(line)) {
+            return line; // Major sections
+        } else if (/^\d+\./.test(line)) {
+            return '    ' + line; // Numbered subsections
+        } else if (/^[A-Z]\./.test(line)) {
+            return '    ' + line; // Letter subsections
+        } else if (line.startsWith('-') || line.startsWith('•')) {
+            return '      ' + line; // Bullet points
+        } else if (line.length > 0) {
+            return '    - ' + line; // Default subsection
+        }
+
+        return line;
+    });
+
+    // Step 5: Add extra line breaks before Parts and Chapters
+    let organizedText = '';
+    processedLines.forEach((line, idx) => {
+        if (/^\s*(Part\s+[IVX\d]+|Chapter\s+\d+)/i.test(line)) {
+            // Add two line breaks before every Part/Chapter except the very first one
+            if (idx > 0) organizedText += '\n\n';
+        }
+        organizedText += line + '\n';
+    });
+
+    // Step 6: Clean up
+    organizedText = organizedText.replace(/\n{3,}/g, '\n\n').trim();
+
+    // Update the form field
+    form.table_of_contents = organizedText;
+};
+
+function openGuideModal() {
+    showGuideModal.value = true
+}
+function closeGuideModal() {
+    showGuideModal.value = false
 }
 
 </script>
@@ -622,8 +707,43 @@ const goBack = () => {
                         <h2 class="text-lg font-semibold">Content Description</h2>
                         <div class="grid gap-6">
                             <div class="grid gap-2">
-                                <Label for="table_of_contents">Table of Contents</Label>
-                                <Textarea id="table_of_contents" rows="4" v-model="form.table_of_contents" />
+                                <div class="flex justify-between items-center">
+                                    <Label for="table_of_contents">Table of Contents</Label>
+                                    <div class="flex gap-2">
+                                        <UploadContentsButton @contents-uploaded="handleContentsUploaded" @upload-error="handleUploadError" />
+                                        <Button
+                                            type="button"
+                                            @click="organizeTOC"
+                                            variant="outline"
+                                            size="sm"
+                                            :disabled="!form.table_of_contents || form.table_of_contents.trim().length === 0"
+                                            class="flex items-center gap-2"
+                                        >
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M3 6h18M3 12h18m-18 6h18"/>
+                                                <path d="M8 6v12M16 6v12"/>
+                                            </svg>
+                                            Organize
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            @click="openGuideModal"
+                                            variant="ghost"
+                                            size="sm"
+                                            class="flex items-center gap-2"
+                                            title="Table of Contents Guide"
+                                        >
+                                            <CircleHelp class="h-4 w-4" />
+                                            <span class="ml-0 text-sm hidden md:inline">Guide</span>
+                                        </Button>
+                                    </div>
+                                </div>
+                                <Textarea
+                                    id="table_of_contents"
+                                    rows="4"
+                                    v-model="form.table_of_contents"
+                                    class="h-100 overflow-y-auto resize-none"
+                                />
                                 <InputError :message="form.errors.table_of_contents" />
                             </div>
                             <div class="grid gap-2">
@@ -648,4 +768,41 @@ const goBack = () => {
             </div>
         </RecordsLayout>
     </AppLayout>
+
+    <!-- Guide Modal -->
+    <Dialog v-model:open="showGuideModal" @close="closeGuideModal">
+        <DialogOverlay class="fixed inset-0 bg-black/30" />
+        <DialogContent class="fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-lg">
+            <div class="flex justify-between">
+                <h3 class="text-lg font-semibold">Guide for Adding Table of Contents Section</h3>
+            </div>
+
+            <div class="mt-4 space-y-4 overflow-y-auto pr-2" style="max-height: 60vh">
+                <ol class="list-decimal pl-5 text-sm text-gray-700">
+                    <li class="mb-2">
+                        If the Fujitsu ScanSnap SV600 OCR (ABBYY FineReader) is inaccurate, use this method as an alternative.
+                    </li>
+                    <li class="mb-2">
+                        After successfully scanning the "Table of Contents" section of a book and saving it as a PDF:
+                        <ul class="list-disc pl-6 mt-1 text-sm text-gray-600">
+                            <li>Open the PDF in <span class="font-semibold">Google Chrome</span>.</li>
+                            <li>Wait 5–10 seconds for Chrome's built-in OCR to finish (or click once and wait until the "Extracting text from PDF..." indicator disappears).</li>
+                            <li>Once OCR completes, press <span class="font-semibold">CTRL + A</span> to select all text.</li>
+                            <li>Copy and paste it into the "Table of Contents" section.</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <div class="image-container mt-4 overflow-y-auto border border-gray-200 rounded-lg" style="max-height: 400px;">
+                    <img src="/storage/system_images/TOCGuide.jpg" alt="TOC Guide Screenshot" class="w-full object-contain" />
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <Button variant="outline" @click="closeGuideModal">
+                    Close
+                </Button>
+            </div>
+        </DialogContent>
+    </Dialog>
 </template>
