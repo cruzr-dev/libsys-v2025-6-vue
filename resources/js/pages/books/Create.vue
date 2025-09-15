@@ -338,63 +338,118 @@ const goBack = () => {
 
 // Organize Table of Contents text
 const organizeTOC = () => {
-    if (!form.table_of_contents || form.table_of_contents.trim().length === 0) {
-        return;
+    let raw = form.table_of_contents;
+    if (!raw || !raw.trim()) return;
+
+    // Idempotency guard: if we already indented with two-space scheme & have blank separations, skip re-do
+    const alreadyOrganized = /^\s{0,4}(Part|Chapter)\b/m.test(raw) && /^ {2,}- /.test(raw.split('\n').find(l => /^ {2,}- /.test(l)) || '');
+    if (alreadyOrganized) {
+        return; // Prevent double formatting
     }
 
-    let text = form.table_of_contents.trim();
+    // 1. Normalize
+    raw = raw
+        .replace(/\r\n?/g, '\n')
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
 
-    // Step 1: Normalize spacing and remove excessive dots/separators
-    text = text.replace(/\.{3,}/g, ' ···· '); // Replace multiple dots with uniform separator
-    text = text.replace(/\s{2,}/g, ' '); // Replace multiple spaces with single space
-    text = text.replace(/[\-_]{2,}/g, ' '); // Replace multiple dashes/underscores with space
+    // 2. Pre-insert line breaks before major headings not already on separate lines
+    const majorHeadings =
+        /\b(Part\s+[IVXLC\d]+|Chapter\s+[IVXLC\d]+|Introduction|Acknowledgments?|Preface|Foreword|Abstract|Summary|Conclusion|References?|Bibliography|Appendix|Index|Glossary)\b/gi;
+    raw = raw.replace(majorHeadings, '\n$1').replace(/\n{2,}/g, '\n');
 
-    // Step 2: Insert line breaks before major sections
-    const majorHeadings = /\b(Part\s+[IVX\d]+|Chapter\s+\d+|Introduction|Acknowledgments?|Preface|Foreword|Abstract|Summary|Conclusion|References?|Bibliography|Appendix|Index|Glossary)\b/gi;
-    text = text.replace(majorHeadings, '\n$1');
+    // 3. Split lines
+    const lines = raw
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 0);
 
-    // Step 3: Split into lines and process each line
-    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    // 4. Classification helpers
+    const isPart = (l: string) => /^Part\s+[IVXLC\d]+/i.test(l);
+    const isChapter = (l: string) => /^Chapter\s+[IVXLC\d]+/i.test(l);
+    const isMajor = (l: string) =>
+        /^(Introduction|Acknowledgments?|Preface|Foreword|Abstract|Summary|Conclusion|References?|Bibliography|Appendix|Index|Glossary)$/i.test(
+            l
+        );
+    const isMultiLevelNumeric = (l: string) => /^\d+(\.\d+){1,4}\s+[^.\s]/.test(l); // 1.1 Title
+    const isSimpleNumbered = (l: string) => /^\d+\.\s+/.test(l); // 1. Title
+    const isLetterEnumerated = (l: string) => /^[A-Z]\.\s+/.test(l);
+    const isBullet = (l: string) => /^[-*•]\s+/.test(l);
 
-    // Step 4: Apply hierarchical indentation
-    const processedLines = lines.map(line => {
-        // Remove page numbers only if separated by dots/spaces like in real TOCs
-        line = line.replace(/(\.{2,}|\s{3,})\d+\s*$/, '');
+    // Normalize bullet symbols
+    const normalizeBullet = (l: string) => l.replace(/^([*•])\s+/, '- ');
 
-        if (/^Part\s+[IVX\d]+/i.test(line)) {
-            return line; // Part level (no indentation)
-        } else if (/^Chapter\s+\d+/i.test(line)) {
-            return '  ' + line; // Chapter level
-        } else if (/^(Introduction|Acknowledgments?|Preface|Foreword|Abstract|Summary|Conclusion|References?|Bibliography|Appendix|Index|Glossary)$/i.test(line)) {
-            return line; // Major sections
-        } else if (/^\d+\./.test(line)) {
-            return '    ' + line; // Numbered subsections
-        } else if (/^[A-Z]\./.test(line)) {
-            return '    ' + line; // Letter subsections
-        } else if (line.startsWith('-') || line.startsWith('•')) {
-            return '      ' + line; // Bullet points
-        } else if (line.length > 0) {
-            return '    - ' + line; // Default subsection
+    // Depth calculation (0-based root)
+    const getDepth = (l: string): number => {
+        if (isPart(l)) return 0;
+        if (isChapter(l)) return 1;
+        if (isMajor(l)) return 0;
+        if (isMultiLevelNumeric(l)) {
+            // Depth based on segments count: 1.2.3 -> depth 2 (offset)
+            const segments = l.split(/\s+/)[0].split('.');
+            return Math.min(segments.length + 1, 6);
+        }
+        if (isSimpleNumbered(l)) return 2;
+        if (isLetterEnumerated(l)) return 3;
+        if (isBullet(l)) return 4;
+        return 3; // default subsection depth
+    };
+
+    // 5. Process & indent
+    const processed: string[] = [];
+    let lastCategory = '';
+
+    for (let line of lines) {
+        // Remove residual trailing page numbers (if any slipped through)
+        line = line.replace(/(\.{2,}|\s{3,})\b(\d+|[ivxlcdm]{1,7})\b\s*$/i, '').trim();
+
+        line = normalizeBullet(line);
+
+        const depth = getDepth(line);
+        const category =
+            isPart(line) ? 'part'
+                : isChapter(line) ? 'chapter'
+                    : isMajor(line) ? 'major'
+                        : isMultiLevelNumeric(line) ? 'multi'
+                            : isSimpleNumbered(line) ? 'simple'
+                                : isLetterEnumerated(line) ? 'letter'
+                                    : isBullet(line) ? 'bullet'
+                                        : 'default';
+
+        // Avoid double-prefixing default subsections if already started with "- "
+        if (category === 'default' && !/^- /.test(line)) {
+            line = '- ' + line;
         }
 
-        return line;
-    });
+        // Indentation strategy (2 spaces per depth level)
+        const indentLevelsToSpaces = (d: number) => '  '.repeat(d);
+        let indented = line;
 
-    // Step 5: Add extra line breaks before Parts and Chapters
-    let organizedText = '';
-    processedLines.forEach((line, idx) => {
-        if (/^\s*(Part\s+[IVX\d]+|Chapter\s+\d+)/i.test(line)) {
-            // Add two line breaks before every Part/Chapter except the very first one
-            if (idx > 0) organizedText += '\n\n';
+        if (category === 'part' || category === 'major') {
+            indented = line; // no indent
+        } else {
+            indented = indentLevelsToSpaces(depth) + line;
         }
-        organizedText += line + '\n';
-    });
 
-    // Step 6: Clean up
-    organizedText = organizedText.replace(/\n{3,}/g, '\n\n').trim();
+        // Spacing before new Part/Chapter (except first)
+        if ((category === 'part' || category === 'chapter') && processed.length > 0 && lastCategory !== 'blank') {
+            processed.push(''); // blank line separator
+            processed.push(indented);
+        } else {
+            processed.push(indented);
+        }
 
-    // Update the form field
-    form.table_of_contents = organizedText;
+        lastCategory = category;
+    }
+
+    // 6. Collapse excessive blank groups & trim
+    let organized = processed
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+    form.table_of_contents = organized;
 };
 
 function openGuideModal() {

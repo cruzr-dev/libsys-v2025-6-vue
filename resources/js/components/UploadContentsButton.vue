@@ -104,34 +104,67 @@ const handleFileSelection = async (event: Event) => {
 
 // Clean the table of contents text
 const cleanTableOfContents = (rawText: string): string => {
-    if (!rawText || typeof rawText !== 'string') {
-        return '';
+    if (!rawText) return '';
+
+    // Normalize line endings & strip BOM
+    let text = rawText.replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '');
+
+    const originalLines = text.split('\n');
+    const cleaned: string[] = [];
+    let prev = '';
+
+    for (let line of originalLines) {
+        // Normalize tabs -> spaces, trim right only
+        line = line.replace(/\t+/g, ' ').replace(/\s+$/g, '');
+
+        const trimmed = line.trim();
+
+        // Collapse multiple blank lines into one
+        if (!trimmed) {
+            if (cleaned.length && cleaned[cleaned.length - 1] !== '') {
+                cleaned.push('');
+            }
+            prev = '';
+            continue;
+        }
+
+        // Skip repeated TOC heading (keep first only)
+        if (/^table of contents$/i.test(trimmed) &&
+            cleaned.some(l => /^table of contents$/i.test(l))) {
+            continue;
+        }
+
+        // Skip common running headers/footers
+        if (/^copyright\s+/i.test(trimmed)) continue;
+
+        // Remove standalone page numbers like "12" or "Page 5"
+        if (/^(page\s+)?\d+$/i.test(trimmed)) continue;
+
+        // Merge hyphenated line breaks: word- \n continuation
+        if (cleaned.length && /-$/.test(prev) && /^[a-z]/.test(trimmed)) {
+            const last = cleaned.pop()!;
+            line = last.slice(0, -1) + trimmed;
+        }
+
+        // Remove dotted leaders + trailing page number (arabic or roman)
+        // e.g., "Chapter 1 ........ 5" or "Preface .... xii"
+        line = line.replace(
+            /(?:\.{2,}|[\s\.]{3,})\s*\b(\d+|[ivxlcdm]{1,7})\b\s*$/i,
+            ''
+        ).replace(/\s+$/, '');
+
+        // Avoid consecutive duplicates
+        if (line === prev) continue;
+
+        cleaned.push(line);
+        prev = line;
     }
 
-    // Split text into lines for line-by-line processing
-    const lines = rawText.split(/\r?\n/);
+    // Trim leading/trailing blank lines
+    while (cleaned[0] === '') cleaned.shift();
+    while (cleaned[cleaned.length - 1] === '') cleaned.pop();
 
-    const cleanedLines = lines.map(line => {
-        // Remove dotted leaders and trailing page numbers
-        // This regex matches patterns like "Chapter 1 .................. 5" or "Introduction ........ 1"
-        let cleaned = line.replace(/\.{2,}\s*\d+\s*$/, '');
-
-        // Also handle cases with spaces and dots mixed: "Chapter 1 . . . . . . 5"
-        cleaned = cleaned.replace(/[\s\.]{3,}\d+\s*$/, '');
-
-        // Remove trailing spaces but preserve the line structure
-        cleaned = cleaned.replace(/\s+$/, '');
-
-        return cleaned;
-    });
-
-    // Join lines back together, preserving line breaks
-    // Filter out completely empty lines that might have been created during cleaning
-    const result = cleanedLines
-        .filter(line => line.trim().length > 0 || cleanedLines.indexOf(line) === 0)
-        .join('\n');
-
-    return result.trim();
+    return cleaned.join('\n');
 };
 </script>
 
