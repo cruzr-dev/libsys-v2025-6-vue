@@ -113,7 +113,8 @@ const mainNavItems = computed((): NavItem[] => [
         isActive: hasActiveSubItem([
             { url: "/sample" },
             { url: "/explorer" },
-            { url: "/quantum" }
+            { url: "/quantum" },
+            { url: "/statistics/topFigures" }
         ]) || isRouteActive('/statistics'),
         items: [
             {
@@ -130,6 +131,11 @@ const mainNavItems = computed((): NavItem[] => [
                 title: "Quantum",
                 url: "/quantum",
                 isActive: isRouteActive('/quantum'),
+            },
+            {
+                title: "Top Figures",
+                url: "/statistics/topFigures",
+                isActive: isRouteActive('/statistics/topFigures'),
             },
 
         ],

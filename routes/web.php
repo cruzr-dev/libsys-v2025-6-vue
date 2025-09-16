@@ -14,6 +14,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\RecordReportsController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\TopFiguresStatisticsController;
 use App\Http\Controllers\UndergraduateStudentController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\ThesisController;
@@ -116,6 +117,11 @@ Route::middleware($middleware)->group(function () {
             Route::get('/books/qrcodes', [RecordReportsController::class, 'BookBarcodes'])->name('reports.records.books.barcodes');
         });
     });
+
+    Route::prefix('statistics')->group(function () {
+        Route::get('/topFigures', [TopFiguresStatisticsController::class, 'topFigures'])->name('statistics.topFigures');
+    });
+
         Route::prefix('logger')->group(function () {
         Route::get('/', [LibraryVisitController::class, 'index'])->name('logger.index');
     });
