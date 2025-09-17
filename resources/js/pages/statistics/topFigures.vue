@@ -232,7 +232,7 @@ watch([statType, quarter, entries, year, dateFrom, dateTo], () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-6 md:p-8">
             <div class="flex items-center justify-between">
-                <h1 class="text-xl font-semibold text-gray-900 md:text-2xl">Top 5 Statistics</h1>
+                <h1 class="text-xl font-semibold text-gray-900 md:text-2xl">Top Figures</h1>
             </div>
 
             <div class="space-y-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm md:p-4">
