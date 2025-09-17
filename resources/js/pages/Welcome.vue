@@ -13,6 +13,7 @@ import { onMounted, ref, watch, nextTick } from 'vue';
 import WelcomeFooter from '@/components/WelcomeFooter.vue';
 import CollectionSearchComboBox from '@/components/CollectionSearchComboBox.vue';
 
+
 // Page and alert handling
 const page = usePage();
 const name = page.props.name;
@@ -265,7 +266,19 @@ const stats = [
         icon: Repeat,
     },
 ];
+//branding
+const branding = {
+    logoUrl: '/images/projectStatic/eagle.jpg', // or dynamic source
+    headerLinkText: 'ULRC Tagum-Mabini'
+};
 
+const heroVisible = ref(false);
+
+onMounted(() => {
+    nextTick(() => {
+        heroVisible.value = true; // trigger one-time fade in
+    });
+});
 // Lifecycle
 onMounted(() => {
     if (page.props.flash.error) {
@@ -345,26 +358,35 @@ watch(() => window.location.search, () => {
             </nav>
         </header>
 
-        <!-- Main content -->
-        <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
 
-            <!-- Search section -->
-            <div class="px-4">
-                <div class="relative flex h-[360px] min-w-full items-center justify-center rounded-2xl bg-[url(/storage/system_images/eagle.jpg)] bg-cover">
-                    <!-- Heading + Sub-heading -->
-                    <div class="absolute top-10 left-1/2 transform -translate-x-1/2 text-center text-primary-foreground dark:text-muted-foreground">
-                        <h1 class="text-4xl font-bold">ULRC Tagum-Mabini</h1>
-                        <p class="text-lg">Your gateway to knowledge and discovery</p>
-                    </div>
 
-                    <!-- Search Box -->
-                    <div class="w-full max-w-xl p-1 rounded-xl bg-background">
-                        <CollectionSearchComboBox
-                            class="w-full rounded-lg"
-                        />
-                    </div>
+        <div class="px-4">
+            <div class="relative flex h-[360px] min-w-full items-center justify-center overflow-hidden rounded-2xl">
+                <!-- Background image layer -->
+                <div class="absolute inset-0 z-0">
+                    <img
+                        src="/storage/system_images/eagle.jpg"
+                        alt="Library banner"
+                        class="h-full w-full object-cover scale-105 blur-sm brightness-75"
+                        @error="(e) => { (e.target as HTMLImageElement).src = '/images/projectStatic/eagle.jpg'; }"
+                    />
+                </div>
+
+                <!-- Gradient overlay -->
+                <div class="absolute inset-0 z-10 bg-gradient-to-b from-black/40 via-black/20 to-black/30"></div>
+
+                <!-- Heading -->
+                <div class="absolute top-10 left-1/2 z-20 -translate-x-1/2 text-center drop-shadow">
+                    <h1 class="text-4xl font-bold text-white dark:text-white">ULRC Tagum-Mabini</h1>
+                    <p class="text-lg text-white dark:text-white">Your gateway to knowledge and discovery</p>
+                </div>
+
+                <!-- Search -->
+                <div class="z-20 w-full max-w-xl p-1 rounded-xl bg-background/80 backdrop-blur border border-white/10 shadow-lg">
+                    <CollectionSearchComboBox class="w-full rounded-lg" />
                 </div>
             </div>
+
 
             <!-- Statistics section -->
             <div class="flex gap-8 px-12 py-8 pb-0 justify-center">
