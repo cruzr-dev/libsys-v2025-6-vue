@@ -19,4 +19,14 @@ class Course extends Model
     {
         return $this->hasMany(Major::class);
     }
+
+    public function undergraduateStudents(): HasMany
+    {
+        return $this->hasMany(UndergraduateStudent::class);
+    }
+
+    public function graduateStudents(): HasMany
+    {
+        return $this->hasMany(GraduateStudent::class);
+    }
 }

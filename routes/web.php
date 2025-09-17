@@ -120,6 +120,7 @@ Route::middleware($middleware)->group(function () {
 
     Route::prefix('statistics')->group(function () {
         Route::get('/topFigures', [TopFiguresStatisticsController::class, 'topFigures'])->name('statistics.topFigures');
+        Route::get('/api/top-library-visits', [TopFiguresStatisticsController::class, 'getTopLibraryVisits'])->name('statistics.api.topLibraryVisits');
     });
 
         Route::prefix('logger')->group(function () {

@@ -8,6 +8,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import Chart from 'chart.js/auto';
 import { onMounted, ref, watch } from 'vue';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Statistics', href: '/statistics' },
@@ -19,6 +20,10 @@ const statType = ref<'searches' | 'borrowed' | 'visits' | 'programs'>('visits');
 const quarter = ref<'Q1' | 'Q2' | 'Q3' | 'Q4'>('Q1');
 const entries = ref<5 | 10 | 15>(5);
 const isGenerated = ref(false);
+
+// Loading state
+const isLoading = ref(false);
+const error = ref<string | null>(null);
 
 // New filters: Year and Date Range
 const currentYear = new Date().getFullYear();
@@ -142,12 +147,36 @@ const valueLabelPlugin = {
     },
 };
 
-function renderChart() {
+async function renderChart() {
     const el = document.getElementById(canvasId) as HTMLCanvasElement | null;
     if (!el) return;
     destroyChart();
 
-    const dataset = makeData(statType.value, quarter.value, entries.value, year.value);
+    let dataset: Item[] = [];
+
+    // For visits, use real data from API
+    if (statType.value === 'visits') {
+        try {
+            dataset = await fetchLibraryVisitsData();
+            // If no data returned or an error occurred, show a message
+            if (dataset.length === 0) {
+                if (error.value) {
+                    console.error(error.value);
+                } else {
+                    error.value = 'No data available for the selected filters';
+                }
+                // Use some placeholder data to avoid empty chart
+                dataset = [{ label: 'No data available', value: 0 }];
+            }
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            dataset = [{ label: 'Error loading data', value: 0 }];
+        }
+    } else {
+        // For other statistics, continue using mock data
+        dataset = makeData(statType.value, quarter.value, entries.value, year.value);
+    }
+
     const labels = dataset.map((d) => d.label);
     const values = dataset.map((d) => d.value);
 
@@ -216,6 +245,45 @@ function downloadPDF() {
             w.print();
         } catch (e) {}
     }, 300);
+}
+
+// Function to fetch library visits data from API
+async function fetchLibraryVisitsData(): Promise<Item[]> {
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const params = {
+      entries: entries.value,
+      quarter: quarter.value,
+      year: year.value,
+      date_from: dateFrom.value || undefined,
+      date_to: dateTo.value || undefined
+    };
+
+    const response = await axios.get('/statistics/api/top-library-visits', { params });
+
+    // Log debug information to console
+    if (response.data.debug) {
+      console.log('API Debug Info:', response.data.debug);
+    }
+
+    if (response.data.success && Array.isArray(response.data.data)) {
+      if (response.data.data.length === 0) {
+        error.value = `No library visit data found for the selected period. Debug info: ${JSON.stringify(response.data.debug || {})}`;
+      }
+      return response.data.data;
+    } else {
+      error.value = 'Invalid data received from server';
+      return [];
+    }
+  } catch (err: any) {
+    console.error('API Error:', err);
+    error.value = err.response?.data?.message || err.message || 'Failed to fetch library visits data';
+    return [];
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 onMounted(() => {
@@ -315,7 +383,32 @@ watch([statType, quarter, entries, year, dateFrom, dateTo], () => {
                     </div>
                 </div>
 
-                <div class="h-[360px] md:h-[440px]">
+                <div class="h-[360px] md:h-[440px] relative">
+                    <!-- Loading indicator -->
+                    <div v-if="isLoading && statType === 'visits'" class="absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-75 z-10">
+                        <div class="text-center">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                            <p class="mt-2 text-sm text-gray-600">Loading library visit data...</p>
+                        </div>
+                    </div>
+
+                    <!-- Error display -->
+                    <div v-if="error && statType === 'visits'" class="absolute top-2 left-2 right-2 bg-red-50 border border-red-200 rounded-md p-3 z-20">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">Data Loading Error</h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <p>{{ error }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <canvas :id="canvasId" class="h-full w-full"></canvas>
                 </div>
 
