@@ -24,12 +24,12 @@ class TopFiguresStatisticsController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
 
-        // Define quarter date ranges
+        // Define quarter date ranges according to requirements
         $quarterRanges = [
-            'Q1' => ['01-01', '03-31'],
-            'Q2' => ['04-01', '06-30'],
-            'Q3' => ['07-01', '09-30'],
-            'Q4' => ['10-01', '12-31'],
+            'Q1' => ['01-01', '03-31'], // Jan, Feb, Mar
+            'Q2' => ['04-01', '06-30'], // Apr, May, Jun
+            'Q3' => ['07-01', '09-30'], // Jul, Aug, Sep
+            'Q4' => ['10-01', '12-31'], // Oct, Nov, Dec
         ];
 
         // Build the query
@@ -40,7 +40,7 @@ class TopFiguresStatisticsController extends Controller
 
         // Apply date filters
         if ($dateFrom && $dateTo) {
-            // Use custom date range if provided
+            // Use custom date range if provided (overrides Quarter/Year)
             $query->whereBetween('library_visits.entry_time', [
                 Carbon::parse($dateFrom)->startOfDay(),
                 Carbon::parse($dateTo)->endOfDay()
@@ -103,54 +103,8 @@ class TopFiguresStatisticsController extends Controller
             })
             ->toArray();
 
-        // If no courses found, let's provide some fallback data or check broader date range
-        if (empty($sortedCourses)) {
-            // Check if there are any student visits at all (without date filter)
-            $allStudentVisits = LibraryVisit::join('users', 'library_visits.user_id', '=', 'users.id')
-                ->whereIn('users.user_type_id', [3, 4])
-                ->with([
-                    'user.undergraduateStudent.course',
-                    'user.graduateStudent.course'
-                ])
-                ->get();
-
-            // Try to get courses from all available student visits
-            $allCourseCounts = [];
-            foreach ($allStudentVisits as $visit) {
-                $course = null;
-                if ($visit->user->user_type_id == 3 && $visit->user->undergraduateStudent) {
-                    $course = $visit->user->undergraduateStudent->course;
-                } elseif ($visit->user->user_type_id == 4 && $visit->user->graduateStudent) {
-                    $course = $visit->user->graduateStudent->course;
-                }
-
-                if ($course) {
-                    $courseKey = $course->code ?? $course->name;
-                    if (!isset($allCourseCounts[$courseKey])) {
-                        $allCourseCounts[$courseKey] = [
-                            'label' => $course->name,
-                            'code' => $course->code,
-                            'value' => 0
-                        ];
-                    }
-                    $allCourseCounts[$courseKey]['value']++;
-                }
-            }
-
-            if (!empty($allCourseCounts)) {
-                $sortedCourses = collect($allCourseCounts)
-                    ->sortByDesc('value')
-                    ->take($entries)
-                    ->values()
-                    ->map(function ($course) {
-                        return [
-                            'label' => $course['code'] ? "{$course['code']} - {$course['label']}" : $course['label'],
-                            'value' => $course['value']
-                        ];
-                    })
-                    ->toArray();
-            }
-        }
+        // No fallback search - return empty array if no data matches filters
+        // This change ensures we don't display all data when filters return no results
 
         return response()->json([
             'success' => true,
@@ -162,7 +116,9 @@ class TopFiguresStatisticsController extends Controller
                 'course_counts_found' => count($courseCounts),
                 'date_range' => $dateFrom && $dateTo ?
                     ['from' => $dateFrom, 'to' => $dateTo] :
-                    ['quarter' => $quarter, 'year' => $year],
+                    ['quarter' => $quarter, 'year' => $year,
+                     'start_date' => "$year-" . $quarterRanges[$quarter][0],
+                     'end_date' => "$year-" . $quarterRanges[$quarter][1]],
                 'query_params' => $request->all()
             ]
         ]);

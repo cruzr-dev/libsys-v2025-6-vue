@@ -270,7 +270,13 @@ async function fetchLibraryVisitsData(): Promise<Item[]> {
 
     if (response.data.success && Array.isArray(response.data.data)) {
       if (response.data.data.length === 0) {
-        error.value = `No library visit data found for the selected period. Debug info: ${JSON.stringify(response.data.debug || {})}`;
+        // Show a user-friendly message when no data is available
+        if (dateFrom.value && dateTo.value) {
+          error.value = `No library visits data found for the date range: ${dateFrom.value} to ${dateTo.value}`;
+        } else {
+          error.value = `No library visits data found for ${quarter.value} ${year.value}`;
+        }
+        return [];
       }
       return response.data.data;
     } else {
@@ -394,17 +400,27 @@ watch([statType, quarter, entries, year, dateFrom, dateTo], () => {
 
                     <!-- Error display -->
                     <div v-if="error && statType === 'visits'" class="absolute top-2 left-2 right-2 bg-red-50 border border-red-200 rounded-md p-3 z-20">
-                        <div class="flex">
+                        <div class="flex items-center">
                             <div class="flex-shrink-0">
                                 <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                                 </svg>
                             </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-red-800">Data Loading Error</h3>
-                                <div class="mt-2 text-sm text-red-700">
-                                    <p>{{ error }}</p>
-                                </div>
+                            <div class="ml-3 flex-1">
+                                <p class="text-sm text-red-700">{{ error }}</p>
+                                <p class="mt-1 text-xs text-red-600">Try selecting a different time period or check your filter settings.</p>
+                            </div>
+                            <div class="ml-auto pl-3">
+                                <Button
+                                  variant="ghost"
+                                  class="h-7 w-7 p-0 rounded-full"
+                                  @click="error = null"
+                                >
+                                  <span class="sr-only">Dismiss</span>
+                                  <svg class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </Button>
                             </div>
                         </div>
                     </div>
